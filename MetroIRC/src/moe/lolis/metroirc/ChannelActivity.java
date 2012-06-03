@@ -88,7 +88,7 @@ public class ChannelActivity extends ListActivity {
 		switch (item.getItemId()) {
 		case android.R.id.home:
 			// Home button pressed in action bar
-			View channelList = findViewById(R.id.channelListRow);
+			View channelList = findViewById(R.id.channelList);
 			if (channelList.getVisibility() == View.VISIBLE){
 				channelList.setVisibility(View.GONE);
 			}
