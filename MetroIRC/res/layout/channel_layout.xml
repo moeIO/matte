@@ -1,18 +1,79 @@
 <?xml version="1.0" encoding="utf-8"?>
+
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
         android:id="@+id/presencelinearlayout"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        android:orientation="vertical" 
-        android:background="#ededed"
+        android:orientation="horizontal" 
         >
 
-        <ListView
+<TableRow
+    android:id="@+id/channelListRow"
+    android:layout_width="wrap_content"
+    android:layout_height="match_parent" >
+
+    <ProgressBar
+        android:id="@+id/progressBar1"
+        style="?android:attr/progressBarStyleSmall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+</TableRow>
+
+<TableRow
+    android:id="@+id/channelMessagesRow"
+    android:layout_width="wrap_content"
+    android:layout_height="match_parent" >
+
+    <LinearLayout
+        android:id="@+id/presencelinearlayout"
+        android:layout_width="fill_parent"
+        android:layout_height="match_parent"
+        android:background="#ededed"
+        android:orientation="vertical" >
+
+        <TableRow
+            android:id="@+id/tableRow1"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="top" android:layout_weight="1">
+
+            <ListView
                 android:id="@+id/android:list"
                 android:layout_width="fill_parent"
                 android:layout_height="fill_parent"
                 android:cacheColorHint="#ededed"
                 android:divider="#e3e3e3"
-                android:dividerHeight="1px"
-                android:footerDividersEnabled="false" />
+                android:dividerHeight="0px"
+                android:footerDividersEnabled="false"
+                android:stackFromBottom="true" >
+            </ListView>
+        </TableRow>
+
+        <TableRow
+            android:id="@+id/tableRow2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom">
+
+            <EditText
+                android:id="@+id/editText1"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:ems="10"
+                android:textColor="#000000" >
+
+                <requestFocus />
+            </EditText>
+
+            <Button
+                android:id="@+id/button1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text=">" />
+        </TableRow>
     </LinearLayout>
+</TableRow>
+
+        </LinearLayout>

@@ -12,12 +12,16 @@
 
         <TextView
             android:id="@+id/channelMessageName"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="right"
+            android:layout_gravity="top|right"
+            android:layout_marginRight="5dp"
             android:gravity="right"
             android:text="Name"
-            android:textAppearance="?android:attr/textAppearanceSmall" />
+            android:textColor="#2f8699"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:textSize="16dp" android:textStyle="bold"/>
+
     </TableRow>
 
     <TableRow
@@ -32,7 +36,10 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Message content"
-            android:textAppearance="?android:attr/textAppearanceSmall" />
+            android:textColor="#343434"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:textSize="16dp" />
+
     </TableRow>
 
 </LinearLayout>
