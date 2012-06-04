@@ -85,6 +85,7 @@ public class ChannelActivity extends ListActivity {
 				.setAdapter(channelAdapter);
 		//Hide that shit
 		findViewById(R.id.channelList).setVisibility(View.GONE);
+		
 	}
 
 	// Adapter that handles the message list
