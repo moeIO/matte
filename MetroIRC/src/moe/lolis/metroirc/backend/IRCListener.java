@@ -5,6 +5,7 @@ import org.pircbotx.PircBotX;
 import org.pircbotx.hooks.ListenerAdapter;
 import org.pircbotx.hooks.events.MessageEvent;
 import moe.lolis.metroirc.irc.Channel;
+import moe.lolis.metroirc.irc.ChannelMessage;
 import moe.lolis.metroirc.irc.Server;
 
 public class IRCListener extends ListenerAdapter<PircBotX> {
@@ -18,7 +19,7 @@ public class IRCListener extends ListenerAdapter<PircBotX> {
 		Server server = this.service.getServer(event.getBot().getServerInfo().getNetwork());
 		Channel channel = server.getChannel(event.getChannel().getName());
 		
-		Channel.Message message = channel.new Message();
+		ChannelMessage message = new ChannelMessage();
 		message.setNickname(event.getUser().getNick());
 		message.setContent(event.getMessage());
 		message.setTime(new Date());
