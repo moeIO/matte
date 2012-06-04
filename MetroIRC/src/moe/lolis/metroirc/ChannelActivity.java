@@ -1,7 +1,6 @@
 package moe.lolis.metroirc;
 
 import java.util.ArrayList;
-import java.util.Date;
 
 import moe.lolis.metroirc.ChannelListEntry.Type;
 import android.app.ActionBar;
@@ -22,7 +21,9 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 
-public class ChannelActivity extends ListActivity {
+public class ChannelActivity extends ListActivity implements
+		ServiceEventListener {
+	private ChannelActivity activity;
 	private LayoutInflater inflater;
 	private MessageAdapter adapter;
 	private ChannelListAdapter channelAdapter;
@@ -34,46 +35,18 @@ public class ChannelActivity extends ListActivity {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		this.setContentView(R.layout.channel_layout);
-
+		activity = this;
 		// Fire up the service
 		Intent serviceIntent = new Intent(this, MoeService.class);
 		this.startService(serviceIntent);
-		// First service bind will be done in onResume() which is called at start
+		// First service bind will be done in onResume() which is called at
+		// start
 
 		// Request action bar.
 		ActionBar bar = this.getActionBar();
 		bar.setDisplayHomeAsUpEnabled(true);
 
 		setTitle("#coolchannel");
-		// Temporary fake list
-		ArrayList<ChannelMessage> messages = new ArrayList<ChannelMessage>();
-		ChannelMessage m = new ChannelMessage();
-		m.time = new Date();
-		m.text = "The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog..";
-		messages.add(m);
-		m = new ChannelMessage();
-		m.time = new Date();
-		m.text = "Blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah blah";
-		messages.add(m);
-		m = new ChannelMessage();
-		m.time = new Date();
-		m.text = "Guy is the coolest guy around etc etc different sized words etc different sized words etc different sized words.";
-		messages.add(m);
-		messages.add(m);
-		messages.add(m);
-		messages.add(m);
-		messages.add(m);
-		messages.add(m);
-		messages.add(m);
-		messages.add(m);
-		messages.add(m);
-
-		// Set up list adapter,
-		this.inflater = (LayoutInflater) this
-				.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-		this.adapter = new MessageAdapter(getApplicationContext(),
-				R.layout.channel_message_row, messages);
-		this.setListAdapter(this.adapter);
 
 		// Set up sidebar,
 		ViewStub channelListContainer = (ViewStub) this
@@ -189,7 +162,8 @@ public class ChannelActivity extends ListActivity {
 		@Override
 		public void onServiceConnected(ComponentName className, IBinder service) {
 			moeService = ((MoeService.LocalBinder) service).getService();
-
+			moeService.connectedServiceEventListener = activity;
+			activity.serviceConnected();
 		}
 
 		// Called when the activity disconnects from the service
@@ -214,6 +188,26 @@ public class ChannelActivity extends ListActivity {
 		this.bindService(servIntent, serviceConnection,
 				Context.BIND_AUTO_CREATE);
 		super.onResume();
+	}
+
+	public void serviceConnected() {
+		// Set up list adapter,
+		this.inflater = (LayoutInflater) this
+				.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+		this.adapter = new MessageAdapter(getApplicationContext(),
+				R.layout.channel_message_row, moeService.channel.messages);
+		this.setListAdapter(this.adapter);
+	}
+
+	@Override
+	public void messageRecieved(Channel channel) {
+		// Update the message list
+		this.runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+				adapter.notifyDataSetChanged();
+			}
+		});
 	}
 
 }
