@@ -20,17 +20,18 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 public class ChannelActivity extends ListActivity {
-	LayoutInflater inflater;
-	MessageAdapter adapter;
-	ChannelListAdapter channelAdapter;
+	private LayoutInflater inflater;
+	private MessageAdapter adapter;
+	private ChannelListAdapter channelAdapter;
 
 	/** Called when the activity is first created. */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.channel_layout);
-		// Request action bar (3.0+)
-		ActionBar bar = getActionBar();
+		this.setContentView(R.layout.channel_layout);
+		
+		// Request action bar.
+		ActionBar bar = this.getActionBar();
 		bar.setDisplayHomeAsUpEnabled(true);
 
 		setTitle("#coolchannel");
@@ -57,14 +58,13 @@ public class ChannelActivity extends ListActivity {
 		messages.add(m);
 		messages.add(m);
 
-		// Set up list adapter
-		inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-		adapter = new MessageAdapter(getApplicationContext(),
-				R.layout.channel_message_row, messages);
-		setListAdapter(adapter);
+		// Set up list adapter,
+		this.inflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+		this.adapter = new MessageAdapter(getApplicationContext(), R.layout.channel_message_row, messages);
+		this.setListAdapter(this.adapter);
 
-		// Set up sidebar
-		ViewStub channelListContainer = (ViewStub) findViewById(R.id.channelListStub);
+		// Set up sidebar,
+		ViewStub channelListContainer = (ViewStub) this.findViewById(R.id.channelListStub);
 		channelListContainer.inflate();
 
 		// Some fake data
@@ -77,15 +77,13 @@ public class ChannelActivity extends ListActivity {
 		chan.type = Type.Channel;
 		chan.name = "#coolchannel";
 		channels.add(chan);
-		channelAdapter = new ChannelListAdapter(getApplicationContext(),
-				R.layout.channel_message_row, channels);
-		//Set adapter of newly inflated container
-		LinearLayout channelList = (LinearLayout)findViewById(R.id.channelListPanel);
-		((ListView) channelList.findViewById(android.R.id.list))
-				.setAdapter(channelAdapter);
-		//Hide that shit
-		findViewById(R.id.channelList).setVisibility(View.GONE);
+		channelAdapter = new ChannelListAdapter(getApplicationContext(), R.layout.channel_message_row, channels);
 		
+		// Set adapter of newly inflated container
+		LinearLayout channelList = (LinearLayout) this.findViewById(R.id.channelListPanel);
+		((ListView) channelList.findViewById(android.R.id.list)).setAdapter(this.channelAdapter);
+		// And hide it by default.
+		this.findViewById(R.id.channelList).setVisibility(View.GONE);
 	}
 
 	// Adapter that handles the message list
@@ -93,8 +91,7 @@ public class ChannelActivity extends ListActivity {
 
 		private ArrayList<ChannelMessage> items;
 
-		public MessageAdapter(Context context, int textViewResourceId,
-				ArrayList<ChannelMessage> items) {
+		public MessageAdapter(Context context, int textViewResourceId, ArrayList<ChannelMessage> items) {
 			super(context, textViewResourceId, items);
 			this.items = items;
 		}
@@ -102,15 +99,12 @@ public class ChannelActivity extends ListActivity {
 		@Override
 		public View getView(int position, View convertView, ViewGroup parent) {
 			if (convertView == null) {
-				convertView = inflater.inflate(R.layout.channel_message_row,
-						null);
+				convertView = inflater.inflate(R.layout.channel_message_row, null);
 			}
+			
 			ChannelMessage message = items.get(position);
-			TextView name = (TextView) convertView
-					.findViewById(R.id.channelMessageName);
-			TextView content = (TextView) convertView
-					.findViewById(R.id.channelMessageContent);
-
+			TextView name = (TextView) convertView.findViewById(R.id.channelMessageName);
+			TextView content = (TextView) convertView.findViewById(R.id.channelMessageContent);
 			content.setText(message.text);
 
 			return convertView;
@@ -122,7 +116,7 @@ public class ChannelActivity extends ListActivity {
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
 		case android.R.id.home:
-			// Home button pressed in action bar
+			// Home button pressed in action bar, show channel list!
 			View channelList = findViewById(R.id.channelList);
 			if (channelList.getVisibility() == View.VISIBLE) {
 				channelList.setVisibility(View.GONE);
@@ -144,8 +138,7 @@ public class ChannelActivity extends ListActivity {
 
 		private ArrayList<ChannelListEntry> items;
 
-		public ChannelListAdapter(Context context, int textViewResourceId,
-				ArrayList<ChannelListEntry> items) {
+		public ChannelListAdapter(Context context, int textViewResourceId, ArrayList<ChannelListEntry> items) {
 			super(context, textViewResourceId, items);
 			this.items = items;
 		}
@@ -155,17 +148,13 @@ public class ChannelActivity extends ListActivity {
 			ChannelListEntry entry = items.get(position);
 			if (convertView == null) {
 				if (entry.type == Type.Server) {
-					convertView = inflater.inflate(R.layout.channellist_server,
-							null);
+					convertView = inflater.inflate(R.layout.channellist_server, null);
 				} else if (entry.type == Type.Channel) {
-					convertView = inflater.inflate(
-							R.layout.channellist_channel, null);
+					convertView = inflater.inflate(R.layout.channellist_channel, null);
 				}
 			}
 
-			TextView name = (TextView) convertView
-					.findViewById(R.id.name);
-
+			TextView name = (TextView) convertView.findViewById(R.id.name);
 			name.setText(entry.name);
 
 			return convertView;
