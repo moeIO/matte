@@ -4,11 +4,14 @@ import java.util.ArrayList;
 import java.util.Date;
 
 import moe.lolis.metroirc.ChannelListEntry.Type;
-
 import android.app.ActionBar;
 import android.app.ListActivity;
+import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -24,12 +27,19 @@ public class ChannelActivity extends ListActivity {
 	private MessageAdapter adapter;
 	private ChannelListAdapter channelAdapter;
 
+	private MoeService moeService;
+
 	/** Called when the activity is first created. */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		this.setContentView(R.layout.channel_layout);
-		
+
+		// Fire up the service
+		Intent serviceIntent = new Intent(this, MoeService.class);
+		this.startService(serviceIntent);
+		// First service bind will be done in onResume() which is called at start
+
 		// Request action bar.
 		ActionBar bar = this.getActionBar();
 		bar.setDisplayHomeAsUpEnabled(true);
@@ -59,12 +69,15 @@ public class ChannelActivity extends ListActivity {
 		messages.add(m);
 
 		// Set up list adapter,
-		this.inflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-		this.adapter = new MessageAdapter(getApplicationContext(), R.layout.channel_message_row, messages);
+		this.inflater = (LayoutInflater) this
+				.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+		this.adapter = new MessageAdapter(getApplicationContext(),
+				R.layout.channel_message_row, messages);
 		this.setListAdapter(this.adapter);
 
 		// Set up sidebar,
-		ViewStub channelListContainer = (ViewStub) this.findViewById(R.id.channelListStub);
+		ViewStub channelListContainer = (ViewStub) this
+				.findViewById(R.id.channelListStub);
 		channelListContainer.inflate();
 
 		// Some fake data
@@ -77,11 +90,14 @@ public class ChannelActivity extends ListActivity {
 		chan.type = Type.Channel;
 		chan.name = "#coolchannel";
 		channels.add(chan);
-		channelAdapter = new ChannelListAdapter(getApplicationContext(), R.layout.channel_message_row, channels);
-		
+		channelAdapter = new ChannelListAdapter(getApplicationContext(),
+				R.layout.channel_message_row, channels);
+
 		// Set adapter of newly inflated container
-		LinearLayout channelList = (LinearLayout) this.findViewById(R.id.channelListPanel);
-		((ListView) channelList.findViewById(android.R.id.list)).setAdapter(this.channelAdapter);
+		LinearLayout channelList = (LinearLayout) this
+				.findViewById(R.id.channelListPanel);
+		((ListView) channelList.findViewById(android.R.id.list))
+				.setAdapter(this.channelAdapter);
 		// And hide it by default.
 		this.findViewById(R.id.channelList).setVisibility(View.GONE);
 	}
@@ -91,7 +107,8 @@ public class ChannelActivity extends ListActivity {
 
 		private ArrayList<ChannelMessage> items;
 
-		public MessageAdapter(Context context, int textViewResourceId, ArrayList<ChannelMessage> items) {
+		public MessageAdapter(Context context, int textViewResourceId,
+				ArrayList<ChannelMessage> items) {
 			super(context, textViewResourceId, items);
 			this.items = items;
 		}
@@ -99,12 +116,15 @@ public class ChannelActivity extends ListActivity {
 		@Override
 		public View getView(int position, View convertView, ViewGroup parent) {
 			if (convertView == null) {
-				convertView = inflater.inflate(R.layout.channel_message_row, null);
+				convertView = inflater.inflate(R.layout.channel_message_row,
+						null);
 			}
-			
+
 			ChannelMessage message = items.get(position);
-			TextView name = (TextView) convertView.findViewById(R.id.channelMessageName);
-			TextView content = (TextView) convertView.findViewById(R.id.channelMessageContent);
+			TextView name = (TextView) convertView
+					.findViewById(R.id.channelMessageName);
+			TextView content = (TextView) convertView
+					.findViewById(R.id.channelMessageContent);
 			content.setText(message.text);
 
 			return convertView;
@@ -138,7 +158,8 @@ public class ChannelActivity extends ListActivity {
 
 		private ArrayList<ChannelListEntry> items;
 
-		public ChannelListAdapter(Context context, int textViewResourceId, ArrayList<ChannelListEntry> items) {
+		public ChannelListAdapter(Context context, int textViewResourceId,
+				ArrayList<ChannelListEntry> items) {
 			super(context, textViewResourceId, items);
 			this.items = items;
 		}
@@ -148,9 +169,11 @@ public class ChannelActivity extends ListActivity {
 			ChannelListEntry entry = items.get(position);
 			if (convertView == null) {
 				if (entry.type == Type.Server) {
-					convertView = inflater.inflate(R.layout.channellist_server, null);
+					convertView = inflater.inflate(R.layout.channellist_server,
+							null);
 				} else if (entry.type == Type.Channel) {
-					convertView = inflater.inflate(R.layout.channellist_channel, null);
+					convertView = inflater.inflate(
+							R.layout.channellist_channel, null);
 				}
 			}
 
@@ -159,6 +182,38 @@ public class ChannelActivity extends ListActivity {
 
 			return convertView;
 		}
+	}
+
+	private ServiceConnection serviceConnection = new ServiceConnection() {
+		// Called when activity connects to the service
+		@Override
+		public void onServiceConnected(ComponentName className, IBinder service) {
+			moeService = ((MoeService.LocalBinder) service).getService();
+
+		}
+
+		// Called when the activity disconnects from the service
+		@Override
+		public void onServiceDisconnected(ComponentName className) {
+			moeService = null;
+		}
+	};
+
+	// On activity Paused
+	public void onPause() {
+		// Unbind the service
+		this.unbindService(serviceConnection);
+		super.onPause();
+	};
+
+	// On activity Resumed
+	public void onResume() {
+		// Bind the service
+		Intent servIntent = new Intent(this.getApplicationContext(),
+				MoeService.class);
+		this.bindService(servIntent, serviceConnection,
+				Context.BIND_AUTO_CREATE);
+		super.onResume();
 	}
 
 }
