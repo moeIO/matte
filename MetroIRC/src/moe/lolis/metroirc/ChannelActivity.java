@@ -48,6 +48,14 @@ public class ChannelActivity extends ListActivity {
 		m.time = new Date();
 		m.text = "Guy is the coolest guy around etc etc different sized words etc different sized words etc different sized words.";
 		messages.add(m);
+		messages.add(m);
+		messages.add(m);
+		messages.add(m);
+		messages.add(m);
+		messages.add(m);
+		messages.add(m);
+		messages.add(m);
+		messages.add(m);
 
 		// Set up list adapter
 		inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
@@ -63,7 +71,7 @@ public class ChannelActivity extends ListActivity {
 		ArrayList<ChannelListEntry> channels = new ArrayList<ChannelListEntry>();
 		ChannelListEntry serv = new ChannelListEntry();
 		serv.type = Type.Server;
-		serv.name = "Rizon";
+		serv.name = "!Rizon";
 		channels.add(serv);
 		ChannelListEntry chan = new ChannelListEntry();
 		chan.type = Type.Channel;

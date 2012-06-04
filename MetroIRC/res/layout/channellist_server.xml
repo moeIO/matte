@@ -8,11 +8,14 @@
         android:id="@+id/name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="1dp"
         android:layout_marginLeft="10dp"
         android:layout_marginTop="10dp"
         android:text="Medium Text"
         android:textAppearance="?android:attr/textAppearanceMedium"
-        android:textColor="#6f6f6f"
-        android:textStyle="bold" android:layout_marginBottom="5dp"/>
+        android:textColor="#9f9f9f"
+        android:textStyle="bold" />
+
+
 
 </LinearLayout>
