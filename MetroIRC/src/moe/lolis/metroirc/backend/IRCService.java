@@ -2,14 +2,18 @@ package moe.lolis.metroirc.backend;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import javax.net.ssl.SSLSocketFactory;
+
 import android.app.Service;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
-import org.pircbotx.MultiBotManager;
-import org.pircbotx.PircBotX;
+
+import org.pircbotx.UtilSSLSocketFactory;
+import moe.lolis.metroirc.irc.Client;
+import moe.lolis.metroirc.irc.ClientManager;
 import moe.lolis.metroirc.irc.Channel;
 import moe.lolis.metroirc.irc.Server;
 import moe.lolis.metroirc.irc.ServerPreferences;
@@ -25,7 +29,7 @@ public class IRCService extends Service implements ServiceEventListener {
 	public ServiceEventListener connectedEventListener;
 	private IRCListener listener;
 	private ConnectTask connectionTask;
-	private MultiBotManager botManager;
+	private ClientManager clientManager;
 	private HashMap<String, Server> servers;
 
 	@Override
@@ -40,18 +44,16 @@ public class IRCService extends Service implements ServiceEventListener {
 
 	@Override
 	public void onCreate() {
-		servers = new HashMap<String, Server>();
-		this.botManager = new MultiBotManager("MetroIRC");
+		this.servers = new HashMap<String, Server>();
+		this.clientManager = new ClientManager();
 
 		// TODO: get server preferences from config file.
 		// For now, use dummy data.
 		ArrayList<ServerPreferences> prefs = new ArrayList<ServerPreferences>();
 		ServerPreferences p = new ServerPreferences();
 		p.setName("Rizon");
-		p.addNickname("MoeBot");
-		p.addNickname("MoeBot_");
-		p.addNickname("MoeBot__");
-		p.setUsername("moebot");
+		p.addNickname("JohnDoe");
+		p.setUsername("johndo");
 		p.setRealname("MetroIRC");
 		p.addHost(p.new Host("irc.lolipower.org", 6697, true, null));
 		p.addAutoChannel("#metroirc");
@@ -63,8 +65,7 @@ public class IRCService extends Service implements ServiceEventListener {
 
 		for (ServerPreferences serverPrefs : prefs) {
 			if (serverPrefs.isAutoConnected()) {
-				this.connectionTask
-						.execute(new ServerPreferences[] { serverPrefs });
+				this.connectionTask.execute(new ServerPreferences[] { serverPrefs });
 			}
 		}
 		super.onCreate();
@@ -82,9 +83,8 @@ public class IRCService extends Service implements ServiceEventListener {
 	}
 
 	// Asynchronous connect (Can't have UI networking)
-	private class ConnectTask extends
-			AsyncTask<ServerPreferences, Void, Boolean> {
-		private PircBotX bot;
+	private class ConnectTask extends AsyncTask<ServerPreferences, Void, Boolean> {
+		private Client client;
 		ServerPreferences preferences;
 
 		protected Boolean doInBackground(ServerPreferences... arguments) {
@@ -93,34 +93,40 @@ public class IRCService extends Service implements ServiceEventListener {
 			}
 			preferences = arguments[0];
 
-			this.bot = botManager.createBot(preferences.getHosts().get(0)
-					.getHostname());
-			this.bot.setName(preferences.getNicknames().get(0));
-			this.bot.setLogin(preferences.getUsername());
-			this.bot.setAutoNickChange(true);
-			this.bot.setAutoSplitMessage(true);
-			this.bot.getListenerManager().addListener(listener);
-
-			// Attempt to connect to the server
-			try {
-				this.bot.connect(preferences.getHosts().get(0).getHostname());
-			} catch (Exception ex) {
-				Log.e("whoops", ex.getMessage());
-				return false;
+			this.client = clientManager.createClient(preferences);
+			
+			// Attempt to connect to the server.
+			boolean connected = false;
+			for (ServerPreferences.Host host : preferences.getHosts()) {
+				try {
+					if (host.isSSL()) {
+						if (host.verifySSL()) {
+							this.client.connect(host.getHostname(), host.getPort(), host.getPassword(), SSLSocketFactory.getDefault());
+						} else {
+							this.client.connect(host.getHostname(), host.getPort(), host.getPassword(), new UtilSSLSocketFactory().trustAllCertificates());
+						}
+					} else {
+						this.client.connect(host.getHostname(), host.getPort(), host.getPassword());
+					}
+					connected = true;
+				} catch (Exception ex) {
+					Log.e("whoops", ex.getMessage());
+					return false;
+				}
 			}
 
-			return true;
+			return connected;
 		}
 
 		protected void onPostExecute(Boolean succesful) {
 			if (succesful) {
 				Server server = new Server();
-				servers.put(this.bot.getServerInfo().getNetwork(), server);
+				servers.put(this.client.getServerInfo().getNetwork(), server);
 
 				// Automatically join channels after connecting (Afterwards so
 				// that server list is ready)
 				for (String channel : preferences.getAutoChannels()) {
-					this.bot.joinChannel(channel);
+					this.client.joinChannel(channel);
 				}
 			}
 		}
