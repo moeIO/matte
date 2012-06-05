@@ -14,13 +14,13 @@ import moe.lolis.metroirc.irc.Channel;
 import moe.lolis.metroirc.irc.Server;
 import moe.lolis.metroirc.irc.ServerPreferences;
 
-public class IRCService extends Service implements ServiceEventListener{
+public class IRCService extends Service implements ServiceEventListener {
 	public class IRCBinder extends Binder {
 		public IRCService getService() {
 			return IRCService.this;
 		}
 	}
-	
+
 	private final IBinder binder = new IRCBinder();
 	public ServiceEventListener connectedEventListener;
 	private IRCListener listener;
@@ -40,8 +40,9 @@ public class IRCService extends Service implements ServiceEventListener{
 
 	@Override
 	public void onCreate() {
+		servers = new HashMap<String, Server>();
 		this.botManager = new MultiBotManager("MetroIRC");
-		
+
 		// TODO: get server preferences from config file.
 		// For now, use dummy data.
 		ArrayList<ServerPreferences> prefs = new ArrayList<ServerPreferences>();
@@ -56,18 +57,19 @@ public class IRCService extends Service implements ServiceEventListener{
 		p.addAutoChannel("#metroirc");
 		p.isAutoConnected(true);
 		prefs.add(p);
-		
+
 		this.listener = new IRCListener(this);
 		this.connectionTask = new ConnectTask();
-		
-		for(ServerPreferences serverPrefs : prefs) {
-			if(serverPrefs.isAutoConnected()) {
-				this.connectionTask.execute(new ServerPreferences[] { serverPrefs });
+
+		for (ServerPreferences serverPrefs : prefs) {
+			if (serverPrefs.isAutoConnected()) {
+				this.connectionTask
+						.execute(new ServerPreferences[] { serverPrefs });
 			}
 		}
 		super.onCreate();
 	}
-	
+
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
@@ -76,26 +78,29 @@ public class IRCService extends Service implements ServiceEventListener{
 	// Service started
 	@Override
 	public void onStart(Intent intent, int startId) {
-		Log.d("Moe Service", "Kyun~");
+
 	}
 
 	// Asynchronous connect (Can't have UI networking)
-	private class ConnectTask extends AsyncTask<ServerPreferences, Void, Boolean> {
+	private class ConnectTask extends
+			AsyncTask<ServerPreferences, Void, Boolean> {
 		private PircBotX bot;
-		
+		ServerPreferences preferences;
+
 		protected Boolean doInBackground(ServerPreferences... arguments) {
-			if(arguments.length < 1) {
+			if (arguments.length < 1) {
 				return false;
 			}
-			ServerPreferences preferences = arguments[0];
-			
-			this.bot = botManager.createBot(preferences.getHosts().get(0).getHostname());
+			preferences = arguments[0];
+
+			this.bot = botManager.createBot(preferences.getHosts().get(0)
+					.getHostname());
 			this.bot.setName(preferences.getNicknames().get(0));
 			this.bot.setLogin(preferences.getUsername());
 			this.bot.setAutoNickChange(true);
 			this.bot.setAutoSplitMessage(true);
 			this.bot.getListenerManager().addListener(listener);
-			
+
 			// Attempt to connect to the server
 			try {
 				this.bot.connect(preferences.getHosts().get(0).getHostname());
@@ -103,11 +108,7 @@ public class IRCService extends Service implements ServiceEventListener{
 				Log.e("whoops", ex.getMessage());
 				return false;
 			}
-			
-			// Automatically join channels.
-			for(String channel : preferences.getAutoChannels()) {
-				this.bot.joinChannel(channel);
-			}
+
 			return true;
 		}
 
@@ -115,10 +116,11 @@ public class IRCService extends Service implements ServiceEventListener{
 			if (succesful) {
 				Server server = new Server();
 				servers.put(this.bot.getServerInfo().getNetwork(), server);
-				for(org.pircbotx.Channel channelInfo : this.bot.getChannels()) {
-					Channel channel = new Channel();
-					channel.setChannelInfo(channelInfo);
-					server.addChannel(channel);
+
+				// Automatically join channels after connecting (Afterwards so
+				// that server list is ready)
+				for (String channel : preferences.getAutoChannels()) {
+					this.bot.joinChannel(channel);
 				}
 			}
 		}
@@ -127,8 +129,17 @@ public class IRCService extends Service implements ServiceEventListener{
 	public void messageReceived(Channel channel) {
 		this.connectedEventListener.messageReceived(channel);
 	}
-	
-	public Server getServer(String name) { return this.servers.get(name); }
-	public HashMap<String, Server> getServers() { return this.servers; }
+
+	public Server getServer(String name) {
+		return this.servers.get(name);
+	}
+
+	public HashMap<String, Server> getServers() {
+		return this.servers;
+	}
+
+	public void channelJoined(Channel channel) {
+		this.connectedEventListener.channelJoined(channel);
+	}
 
 }

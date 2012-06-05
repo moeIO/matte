@@ -12,4 +12,9 @@ public interface ServiceEventListener {
 	 * the message belonged to
 	 */
 	public void messageReceived(Channel channel);
+	
+	/*
+	 * Called when a channel is joined (durr)
+	 */
+	public void channelJoined(Channel channel);
 }

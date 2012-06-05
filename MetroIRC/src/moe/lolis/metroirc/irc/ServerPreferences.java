@@ -45,6 +45,13 @@ public class ServerPreferences {
 	private boolean autoConnect = false;
 	private boolean doLog = false;
 	
+	public ServerPreferences(){
+		hosts = new ArrayList<ServerPreferences.Host>();
+		nicknames = new ArrayList<String>();
+		autoChannels = new ArrayList<String>();
+		autoCommands = new ArrayList<String>();
+	}
+	
 	// Boilerplate getter/setters.
 	public void setName(String name) { this.name = name; }
 	public String getName() { return this.name; }
