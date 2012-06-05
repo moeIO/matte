@@ -19,9 +19,8 @@ public class IRCListener extends ListenerAdapter<Client> {
 		this.service = service;
 	}
 
-	public void onMessage(MessageEvent event) throws Exception {
-		Server server = this.service.getServer(event.getBot().getServerInfo()
-				.getNetwork());
+	public void onMessage(MessageEvent<Client> event) throws Exception {
+		Server server = this.service.getServer(event.getBot().getServerInfo().getNetwork());
 		Channel channel = server.getChannel(event.getChannel().getName());
 
 		ChannelMessage message = new ChannelMessage();
@@ -33,21 +32,21 @@ public class IRCListener extends ListenerAdapter<Client> {
 		this.service.messageReceived(channel);
 	}
 
-	public void onJoin(JoinEvent event) {
-		Server server = this.service.getServer(event.getBot().getServerInfo()
-				.getNetwork());
+	public void onJoin(JoinEvent<Client> event) {
+		Server server = this.service.getServer(event.getBot().getServerInfo().getNetwork());
 		Channel channel = server.getChannel(event.getChannel().getName());
+		
 		if (channel == null) {
-			// newly encountered channel
-			Channel c = new Channel();
-			c.setChannelInfo(event.getChannel());
-			server.addChannel(c);
-			channel = c;
+			// Newly encountered channel.
+			channel = new Channel();
+			channel.setServerInfo(event.getBot().getServerInfo());
+			channel.setChannelInfo(event.getChannel());
+			server.addChannel(channel);
 		}
 		this.service.channelJoined(channel);
 	}
 
-	public void onConnect(ConnectEvent event) {
+	public void onConnect(ConnectEvent<Client> event) {
 
 	}
 }

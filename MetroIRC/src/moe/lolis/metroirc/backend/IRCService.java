@@ -53,7 +53,7 @@ public class IRCService extends Service implements ServiceEventListener {
 		ServerPreferences p = new ServerPreferences();
 		p.setName("Rizon");
 		p.addNickname("JohnDoe");
-		p.setUsername("johndo");
+		p.setUsername("johndoe");
 		p.setRealname("MetroIRC");
 		p.addHost(p.new Host("irc.lolipower.org", 6697, true, null));
 		p.addAutoChannel("#metroirc");
@@ -94,6 +94,7 @@ public class IRCService extends Service implements ServiceEventListener {
 			preferences = arguments[0];
 
 			this.client = clientManager.createClient(preferences);
+			this.client.getListenerManager().addListener(listener);
 			
 			// Attempt to connect to the server.
 			boolean connected = false;

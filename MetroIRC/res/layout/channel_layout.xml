@@ -49,7 +49,7 @@
                 android:layout_marginRight="5dp"
                 android:layout_weight="1"
                 android:ems="10"
-                android:hint="Enter Message"
+                android:hint="Enter message"
                 android:textColor="#000000" />
 
             <ImageButton
