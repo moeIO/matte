@@ -3,5 +3,22 @@
     <string name="app_name">MetroIRC</string>
     <string name="settings">Settings</string>
     <string name="addServer">Add Server</string>
+    <string name="name">Name</string>
+    <string name="hostname">Hostname</string>
+    <string name="port">Port</string>
+    <string name="ssl">SSL</string>
+    <string name="verifyssl">Verify SSL</string>
+    <string name="password">Password</string>
+    <string name="nicknames">Nicknames</string>
+    <string name="optional">(Optional)</string>
+    <string name="nickhint">Nick1,Nick2,Nick3</string>
+    <string name="username">Username</string>
+    <string name="realname">Realname</string>
+    <string name="autoconnect_commands">Autoconnect Commands</string>
+    <string name="one_per_line">(Optional) One command per line</string>
+    <string name="connectatstartup">Connect at startup</string>
+    <string name="log">Log</string>
+    <string name="hosthint">irc.lolipower.org</string>
+    <string name="quit">Quit</string>
 
 </resources>

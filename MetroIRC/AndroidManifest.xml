@@ -27,7 +27,7 @@
         <service android:name=".backend.IRCService" />
 
         <activity
-            android:name=".Preferences"
+            android:name=".SettingsActivity"
             android:label="@string/settings" >
         </activity>
     </application>
