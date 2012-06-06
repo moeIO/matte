@@ -6,9 +6,11 @@ import java.util.HashMap;
 public class Server {
 	private org.pircbotx.ServerInfo serverInfo;
 	private HashMap<String, Channel> channels;
+	private String name;
 	
 	public Server() {
 		this.channels = new HashMap<String, Channel>();
+		this.name = "Unnamed";
 	}
 	
 	public void setServerInfo(org.pircbotx.ServerInfo serverInfo) { this.serverInfo = serverInfo; }
@@ -23,4 +25,6 @@ public class Server {
 			this.addChannel(channel);
 		}
 	}
+	public void setName(String name) { this.name = name; }
+	public String getName() { return this.name; }
 }
