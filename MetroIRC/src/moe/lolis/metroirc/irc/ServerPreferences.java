@@ -2,6 +2,8 @@ package moe.lolis.metroirc.irc;
 
 import java.util.ArrayList;
 
+import android.content.SharedPreferences;
+
 public class ServerPreferences {
 
 	// Host abstraction.
@@ -66,6 +68,8 @@ public class ServerPreferences {
 
 	// User-friendly name.
 	private String name;
+	// Our spot in the SharedPreferences, if applicable.
+	private int preferenceSpot = -1;
 
 	// List of all nicknames to attempt.
 	private ArrayList<String> nicknames = new ArrayList<String>();
@@ -191,5 +195,82 @@ public class ServerPreferences {
 
 	public void isLogged(boolean doLog) {
 		this.doLog = doLog;
+	}
+	
+	// Load from SharedPreferences.
+	public void loadFromSharedPreferences(SharedPreferences sharedPreferences, int i) {
+		String prefix = "server_" + i + "_";
+
+		this.setName(sharedPreferences.getString(prefix + "name", ""));
+		int nickCount = sharedPreferences.getInt(prefix + "nick_count", 0);
+		for (int j = 0; j < nickCount; j++) {
+			this.addNickname(sharedPreferences.getString(prefix + "nick_" + j, "JohnDoe"));
+		}
+		this.setUsername(sharedPreferences.getString(prefix + "user", "johndoe"));
+		this.setRealname(sharedPreferences.getString(prefix + "realname", "John Doe"));
+
+		Host host = new Host();
+		host.setHostname(sharedPreferences.getString(prefix + "host_hostname", null));
+		host.setPort(sharedPreferences.getInt(prefix + "host_port", 6667));
+		host.isSSL(sharedPreferences.getBoolean(prefix + "host_ssl", false));
+		host.verifySSL(sharedPreferences.getBoolean(prefix + "host_verify_ssl", false));
+		host.setPassword(sharedPreferences.getString(prefix + "host_password", null));
+		this.setHost(host);
+
+		// double fake arraying {MLG}[N0OBj3CT$]
+		int autoChannelCount = sharedPreferences.getInt(prefix + "auto_channel_count", 0);
+		for (int j = 0; j < autoChannelCount; j++) {
+			this.addAutoChannel(sharedPreferences.getString(prefix + "auto_channel_" + j, ""));
+		}
+		int autoCommandCount = sharedPreferences.getInt(prefix + "auto_command_count", 0);
+		for (int j = 0; j < autoCommandCount; j++) {
+			this.addAutoCommand(sharedPreferences.getString(prefix + "auto_command_" + j, ""));
+		}
+		this.isAutoConnected(sharedPreferences.getBoolean(prefix + "auto_connect", false));
+		this.isLogged(sharedPreferences.getBoolean(prefix + "log", false));
+		
+		this.preferenceSpot = i;
+	}
+		
+	// Save the preference to SharedPreferences.
+	public void saveToSharedPreferences(SharedPreferences sharedPreferences) {
+		// If we're already in the preferences, use our existing spot for updating.
+		// Else, create a new spot.
+		String prefix = "server_";
+		SharedPreferences.Editor editor = sharedPreferences.edit();
+		if (this.preferenceSpot >= 0) {
+			prefix += this.preferenceSpot + "_";
+		} else {
+			int count = sharedPreferences.getInt("server_count", 0);
+			editor.putInt("server_count", count + 1);
+			prefix += (count + 1) + "_";
+		}
+		
+		editor.putString(prefix + "name", this.getName());
+		editor.putInt(prefix + "nick_count", this.nicknames.size());
+		for (int i = 0; i < this.nicknames.size(); i++) {
+			editor.putString(prefix + "nick_" + i, this.nicknames.get(i));
+		}
+		editor.putString(prefix + "username", this.getUsername());
+		editor.putString(prefix + "realname", this.getRealname());
+		
+		editor.putString(prefix + "host_hostname", this.host.getHostname());
+		editor.putInt(prefix + "host_port", this.host.getPort());
+		editor.putBoolean(prefix + "host_ssl", this.host.isSSL());
+		editor.putBoolean(prefix + "host_verify_ssl", this.host.verifySSL());
+		editor.putString(prefix + "host_password", this.host.getPassword());
+		
+		editor.putInt(prefix + "auto_channel_count", this.autoChannels.size());
+		for (int i = 0; i < this.autoChannels.size(); i++) {
+			editor.putString(prefix + "auto_channel_" + i, this.autoChannels.get(i));
+		}
+		editor.putInt(prefix + "auto_command_count", this.autoCommands.size());
+		for (int i = 0; i < this.autoCommands.size(); i++) {
+			editor.putString(prefix + "auto_command_" + i, this.autoCommands.get(i));
+		}
+		
+		editor.putBoolean(prefix + "auto_connect", this.isAutoConnected());
+		editor.putBoolean(prefix + "log", this.isLogged());
+		editor.apply();
 	}
 }

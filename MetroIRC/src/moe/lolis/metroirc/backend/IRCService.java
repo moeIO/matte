@@ -136,36 +136,7 @@ public class IRCService extends Service implements ServiceEventListener {
 		int serverCount = rawPreferences.getInt("server_count", 0);
 		for (int i = 0; i < serverCount; i++) {
 			ServerPreferences preference = new ServerPreferences();
-			String prefix = "server_" + i + "_";
-
-			preference.setName(rawPreferences.getString(prefix + "name", ""));
-			int nickCount = rawPreferences.getInt(prefix + "nick_count", 0);
-			for (int j = 0; j < nickCount; j++) {
-				preference.addNickname(rawPreferences.getString(prefix + "nick_" + j, "JohnDoe"));
-			}
-			preference.setUsername(rawPreferences.getString(prefix + "user", "johndoe"));
-			preference.setRealname(rawPreferences.getString(prefix + "realname", "John Doe"));
-
-			ServerPreferences.Host host = preference.new Host();
-			host.setHostname(rawPreferences.getString(prefix + "host_hostname", null));
-			host.setPort(rawPreferences.getInt(prefix + "host_port", 6667));
-			host.isSSL(rawPreferences.getBoolean(prefix + "host_ssl", false));
-			host.verifySSL(rawPreferences.getBoolean(prefix + "host_verify_ssl", false));
-			host.setPassword(rawPreferences.getString(prefix + "host_password", null));
-			preference.setHost(host);
-
-			// double fake arraying {MLG}[N0OBj3CT$]
-			int autoChannelCount = rawPreferences.getInt(prefix + "auto_channel_count", 0);
-			for (int j = 0; j < autoChannelCount; j++) {
-				preference.addAutoChannel(rawPreferences.getString(prefix + "auto_channel_" + j, ""));
-			}
-			int autoCommandCount = rawPreferences.getInt(prefix + "auto_command_count", 0);
-			for (int j = 0; j < autoCommandCount; j++) {
-				preference.addAutoCommand(rawPreferences.getString(prefix + "auto_command_" + j, ""));
-			}
-			preference.isAutoConnected(rawPreferences.getBoolean(prefix + "autoconnect", false));
-			preference.isLogged(rawPreferences.getBoolean(prefix + "log", false));
-
+			preference.loadFromSharedPreferences(rawPreferences, i);
 			preferences.add(preference);
 		}
 
