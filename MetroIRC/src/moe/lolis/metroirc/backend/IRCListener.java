@@ -20,7 +20,7 @@ public class IRCListener extends ListenerAdapter<Client> {
 	}
 
 	public void onMessage(MessageEvent<Client> event) throws Exception {
-		Server server = this.service.getServer(event.getBot().getServerInfo().getNetwork());
+		Server server = this.service.getServer(event.getBot().getServerPreferences().getName());
 		Channel channel = server.getChannel(event.getChannel().getName());
 
 		ChannelMessage message = new ChannelMessage();
