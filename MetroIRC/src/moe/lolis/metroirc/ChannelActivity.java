@@ -30,14 +30,17 @@ import android.widget.BaseExpandableListAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ExpandableListView;
+import android.widget.ExpandableListView.OnGroupClickListener;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.ExpandableListView.OnChildClickListener;
 import android.widget.TextView.OnEditorActionListener;
 
 public class ChannelActivity extends ListActivity implements
-		ServiceEventListener, OnClickListener,OnEditorActionListener {
+		ServiceEventListener, OnClickListener, OnEditorActionListener,
+		OnChildClickListener, OnGroupClickListener {
 	private ChannelActivity activity;
 	private LayoutInflater inflater;
 	private MessageAdapter adapter;
@@ -46,9 +49,12 @@ public class ChannelActivity extends ListActivity implements
 	private IRCService moeService;
 	private Channel currentChannel;
 
+	private LinearLayout channelList;
+
 	private ImageButton sendButton;
 	private EditText sendText;
 	private Button settingsButton;
+	private Button addServerButton;
 
 	/** Called when the activity is first created. */
 	@Override
@@ -81,6 +87,8 @@ public class ChannelActivity extends ListActivity implements
 		sendButton.setOnClickListener(this);
 		sendText = (EditText) this.findViewById(R.id.sendText);
 		sendText.setOnEditorActionListener(this);
+		addServerButton = (Button) this.findViewById(R.id.addServerButton);
+		addServerButton.setOnClickListener(this);
 
 		this.getListView().setTranscriptMode(
 				ListView.TRANSCRIPT_MODE_ALWAYS_SCROLL);
@@ -224,6 +232,22 @@ public class ChannelActivity extends ListActivity implements
 
 	}
 
+	public boolean onGroupClick(ExpandableListView parent, View v,
+			int groupPosition, long id) {
+		// Force groups to stay expanded
+		parent.expandGroup(groupPosition);
+		return true;
+	}
+
+	public boolean onChildClick(ExpandableListView parent, View v,
+			int groupPosition, int childPosition, long id) {
+		Channel newChannel = moeService.getServers().get(groupPosition)
+				.getChannels().get(childPosition);
+		setCurrentChannelView(newChannel);
+		hideChannelList();
+		return false;
+	}
+
 	private ServiceConnection serviceConnection = new ServiceConnection() {
 		// Called when activity connects to the service.
 		public void onServiceConnected(ComponentName className, IBinder service) {
@@ -235,12 +259,17 @@ public class ChannelActivity extends ListActivity implements
 					moeService.getServers());
 
 			// Set adapter of newly inflated container
-			LinearLayout channelList = (LinearLayout) activity
+			LinearLayout channelListPanel = (LinearLayout) activity
 					.findViewById(R.id.channelListPanel);
-			((ExpandableListView) channelList.findViewById(android.R.id.list))
-					.setAdapter(activity.channelAdapter);
+			ExpandableListView expandableChannelList = (ExpandableListView) channelListPanel
+					.findViewById(android.R.id.list);
+			expandableChannelList.setAdapter(activity.channelAdapter);
+			expandableChannelList.setOnChildClickListener(activity);
+			expandableChannelList.setOnGroupClickListener(activity);
+			channelList = (LinearLayout) activity
+					.findViewById(R.id.channelList);
 			// And hide it by default.
-			activity.findViewById(R.id.channelList).setVisibility(View.GONE);
+			hideChannelList();
 
 			settingsButton = (Button) activity
 					.findViewById(R.id.settingsButton);
@@ -257,6 +286,10 @@ public class ChannelActivity extends ListActivity implements
 
 	}
 
+	private void hideChannelList() {
+		channelList.setVisibility(View.GONE);
+	}
+
 	public void messageReceived(Channel channel) {
 		// Update the message list
 		this.runOnUiThread(new Runnable() {
@@ -266,19 +299,29 @@ public class ChannelActivity extends ListActivity implements
 		});
 	}
 
+	private void setCurrentChannelView(Channel channel) {
+		currentChannel = channel;
+		// Update the sidebar
+		channelAdapter.notifyDataSetChanged();
+		activity.setTitle(channel.getChannelInfo().getName());
+		// Set list adapter to be the messages of the connected channel,
+		// TODO: Re-creating the adapter every time may be inefficient
+		activity.adapter = new MessageAdapter(getApplicationContext(),
+				R.layout.channel_message_row, channel.getMesages());
+		activity.setListAdapter(activity.adapter);
+	}
+
 	// Switch to the new channel when it is joined
 	public void channelJoined(Channel channel) {
-		currentChannel = channel;
 		final Channel chan = channel;
 		this.runOnUiThread(new Runnable() {
 			public void run() {
-				// Update the sidebar
-				channelAdapter.notifyDataSetChanged();
-				activity.setTitle(chan.getChannelInfo().getName());
-				// Set list adapter to be the messages of the connected channel,
-				activity.adapter = new MessageAdapter(getApplicationContext(),
-						R.layout.channel_message_row, chan.getMesages());
-				activity.setListAdapter(activity.adapter);
+				setCurrentChannelView(chan);
+				// Expand newest server entry
+				int count = channelAdapter.getGroupCount();
+				for (int i = 0; i < count; i++)
+					((ExpandableListView) channelList
+							.findViewById(android.R.id.list)).expandGroup(i);
 			}
 		});
 	}
@@ -291,19 +334,19 @@ public class ChannelActivity extends ListActivity implements
 			Intent settingsIntent = new Intent(getApplicationContext(),
 					Preferences.class);
 			this.startActivity(settingsIntent);
+		} else if (v.getId() == addServerButton.getId()) {
+
 		}
 	}
-	
+
 	public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-		if (actionId == EditorInfo.IME_ACTION_SEND)
-		{
+		if (actionId == EditorInfo.IME_ACTION_SEND) {
 			this.sendMessage();
 		}
 		return false;
 	}
-	
-	private void sendMessage()
-	{
+
+	private void sendMessage() {
 		if (currentChannel != null) {
 			if (sendText.getText().length() > 0) {
 				currentChannel.sendMessage(sendText.getText().toString());
@@ -314,7 +357,6 @@ public class ChannelActivity extends ListActivity implements
 			}
 		}
 	}
-
 
 	@Override
 	public void onConfigurationChanged(Configuration newConfig) {

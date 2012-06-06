@@ -2,18 +2,34 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     android:background="#303030"
-     >
+    android:orientation="vertical" >
 
     <ExpandableListView
         android:id="@+id/android:list"
         android:layout_width="match_parent"
         android:layout_height="0dp"
+        android:layout_weight="1"
         android:divider="#e3e3e3"
         android:dividerHeight="0px"
-        android:footerDividersEnabled="false" android:layout_weight="1">
+        android:footerDividersEnabled="false"
+        android:groupIndicator="@null" >
     </ExpandableListView>
+
+    <Button
+        android:id="@+id/addServerButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="1dp"
+        android:layout_marginLeft="10dp"
+        android:layout_weight="0"
+        android:background="@null"
+        android:gravity="left|center_vertical"
+        android:text="@string/addServer"
+        android:textColor="#9f9f9f"
+        android:textSize="14dp"
+        android:textStyle="bold"
+         />
 
     <Button
         android:id="@+id/settingsButton"
@@ -21,10 +37,12 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="1dp"
         android:layout_marginLeft="10dp"
-        android:background="@android:color/transparent"
+        android:layout_weight="0"
+        android:background="@null"
+        android:gravity="left|center_vertical"
         android:text="@string/settings"
         android:textColor="#9f9f9f"
         android:textSize="14dp"
-        android:textStyle="bold" android:layout_weight="0"/>
+        android:textStyle="bold" />
 
 </LinearLayout>
