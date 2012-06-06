@@ -5,7 +5,9 @@ import java.util.HashMap;
 import javax.net.ssl.SSLSocketFactory;
 
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Binder;
 import android.os.IBinder;
@@ -46,28 +48,17 @@ public class IRCService extends Service implements ServiceEventListener {
 	public void onCreate() {
 		this.servers = new HashMap<String, Server>();
 		this.clientManager = new ClientManager();
-
-		// TODO: get server preferences from config file.
-		// For now, use dummy data.
-		ArrayList<ServerPreferences> prefs = new ArrayList<ServerPreferences>();
-		ServerPreferences p = new ServerPreferences();
-		p.setName("Rizon");
-		p.addNickname("JohnDoe");
-		p.setUsername("johndoe");
-		p.setRealname("MetroIRC");
-		p.addHost(p.new Host("irc.lolipower.org", 6697, true, null));
-		p.addAutoChannel("#metroirc");
-		p.isAutoConnected(true);
-		prefs.add(p);
-
 		this.listener = new IRCListener(this);
 		this.connectionTask = new ConnectTask();
-
-		for (ServerPreferences serverPrefs : prefs) {
+		
+		// Load preferences from configuration.
+		ArrayList<ServerPreferences> preferences = this.loadPreferences();
+		for (ServerPreferences serverPrefs : preferences) {
 			if (serverPrefs.isAutoConnected()) {
 				this.connectionTask.execute(new ServerPreferences[] { serverPrefs });
 			}
 		}
+		
 		super.onCreate();
 	}
 
@@ -80,6 +71,56 @@ public class IRCService extends Service implements ServiceEventListener {
 	@Override
 	public void onStart(Intent intent, int startId) {
 
+	}
+	
+	// Load preferences.
+	public ArrayList<ServerPreferences> loadPreferences() {
+		ArrayList<ServerPreferences> preferences = new ArrayList<ServerPreferences>();
+		SharedPreferences rawPreferences = this.getSharedPreferences("servers", Context.MODE_PRIVATE);
+		
+		// decent arrays r 4 scrubs, id rather smoke weed
+		int serverCount = rawPreferences.getInt("server_count", 0);
+		for (int i = 0; i < serverCount; i++) {
+			ServerPreferences preference = new ServerPreferences();
+			String prefix = "server_" + i + "_";
+			
+			preference.setName(rawPreferences.getString(prefix + "name", ""));
+			int nickCount = rawPreferences.getInt(prefix + "nick_count", 0);
+			for (int j = 0; j < nickCount; j++) {
+				preference.addNickname(rawPreferences.getString(prefix + "nick_" + j, "JohnDoe"));
+			}
+			preference.setUsername(rawPreferences.getString(prefix + "user", "johndoe"));
+			preference.setRealname(rawPreferences.getString(prefix + "realname", "John Doe"));
+			
+			// double fake arraying {MLG}[N0OBj3CT$]
+			int hostCount = rawPreferences.getInt(prefix + "host_count", 0);
+			for (int j = 0; j < hostCount; j++) {
+				String hostPrefix = prefix + "_host_" + j + "_";
+				
+				ServerPreferences.Host host = preference.new Host();
+				host.setHostname(rawPreferences.getString(hostPrefix + "hostname" , null));
+				host.setPort(rawPreferences.getInt(hostPrefix + "post", 6667));
+				host.isSSL(rawPreferences.getBoolean(hostPrefix + "ssl", false));
+				host.verifySSL(rawPreferences.getBoolean(hostPrefix + "verify_ssl", false));
+				host.setPassword(rawPreferences.getString(hostPrefix + "password", null));
+				preference.addHost(host);
+			}
+			
+			int autoChannelCount = rawPreferences.getInt(prefix + "auto_channel_count", 0);
+			for (int j = 0; j < autoChannelCount; j++) {
+				preference.addAutoChannel(rawPreferences.getString(prefix + "auto_channel_" + j, ""));
+			}
+			int autoCommandCount = rawPreferences.getInt(prefix + "auto_command_count", 0);
+			for (int j = 0; j < autoCommandCount; j++) {
+				preference.addAutoCommand(rawPreferences.getString(prefix + "auto_command_" + j, ""));
+			}
+			preference.isAutoConnected(rawPreferences.getBoolean(prefix + "autoconnect", false));
+			preference.isLogged(rawPreferences.getBoolean(prefix + "log", false));
+			
+			preferences.add(preference);
+		}
+		
+		return preferences;
 	}
 
 	// Asynchronous connect (Can't have UI networking)
