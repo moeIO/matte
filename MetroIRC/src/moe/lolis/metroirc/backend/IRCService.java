@@ -1,9 +1,21 @@
 package moe.lolis.metroirc.backend;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+
 import javax.net.ssl.SSLSocketFactory;
 
+import moe.lolis.metroirc.ChannelActivity;
+import moe.lolis.metroirc.irc.Channel;
+import moe.lolis.metroirc.irc.Client;
+import moe.lolis.metroirc.irc.ClientManager;
+import moe.lolis.metroirc.irc.Server;
+import moe.lolis.metroirc.irc.ServerPreferences;
+
+import org.pircbotx.UtilSSLSocketFactory;
+
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -12,13 +24,6 @@ import android.os.AsyncTask;
 import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
-
-import org.pircbotx.UtilSSLSocketFactory;
-import moe.lolis.metroirc.irc.Client;
-import moe.lolis.metroirc.irc.ClientManager;
-import moe.lolis.metroirc.irc.Channel;
-import moe.lolis.metroirc.irc.Server;
-import moe.lolis.metroirc.irc.ServerPreferences;
 
 public class IRCService extends Service implements ServiceEventListener {
 	public class IRCBinder extends Binder {
@@ -32,7 +37,10 @@ public class IRCService extends Service implements ServiceEventListener {
 	private IRCListener listener;
 	private ConnectTask connectionTask;
 	private ClientManager clientManager;
-	private HashMap<String, Server> servers;
+	private ArrayList<Server> servers;
+	
+	private Notification constantNotification;
+	private static final int CONSTANT_ID = 1;
 
 	@Override
 	public IBinder onBind(Intent intent) {
@@ -46,7 +54,7 @@ public class IRCService extends Service implements ServiceEventListener {
 
 	@Override
 	public void onCreate() {
-		this.servers = new HashMap<String, Server>();
+		this.servers = new ArrayList<Server>();
 		this.clientManager = new ClientManager();
 		this.listener = new IRCListener(this);
 		this.connectionTask = new ConnectTask();
@@ -58,12 +66,14 @@ public class IRCService extends Service implements ServiceEventListener {
 				this.connectionTask.execute(new ServerPreferences[] { serverPrefs });
 			}
 		}
-		
+		//XXX Remove
+		this.connectionTask.execute(new ServerPreferences[] { null });
 		super.onCreate();
 	}
 
 	@Override
 	public void onDestroy() {
+		this.hideConntectedNotification();
 		super.onDestroy();
 	}
 
@@ -134,6 +144,22 @@ public class IRCService extends Service implements ServiceEventListener {
 			}
 			preferences = arguments[0];
 
+			if (preferences==null)
+			{
+				try{
+					this.client = new Client();
+					this.client.getListenerManager().addListener(listener);
+				this.client.setName("Guy-sama");
+				this.client.connect("irc.rizon.net");
+				}
+				catch (Exception ex)
+				{
+					
+				}
+				return true;
+			}
+			else
+			{
 			this.client = clientManager.createClient(preferences);
 			this.client.getListenerManager().addListener(listener);
 			
@@ -156,22 +182,55 @@ public class IRCService extends Service implements ServiceEventListener {
 					return false;
 				}
 			}
-
+			
 			return connected;
+			}
 		}
 
 		protected void onPostExecute(Boolean succesful) {
 			if (succesful) {
+				showConnectedNotification();
 				Server server = new Server();
-				servers.put(this.client.getServerInfo().getNetwork(), server);
+				server.setServerInfo(this.client.getServerInfo());
+				servers.add(server);
 
+				/*
 				// Automatically join channels after connecting (Afterwards so
 				// that server list is ready)
 				for (String channel : preferences.getAutoChannels()) {
 					this.client.joinChannel(channel);
 				}
+				*/
+				this.client.joinChannel("#metroirc");
+				this.client.joinChannel("#metroirc2");
 			}
 		}
+	}
+	
+	private void showConnectedNotification(){
+		String ns = Context.NOTIFICATION_SERVICE;
+		NotificationManager mNotificationManager = (NotificationManager) getSystemService(ns);
+
+		//XXX Using the deprecated API to support <3.0 (Need to switch to new API + compat package)
+		int icon = moe.lolis.metroirc.R.drawable.ic_launcher;
+		constantNotification = new Notification(icon, "MetroIRC connected",0);
+
+		Context context = getApplicationContext();
+		CharSequence contentTitle = "MetroIRC";
+		CharSequence contentText = "Connected";
+		Intent notificationIntent = new Intent(this, ChannelActivity.class);
+		PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
+				notificationIntent, 0);
+
+		constantNotification.setLatestEventInfo(context,contentTitle, contentText, contentIntent);
+		constantNotification.flags = Notification.FLAG_ONGOING_EVENT;
+		mNotificationManager.notify(CONSTANT_ID, constantNotification);
+	}
+	
+	private void hideConntectedNotification(){
+		String ns = Context.NOTIFICATION_SERVICE;
+		NotificationManager mNotificationManager = (NotificationManager) getSystemService(ns);
+		mNotificationManager.cancel(CONSTANT_ID);
 	}
 
 	public void messageReceived(Channel channel) {
@@ -179,10 +238,16 @@ public class IRCService extends Service implements ServiceEventListener {
 	}
 
 	public Server getServer(String name) {
-		return this.servers.get(name);
+		//XXX Mining, wahoo!
+		for (Server s : servers)
+		{
+			if (s.getServerInfo().getNetwork().equals(name))
+				return s;
+		}
+		return null;
 	}
 
-	public HashMap<String, Server> getServers() {
+	public ArrayList<Server> getServers() {
 		return this.servers;
 	}
 

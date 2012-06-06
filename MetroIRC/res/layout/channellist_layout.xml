@@ -1,17 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="wrap_content"
+    android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical" android:layout_gravity="top">
+    android:orientation="vertical"
+    android:background="#303030"
+     >
 
-    <ListView
+    <ExpandableListView
         android:id="@+id/android:list"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:background="#303030"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
         android:divider="#e3e3e3"
         android:dividerHeight="0px"
-        android:footerDividersEnabled="false" >
-    </ListView>
+        android:footerDividersEnabled="false" android:layout_weight="1">
+    </ExpandableListView>
+
+    <Button
+        android:id="@+id/settingsButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="1dp"
+        android:layout_marginLeft="10dp"
+        android:background="@android:color/transparent"
+        android:text="@string/settings"
+        android:textColor="#9f9f9f"
+        android:textSize="14dp"
+        android:textStyle="bold" android:layout_weight="0"/>
 
 </LinearLayout>

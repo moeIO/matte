@@ -6,6 +6,7 @@ import moe.lolis.metroirc.backend.IRCService;
 import moe.lolis.metroirc.backend.ServiceEventListener;
 import moe.lolis.metroirc.irc.Channel;
 import moe.lolis.metroirc.irc.ChannelMessage;
+import moe.lolis.metroirc.irc.Server;
 import android.app.ActionBar;
 import android.app.ListActivity;
 import android.content.ComponentName;
@@ -15,6 +16,7 @@ import android.content.ServiceConnection;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -22,15 +24,20 @@ import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.view.ViewStub;
 import android.view.WindowManager;
+import android.view.inputmethod.EditorInfo;
 import android.widget.ArrayAdapter;
+import android.widget.BaseExpandableListAdapter;
+import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ExpandableListView;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.TextView.OnEditorActionListener;
 
 public class ChannelActivity extends ListActivity implements
-		ServiceEventListener, OnClickListener {
+		ServiceEventListener, OnClickListener,OnEditorActionListener {
 	private ChannelActivity activity;
 	private LayoutInflater inflater;
 	private MessageAdapter adapter;
@@ -41,6 +48,7 @@ public class ChannelActivity extends ListActivity implements
 
 	private ImageButton sendButton;
 	private EditText sendText;
+	private Button settingsButton;
 
 	/** Called when the activity is first created. */
 	@Override
@@ -69,30 +77,10 @@ public class ChannelActivity extends ListActivity implements
 				.findViewById(R.id.channelListStub);
 		channelListContainer.inflate();
 
-		// Some fake data
-		ArrayList<ChannelListEntry> channels = new ArrayList<ChannelListEntry>();
-		ChannelListEntry serv = new ChannelListEntry();
-		serv.type = ChannelListEntry.Type.Server;
-		serv.name = "!Rizon";
-		channels.add(serv);
-		ChannelListEntry chan = new ChannelListEntry();
-		chan.type = ChannelListEntry.Type.Channel;
-		chan.name = "#coolchannel";
-		channels.add(chan);
-		this.channelAdapter = new ChannelListAdapter(getApplicationContext(),
-				R.layout.channel_message_row, channels);
-
-		// Set adapter of newly inflated container
-		LinearLayout channelList = (LinearLayout) this
-				.findViewById(R.id.channelListPanel);
-		((ListView) channelList.findViewById(android.R.id.list))
-				.setAdapter(this.channelAdapter);
-		// And hide it by default.
-		this.findViewById(R.id.channelList).setVisibility(View.GONE);
-
 		sendButton = (ImageButton) this.findViewById(R.id.sendButton);
 		sendButton.setOnClickListener(this);
 		sendText = (EditText) this.findViewById(R.id.sendText);
+		sendText.setOnEditorActionListener(this);
 
 		this.getListView().setTranscriptMode(
 				ListView.TRANSCRIPT_MODE_ALWAYS_SCROLL);
@@ -168,34 +156,72 @@ public class ChannelActivity extends ListActivity implements
 	 * Sidebar
 	 */
 	// Adapter that handles the message list
-	private class ChannelListAdapter extends ArrayAdapter<ChannelListEntry> {
+	private class ChannelListAdapter extends BaseExpandableListAdapter {
 
-		private ArrayList<ChannelListEntry> items;
+		private ArrayList<Server> servers;
 
-		public ChannelListAdapter(Context context, int textViewResourceId,
-				ArrayList<ChannelListEntry> items) {
-			super(context, textViewResourceId, items);
-			this.items = items;
+		public ChannelListAdapter(ArrayList<Server> servers) {
+			super();
+			this.servers = servers;
 		}
 
-		@Override
-		public View getView(int position, View convertView, ViewGroup parent) {
-			ChannelListEntry entry = items.get(position);
+		public Object getChild(int groupPos, int childPos) {
+			return servers.get(groupPos).getChannels().get(childPos);
+		}
+
+		public long getChildId(int groupPosition, int childPosition) {
+			return childPosition;
+		}
+
+		public View getChildView(int groupPosition, int childPosition,
+				boolean isLastChild, View convertView, ViewGroup parent) {
+			Channel c = servers.get(groupPosition).getChannels()
+					.get(childPosition);
 			if (convertView == null) {
-				if (entry.type == ChannelListEntry.Type.Server) {
-					convertView = inflater.inflate(R.layout.channellist_server,
-							null);
-				} else if (entry.type == ChannelListEntry.Type.Channel) {
-					convertView = inflater.inflate(
-							R.layout.channellist_channel, null);
-				}
+				convertView = inflater.inflate(R.layout.channellist_channel,
+						null);
 			}
-
 			TextView name = (TextView) convertView.findViewById(R.id.name);
-			name.setText(entry.name);
-
+			name.setText(c.getChannelInfo().getName());
 			return convertView;
 		}
+
+		public int getChildrenCount(int groupPosition) {
+			return servers.get(groupPosition).getChannels().size();
+		}
+
+		public Object getGroup(int groupPosition) {
+			return servers.get(groupPosition);
+		}
+
+		public int getGroupCount() {
+			return servers.size();
+		}
+
+		public long getGroupId(int groupPosition) {
+			return groupPosition;
+		}
+
+		public View getGroupView(int groupPosition, boolean isExpanded,
+				View convertView, ViewGroup parent) {
+			Server s = servers.get(groupPosition);
+			if (convertView == null) {
+				convertView = inflater.inflate(R.layout.channellist_server,
+						null);
+			}
+			TextView name = (TextView) convertView.findViewById(R.id.name);
+			name.setText(s.getServerInfo().getNetwork());
+			return convertView;
+		}
+
+		public boolean hasStableIds() {
+			return true;
+		}
+
+		public boolean isChildSelectable(int groupPosition, int childPosition) {
+			return true;
+		}
+
 	}
 
 	private ServiceConnection serviceConnection = new ServiceConnection() {
@@ -204,6 +230,21 @@ public class ChannelActivity extends ListActivity implements
 			moeService = ((IRCService.IRCBinder) service).getService();
 			moeService.connectedEventListener = activity;
 			activity.serviceConnected();
+
+			activity.channelAdapter = new ChannelListAdapter(
+					moeService.getServers());
+
+			// Set adapter of newly inflated container
+			LinearLayout channelList = (LinearLayout) activity
+					.findViewById(R.id.channelListPanel);
+			((ExpandableListView) channelList.findViewById(android.R.id.list))
+					.setAdapter(activity.channelAdapter);
+			// And hide it by default.
+			activity.findViewById(R.id.channelList).setVisibility(View.GONE);
+
+			settingsButton = (Button) activity
+					.findViewById(R.id.settingsButton);
+			settingsButton.setOnClickListener(activity);
 		}
 
 		// Called when the activity disconnects from the service.
@@ -245,20 +286,39 @@ public class ChannelActivity extends ListActivity implements
 	public void onClick(View v) {
 		// Send button clicked
 		if (v.getId() == sendButton.getId()) {
-			if (currentChannel != null) {
-				if (sendText.getText().length() > 0) {
-					currentChannel.sendMessage(sendText.getText().toString());
-					sendText.setText("");
-					// Update UI because sent message does not come in as an
-					// event
-					adapter.notifyDataSetChanged();
-				}
+			this.sendMessage();
+		} else if (v.getId() == settingsButton.getId()) {
+			Intent settingsIntent = new Intent(getApplicationContext(),
+					Preferences.class);
+			this.startActivity(settingsIntent);
+		}
+	}
+	
+	public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+		if (actionId == EditorInfo.IME_ACTION_SEND)
+		{
+			this.sendMessage();
+		}
+		return false;
+	}
+	
+	private void sendMessage()
+	{
+		if (currentChannel != null) {
+			if (sendText.getText().length() > 0) {
+				currentChannel.sendMessage(sendText.getText().toString());
+				sendText.setText("");
+				// Update UI because sent message does not come in as an
+				// event
+				adapter.notifyDataSetChanged();
 			}
 		}
 	}
+
 
 	@Override
 	public void onConfigurationChanged(Configuration newConfig) {
 		super.onConfigurationChanged(newConfig);
 	}
+
 }

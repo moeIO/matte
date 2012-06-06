@@ -50,7 +50,8 @@
                 android:layout_weight="1"
                 android:ems="10"
                 android:hint="Enter message"
-                android:textColor="#000000" />
+                android:textColor="#000000" 
+                android:imeOptions="actionSend"/>
 
             <ImageButton
                 android:id="@+id/sendButton"
