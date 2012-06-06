@@ -1,6 +1,7 @@
 package moe.lolis.metroirc;
 
 import java.util.ArrayList;
+import java.util.prefs.Preferences;
 
 import moe.lolis.metroirc.backend.IRCService;
 import moe.lolis.metroirc.backend.ServiceEventListener;

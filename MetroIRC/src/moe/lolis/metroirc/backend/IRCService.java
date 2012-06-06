@@ -61,26 +61,37 @@ public class IRCService extends Service implements ServiceEventListener {
 		
 		// Load preferences from configuration.
 		ArrayList<ServerPreferences> preferences = this.loadPreferences();
+		// Guy-kun a shit - temporary test preferences until we've made an actual UI.
+		ServerPreferences prefs = new ServerPreferences();
+		prefs.setName("Rizon");
+		prefs.addNickname("Metro-sama");
+		prefs.addNickname("Metro-chan");
+		prefs.setUsername("metroirc");
+		prefs.setRealname("MetroIRC");
+		prefs.setHost("irc.lolipower.org", 6697, true, null);
+		prefs.addAutoChannel("#metroirc");
+		prefs.addAutoChannel("#metroirc2");
+		prefs.isAutoConnected(true);
+		preferences.add(prefs);
+		
 		for (ServerPreferences serverPrefs : preferences) {
 			if (serverPrefs.isAutoConnected()) {
 				this.connectionTask.execute(new ServerPreferences[] { serverPrefs });
 			}
 		}
-		//XXX Remove
-		this.connectionTask.execute(new ServerPreferences[] { null });
 		super.onCreate();
 	}
 
 	@Override
 	public void onDestroy() {
-		this.hideConntectedNotification();
+		this.hideConnectedNotification();
 		super.onDestroy();
 	}
 
-	// Service started
+	// Service started.
 	@Override
-	public void onStart(Intent intent, int startId) {
-
+	public int onStartCommand(Intent intent, int flags, int startID) {
+		return Service.START_STICKY;
 	}
 	
 	// Load preferences.
@@ -102,20 +113,15 @@ public class IRCService extends Service implements ServiceEventListener {
 			preference.setUsername(rawPreferences.getString(prefix + "user", "johndoe"));
 			preference.setRealname(rawPreferences.getString(prefix + "realname", "John Doe"));
 			
+			ServerPreferences.Host host = preference.new Host();
+			host.setHostname(rawPreferences.getString(prefix + "host_hostname" , null));
+			host.setPort(rawPreferences.getInt(prefix + "host_port", 6667));
+			host.isSSL(rawPreferences.getBoolean(prefix + "host_ssl", false));
+			host.verifySSL(rawPreferences.getBoolean(prefix + "host_verify_ssl", false));
+			host.setPassword(rawPreferences.getString(prefix + "host_password", null));
+			preference.setHost(host);
+						
 			// double fake arraying {MLG}[N0OBj3CT$]
-			int hostCount = rawPreferences.getInt(prefix + "host_count", 0);
-			for (int j = 0; j < hostCount; j++) {
-				String hostPrefix = prefix + "_host_" + j + "_";
-				
-				ServerPreferences.Host host = preference.new Host();
-				host.setHostname(rawPreferences.getString(hostPrefix + "hostname" , null));
-				host.setPort(rawPreferences.getInt(hostPrefix + "post", 6667));
-				host.isSSL(rawPreferences.getBoolean(hostPrefix + "ssl", false));
-				host.verifySSL(rawPreferences.getBoolean(hostPrefix + "verify_ssl", false));
-				host.setPassword(rawPreferences.getString(hostPrefix + "password", null));
-				preference.addHost(host);
-			}
-			
 			int autoChannelCount = rawPreferences.getInt(prefix + "auto_channel_count", 0);
 			for (int j = 0; j < autoChannelCount; j++) {
 				preference.addAutoChannel(rawPreferences.getString(prefix + "auto_channel_" + j, ""));
@@ -142,78 +148,56 @@ public class IRCService extends Service implements ServiceEventListener {
 			if (arguments.length < 1) {
 				return false;
 			}
-			preferences = arguments[0];
+			this.preferences = arguments[0];
 
-			if (preferences==null)
-			{
-				try{
-					this.client = new Client();
-					this.client.getListenerManager().addListener(listener);
-				this.client.setName("Guy-sama");
-				this.client.connect("irc.rizon.net");
-				}
-				catch (Exception ex)
-				{
-					
-				}
-				return true;
-			}
-			else
-			{
-			this.client = clientManager.createClient(preferences);
-			this.client.getListenerManager().addListener(listener);
+			this.client = IRCService.this.clientManager.createClient(this.preferences);
+			this.client.getListenerManager().addListener(IRCService.this.listener);
 			
 			// Attempt to connect to the server.
 			boolean connected = false;
-			for (ServerPreferences.Host host : preferences.getHosts()) {
-				try {
-					if (host.isSSL()) {
-						if (host.verifySSL()) {
-							this.client.connect(host.getHostname(), host.getPort(), host.getPassword(), SSLSocketFactory.getDefault());
-						} else {
-							this.client.connect(host.getHostname(), host.getPort(), host.getPassword(), new UtilSSLSocketFactory().trustAllCertificates());
-						}
+			ServerPreferences.Host host = this.preferences.getHost();
+			try {
+				if (host.isSSL()) {
+					if (host.verifySSL()) {
+						this.client.connect(host.getHostname(), host.getPort(), host.getPassword(), SSLSocketFactory.getDefault());
 					} else {
-						this.client.connect(host.getHostname(), host.getPort(), host.getPassword());
+						this.client.connect(host.getHostname(), host.getPort(), host.getPassword(), new UtilSSLSocketFactory().trustAllCertificates());
 					}
-					connected = true;
-				} catch (Exception ex) {
-					Log.e("whoops", ex.getMessage());
-					return false;
+				} else {
+					this.client.connect(host.getHostname(), host.getPort(), host.getPassword());
 				}
+				connected = true;
+			} catch (Exception ex) {
+				Log.e("whoops", ex.getMessage());
+				return false;
 			}
 			
 			return connected;
-			}
 		}
 
 		protected void onPostExecute(Boolean succesful) {
 			if (succesful) {
-				showConnectedNotification();
+				IRCService.this.showConnectedNotification();
 				Server server = new Server();
 				server.setServerInfo(this.client.getServerInfo());
-				servers.add(server);
+				IRCService.this.servers.add(server);
 
-				/*
 				// Automatically join channels after connecting (Afterwards so
 				// that server list is ready)
-				for (String channel : preferences.getAutoChannels()) {
+				for (String channel : this.preferences.getAutoChannels()) {
 					this.client.joinChannel(channel);
 				}
-				*/
-				this.client.joinChannel("#metroirc");
-				this.client.joinChannel("#metroirc2");
 			}
 		}
 	}
 	
-	private void showConnectedNotification(){
+	private void showConnectedNotification() {
 		String ns = Context.NOTIFICATION_SERVICE;
-		NotificationManager mNotificationManager = (NotificationManager) getSystemService(ns);
+		NotificationManager notificationManager = (NotificationManager) this.getSystemService(ns);
 
 		//XXX Using the deprecated API to support <3.0 (Need to switch to new API + compat package)
 		int icon = moe.lolis.metroirc.R.drawable.ic_launcher;
-		constantNotification = new Notification(icon, "MetroIRC connected",0);
+		this.constantNotification = new Notification(icon, "MetroIRC connected",0);
 
 		Context context = getApplicationContext();
 		CharSequence contentTitle = "MetroIRC";
@@ -222,15 +206,15 @@ public class IRCService extends Service implements ServiceEventListener {
 		PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
 				notificationIntent, 0);
 
-		constantNotification.setLatestEventInfo(context,contentTitle, contentText, contentIntent);
-		constantNotification.flags = Notification.FLAG_ONGOING_EVENT;
-		mNotificationManager.notify(CONSTANT_ID, constantNotification);
+		this.constantNotification.setLatestEventInfo(context, contentTitle, contentText, contentIntent);
+		this.constantNotification.flags = Notification.FLAG_ONGOING_EVENT;
+		notificationManager.notify(CONSTANT_ID, this.constantNotification);
 	}
 	
-	private void hideConntectedNotification(){
+	private void hideConnectedNotification() {
 		String ns = Context.NOTIFICATION_SERVICE;
-		NotificationManager mNotificationManager = (NotificationManager) getSystemService(ns);
-		mNotificationManager.cancel(CONSTANT_ID);
+		NotificationManager notificationManager = (NotificationManager) this.getSystemService(ns);
+		notificationManager.cancel(CONSTANT_ID);
 	}
 
 	public void messageReceived(Channel channel) {
@@ -239,10 +223,10 @@ public class IRCService extends Service implements ServiceEventListener {
 
 	public Server getServer(String name) {
 		//XXX Mining, wahoo!
-		for (Server s : servers)
-		{
-			if (s.getServerInfo().getNetwork().equals(name))
+		for (Server s : servers) {
+			if (s.getServerInfo().getNetwork().equals(name)) {
 				return s;
+			}
 		}
 		return null;
 	}

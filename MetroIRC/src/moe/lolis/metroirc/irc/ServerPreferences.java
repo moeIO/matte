@@ -3,13 +3,6 @@ package moe.lolis.metroirc.irc;
 import java.util.ArrayList;
 
 public class ServerPreferences {
-	// User-friendly name.
-	private String name;
-
-	// List of all nicknames to attempt.
-	private ArrayList<String> nicknames = new ArrayList<String>();
-	private String username;
-	private String realname;
 
 	// Host abstraction.
 	public class Host {
@@ -71,7 +64,14 @@ public class ServerPreferences {
 		}
 	}
 
-	private ArrayList<Host> hosts;
+	// User-friendly name.
+	private String name;
+
+	// List of all nicknames to attempt.
+	private ArrayList<String> nicknames = new ArrayList<String>();
+	private String username;
+	private String realname;
+	private Host host;
 
 	// List of channels to automatically join.
 	private ArrayList<String> autoChannels = new ArrayList<String>();
@@ -82,10 +82,9 @@ public class ServerPreferences {
 	private boolean doLog = false;
 
 	public ServerPreferences() {
-		hosts = new ArrayList<ServerPreferences.Host>();
-		nicknames = new ArrayList<String>();
-		autoChannels = new ArrayList<String>();
-		autoCommands = new ArrayList<String>();
+		this.nicknames = new ArrayList<String>();
+		this.autoChannels = new ArrayList<String>();
+		this.autoCommands = new ArrayList<String>();
 	}
 
 	// Boilerplate getter/setters.
@@ -129,29 +128,21 @@ public class ServerPreferences {
 		return this.realname;
 	}
 
-	public void addHost(Host host) {
-		this.hosts.add(host);
+	public void setHost(Host host) {
+		this.host = host;
 	}
 
-	public void addHost(String hostname, int port, boolean ssl, String password) {
+	public void setHost(String hostname, int port, boolean ssl, String password) {
 		Host host = new Host();
 		host.setHostname(hostname);
 		host.setPort(port);
 		host.isSSL(ssl);
 		host.setPassword(password);
-		this.addHost(host);
+		this.setHost(host);
 	}
 
-	public ArrayList<Host> getHosts() {
-		return this.hosts;
-	}
-
-	public void setHosts(ArrayList<Host> hosts) {
-		this.hosts = hosts;
-	}
-
-	public void removeHost(Host host) {
-		this.hosts.remove(host);
+	public Host getHost() {
+		return this.host;
 	}
 
 	public void addAutoChannel(String channel) {
