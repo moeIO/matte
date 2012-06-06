@@ -2,13 +2,6 @@ package moe.lolis.metroirc;
 
 import java.util.ArrayList;
 
-import moe.lolis.metroirc.backend.IRCService;
-import moe.lolis.metroirc.backend.ServiceEventListener;
-import moe.lolis.metroirc.irc.Channel;
-import moe.lolis.metroirc.irc.ChannelMessage;
-import moe.lolis.metroirc.irc.Server;
-import moe.lolis.metroirc.irc.ServerPreferences;
-import moe.lolis.metroirc.irc.ServerPreferences.Host;
 import android.app.ActionBar;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -43,6 +36,13 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.TextView.OnEditorActionListener;
+
+import moe.lolis.metroirc.backend.IRCService;
+import moe.lolis.metroirc.backend.ServiceEventListener;
+import moe.lolis.metroirc.irc.Channel;
+import moe.lolis.metroirc.irc.ChannelMessage;
+import moe.lolis.metroirc.irc.Server;
+import moe.lolis.metroirc.irc.ServerPreferences;
 
 public class ChannelActivity extends ListActivity implements ServiceEventListener, OnClickListener, OnEditorActionListener, OnChildClickListener,
 		OnGroupClickListener {
@@ -214,7 +214,7 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 				convertView = inflater.inflate(R.layout.channellist_server, null);
 			}
 			TextView name = (TextView) convertView.findViewById(R.id.name);
-			name.setText(s.getServerInfo().getNetwork());
+			name.setText(s.getName());
 			return convertView;
 		}
 
@@ -340,7 +340,7 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 
 						public void onClick(View view) {
 							ServerPreferences prefs = new ServerPreferences();
-							Host host = prefs.new Host();
+							ServerPreferences.Host host = prefs.new Host();
 							prefs.setHost(host);
 
 							boolean success = true;
@@ -430,8 +430,7 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 				}
 			});
 			d.show();
-		} else if (v.getId()==quitButton.getId())
-		{
+		} else if (v.getId()==quitButton.getId()) 	{
 			moeService.stopService();
 			this.finish();
 		}

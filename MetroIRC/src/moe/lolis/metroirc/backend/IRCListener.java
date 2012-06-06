@@ -33,7 +33,7 @@ public class IRCListener extends ListenerAdapter<Client> {
 	}
 
 	public void onJoin(JoinEvent<Client> event) {
-		Server server = this.service.getServer(event.getBot().getServerInfo().getNetwork());
+		Server server = this.service.getServer(event.getBot().getServerPreferences().getName());
 		Channel channel = server.getChannel(event.getChannel().getName());
 		
 		if (channel == null) {

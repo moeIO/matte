@@ -12,11 +12,7 @@ public class ClientManager {
 
 	public Client createClient(ServerPreferences preferences) {
 		Client client = new Client();
-
-		client.setNicks(preferences.getNicknames());
-		client.setLogin(preferences.getUsername());
-		client.setFinger(preferences.getNicknames().get(0));
-		client.setRealname(preferences.getRealname());
+		client.loadFromPreferences(preferences);
 		client.setAutoNickChange(true);
 		client.setAutoSplitMessage(true);
 		client.setEncoding(Charset.forName("UTF-8"));

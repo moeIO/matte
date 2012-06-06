@@ -21,6 +21,7 @@ public class Client extends PircBotX {
 	public static final String VERSION = "1.0";
 	protected ArrayList<String> availableNicks;
 	protected String realname = "John Doe";
+	protected ServerPreferences serverPreferences;
 	
 	public Client() {
 		super();
@@ -151,5 +152,21 @@ public class Client extends PircBotX {
 	
 	public String getRealname() {
 		return this.realname;
+	}
+	
+	public void setServerPreferences(ServerPreferences serverPrefs) {
+		this.serverPreferences = serverPrefs;
+	}
+	
+	public ServerPreferences getServerPreferences() {
+		return this.serverPreferences;
+	}
+	
+	public void loadFromPreferences(ServerPreferences preferences) {
+		this.setNicks(preferences.getNicknames());
+		this.setLogin(preferences.getUsername());
+		this.setFinger(preferences.getNicknames().get(0));
+		this.setRealname(preferences.getRealname());
+		this.setServerPreferences(preferences);
 	}
 }

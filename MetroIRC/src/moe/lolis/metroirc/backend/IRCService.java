@@ -1,17 +1,8 @@
 package moe.lolis.metroirc.backend;
 
 import java.util.ArrayList;
-
+import java.util.HashMap;
 import javax.net.ssl.SSLSocketFactory;
-
-import moe.lolis.metroirc.ChannelActivity;
-import moe.lolis.metroirc.irc.Channel;
-import moe.lolis.metroirc.irc.Client;
-import moe.lolis.metroirc.irc.ClientManager;
-import moe.lolis.metroirc.irc.Server;
-import moe.lolis.metroirc.irc.ServerPreferences;
-
-import org.pircbotx.UtilSSLSocketFactory;
 
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -25,6 +16,14 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
 
+import org.pircbotx.UtilSSLSocketFactory;
+import moe.lolis.metroirc.ChannelActivity;
+import moe.lolis.metroirc.irc.Channel;
+import moe.lolis.metroirc.irc.Client;
+import moe.lolis.metroirc.irc.ClientManager;
+import moe.lolis.metroirc.irc.Server;
+import moe.lolis.metroirc.irc.ServerPreferences;
+
 public class IRCService extends Service implements ServiceEventListener {
 	public class IRCBinder extends Binder {
 		public IRCService getService() {
@@ -37,6 +36,7 @@ public class IRCService extends Service implements ServiceEventListener {
 	private IRCListener listener;
 	private ConnectTask connectionTask;
 	private ClientManager clientManager;
+	private HashMap<String, Server> serverMap;
 	private ArrayList<Server> servers;
 
 	private Notification constantNotification;
@@ -56,6 +56,7 @@ public class IRCService extends Service implements ServiceEventListener {
 	@Override
 	public void onCreate() {
 		this.servers = new ArrayList<Server>();
+		this.serverMap = new HashMap<String, Server>();
 		this.clientManager = new ClientManager();
 		this.listener = new IRCListener(this);
 		this.connectionTask = new ConnectTask();
@@ -193,8 +194,7 @@ public class IRCService extends Service implements ServiceEventListener {
 					if (host.verifySSL()) {
 						this.client.connect(host.getHostname(), host.getPort(), host.getPassword(), SSLSocketFactory.getDefault());
 					} else {
-						this.client
-								.connect(host.getHostname(), host.getPort(), host.getPassword(), new UtilSSLSocketFactory().trustAllCertificates());
+						this.client.connect(host.getHostname(), host.getPort(), host.getPassword(), new UtilSSLSocketFactory().trustAllCertificates());
 					}
 				} else {
 					this.client.connect(host.getHostname(), host.getPort(), host.getPassword());
@@ -211,8 +211,10 @@ public class IRCService extends Service implements ServiceEventListener {
 		protected void onPostExecute(Boolean succesful) {
 			if (succesful) {
 				Server server = new Server();
+				server.setName(this.preferences.getName());
 				server.setServerInfo(this.client.getServerInfo());
 				IRCService.this.servers.add(server);
+				IRCService.this.serverMap.put(this.preferences.getName(), server);
 
 				// Automatically join channels after connecting (Afterwards so
 				// that server list is ready)
@@ -228,13 +230,7 @@ public class IRCService extends Service implements ServiceEventListener {
 	}
 
 	public Server getServer(String name) {
-		// XXX Mining, wahoo!
-		for (Server s : servers) {
-			if (s.getServerInfo().getNetwork().equals(name)) {
-				return s;
-			}
-		}
-		return null;
+		return this.serverMap.get(name);
 	}
 
 	public ArrayList<Server> getServers() {
