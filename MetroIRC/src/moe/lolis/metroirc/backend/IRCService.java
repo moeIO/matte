@@ -1,17 +1,8 @@
 package moe.lolis.metroirc.backend;
 
 import java.util.ArrayList;
-
+import java.util.HashMap;
 import javax.net.ssl.SSLSocketFactory;
-
-import moe.lolis.metroirc.ChannelActivity;
-import moe.lolis.metroirc.irc.Channel;
-import moe.lolis.metroirc.irc.Client;
-import moe.lolis.metroirc.irc.ClientManager;
-import moe.lolis.metroirc.irc.Server;
-import moe.lolis.metroirc.irc.ServerPreferences;
-
-import org.pircbotx.UtilSSLSocketFactory;
 
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -25,6 +16,14 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
 
+import org.pircbotx.UtilSSLSocketFactory;
+import moe.lolis.metroirc.ChannelActivity;
+import moe.lolis.metroirc.irc.Channel;
+import moe.lolis.metroirc.irc.Client;
+import moe.lolis.metroirc.irc.ClientManager;
+import moe.lolis.metroirc.irc.Server;
+import moe.lolis.metroirc.irc.ServerPreferences;
+
 public class IRCService extends Service implements ServiceEventListener {
 	public class IRCBinder extends Binder {
 		public IRCService getService() {
@@ -37,7 +36,9 @@ public class IRCService extends Service implements ServiceEventListener {
 	private IRCListener listener;
 	private ConnectTask connectionTask;
 	private ClientManager clientManager;
-	private ArrayList<Server> servers;
+	private HashMap<String, Server> servers;
+	// This list is only required for UI stuff.
+	private ArrayList<Server> serverList;
 	
 	private Notification constantNotification;
 	private static final int CONSTANT_ID = 1;
@@ -54,7 +55,8 @@ public class IRCService extends Service implements ServiceEventListener {
 
 	@Override
 	public void onCreate() {
-		this.servers = new ArrayList<Server>();
+		this.servers = new HashMap<String, Server>();
+		this.serverList = new ArrayList<Server>();
 		this.clientManager = new ClientManager();
 		this.listener = new IRCListener(this);
 		this.connectionTask = new ConnectTask();
@@ -179,9 +181,11 @@ public class IRCService extends Service implements ServiceEventListener {
 			if (succesful) {
 				IRCService.this.showConnectedNotification();
 				Server server = new Server();
+				server.setName(this.preferences.getName());
 				server.setServerInfo(this.client.getServerInfo());
-				IRCService.this.servers.add(server);
-
+				IRCService.this.servers.put(server.getName(), server);
+				IRCService.this.serverList.add(server);
+				
 				// Automatically join channels after connecting (Afterwards so
 				// that server list is ready)
 				for (String channel : this.preferences.getAutoChannels()) {
@@ -222,17 +226,15 @@ public class IRCService extends Service implements ServiceEventListener {
 	}
 
 	public Server getServer(String name) {
-		//XXX Mining, wahoo!
-		for (Server s : servers) {
-			if (s.getServerInfo().getNetwork().equals(name)) {
-				return s;
-			}
-		}
-		return null;
+		return this.servers.get(name);
 	}
 
-	public ArrayList<Server> getServers() {
+	public HashMap<String, Server> getServers() {
 		return this.servers;
+	}
+	
+	public ArrayList<Server> getServerList() {
+		return this.serverList;
 	}
 
 	public void channelJoined(Channel channel) {

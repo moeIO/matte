@@ -242,8 +242,7 @@ public class ChannelActivity extends ListActivity implements
 
 	public boolean onChildClick(ExpandableListView parent, View v,
 			int groupPosition, int childPosition, long id) {
-		Channel newChannel = moeService.getServers().get(groupPosition)
-				.getChannels().get(childPosition);
+		Channel newChannel = moeService.getServers().get(groupPosition).getChannels().get(childPosition);
 		setCurrentChannelView(newChannel);
 		hideChannelList();
 		return false;
@@ -256,19 +255,15 @@ public class ChannelActivity extends ListActivity implements
 			moeService.connectedEventListener = activity;
 			activity.serviceConnected();
 
-			activity.channelAdapter = new ChannelListAdapter(
-					moeService.getServers());
+			activity.channelAdapter = new ChannelListAdapter(moeService.getServerList());
 
 			// Set adapter of newly inflated container
-			LinearLayout channelListPanel = (LinearLayout) activity
-					.findViewById(R.id.channelListPanel);
-			ExpandableListView expandableChannelList = (ExpandableListView) channelListPanel
-					.findViewById(android.R.id.list);
+			LinearLayout channelListPanel = (LinearLayout) activity.findViewById(R.id.channelListPanel);
+			ExpandableListView expandableChannelList = (ExpandableListView) channelListPanel.findViewById(android.R.id.list);
 			expandableChannelList.setAdapter(activity.channelAdapter);
 			expandableChannelList.setOnChildClickListener(activity);
 			expandableChannelList.setOnGroupClickListener(activity);
-			channelList = (LinearLayout) activity
-					.findViewById(R.id.channelList);
+			channelList = (LinearLayout) activity.findViewById(R.id.channelList);
 			// And hide it by default.
 			hideChannelList();
 
