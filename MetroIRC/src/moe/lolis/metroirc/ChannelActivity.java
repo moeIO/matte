@@ -1,14 +1,7 @@
 package moe.lolis.metroirc;
 
 import java.util.ArrayList;
-
-import moe.lolis.metroirc.backend.IRCService;
-import moe.lolis.metroirc.backend.ServiceEventListener;
-import moe.lolis.metroirc.irc.Channel;
-import moe.lolis.metroirc.irc.ChannelMessage;
-import moe.lolis.metroirc.irc.CommandInterpreter;
-import moe.lolis.metroirc.irc.Server;
-import moe.lolis.metroirc.irc.ServerPreferences;
+import java.util.HashMap;
 import android.app.ActionBar;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -19,7 +12,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.content.res.Configuration;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -46,20 +38,30 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.TextView.OnEditorActionListener;
 
+import moe.lolis.metroirc.backend.IRCService;
+import moe.lolis.metroirc.backend.ServiceEventListener;
+import moe.lolis.metroirc.irc.Channel;
+import moe.lolis.metroirc.irc.ChannelMessage;
+import moe.lolis.metroirc.irc.CommandInterpreter;
+import moe.lolis.metroirc.irc.Server;
+import moe.lolis.metroirc.irc.ServerPreferences;
+
 public class ChannelActivity extends ListActivity implements ServiceEventListener, OnClickListener, OnEditorActionListener, OnChildClickListener,
 		OnGroupClickListener {
+	// Layout stuff.
 	private ChannelActivity activity;
 	private LayoutInflater inflater;
 	private MessageAdapter adapter;
 	private ChannelListAdapter channelAdapter;
 
+	// IRC backend.
 	private IRCService moeService;
 	private CommandInterpreter commandInterpreter;
 	private Channel currentChannel;
 
+	// Layout elements.
 	private LinearLayout channelList;
 	private ExpandableListView expandableChannelList;
-
 	private ImageButton sendButton;
 	private EditText sendText;
 	private Button settingsButton;
@@ -67,10 +69,17 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 	private Button quitButton;
 	private int highlightCellColour;
 
+	// Misc.
 	private boolean gotoChannelOnServiceConnect;
 	private String onServiceConnectChannel;
 	private String onServiceConnectServer;
+	private int[] possibleNickColours = { };
+	private HashMap<String, Integer> nickColours;
 
+	/*
+	 * UI callbacks.
+	 */
+	
 	/** Called when the activity is first created. */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -91,20 +100,20 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 		bar.setDisplayHomeAsUpEnabled(true);
 		this.setTitle("MetroIRC");
 
-		highlightCellColour = Color.rgb(182, 232, 243);
-
-		// Set up sidebar,
-		ViewStub channelListContainer = (ViewStub) activity.findViewById(R.id.channelListStub);
+		// Set up sidebar.
+		ViewStub channelListContainer = (ViewStub) this.activity.findViewById(R.id.channelListStub);
 		channelListContainer.inflate();
 
-		sendButton = (ImageButton) this.findViewById(R.id.sendButton);
-		sendButton.setOnClickListener(this);
-		sendText = (EditText) this.findViewById(R.id.sendText);
-		sendText.setOnEditorActionListener(this);
-		addServerButton = (Button) this.findViewById(R.id.addServerButton);
-		addServerButton.setOnClickListener(this);
-		quitButton = (Button) this.findViewById(R.id.quitButton);
-		quitButton.setOnClickListener(this);
+		// Set up main UI.
+		this.sendButton = (ImageButton) this.findViewById(R.id.sendButton);
+		this.sendButton.setOnClickListener(this);
+		this.sendText = (EditText) this.findViewById(R.id.sendText);
+		this.sendText.setOnEditorActionListener(this);
+		this.addServerButton = (Button) this.findViewById(R.id.addServerButton);
+		this.addServerButton.setOnClickListener(this);
+		this.quitButton = (Button) this.findViewById(R.id.quitButton);
+		this.quitButton.setOnClickListener(this);
+		this.highlightCellColour = Color.rgb(182, 232, 243);
 
 		this.getListView().setTranscriptMode(ListView.TRANSCRIPT_MODE_ALWAYS_SCROLL);
 
@@ -112,10 +121,10 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 
 	// When our activity is paused.
 	public void onPause() {
-		if (moeService != null)
-			moeService.isAppActive(false);
+		if (this.moeService != null)
+			this.moeService.isAppActive(false);
 		// Unbind the service.
-		this.unbindService(serviceConnection);
+		this.unbindService(this.serviceConnection);
 		super.onPause();
 	};
 
@@ -126,7 +135,7 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 		mNotificationManager.cancelAll();
 		// Bind the service.
 		Intent servIntent = new Intent(this.getApplicationContext(), IRCService.class);
-		this.bindService(servIntent, serviceConnection, Context.BIND_AUTO_CREATE);
+		this.bindService(servIntent, this.serviceConnection, Context.BIND_AUTO_CREATE);
 		super.onResume();
 	}
 
@@ -139,9 +148,9 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 			if (server != null && channel != null) {
 				// Set as values, for the goto to occur when the service
 				// connects (shortly after onNewIntent in onResume)
-				onServiceConnectChannel = channel;
-				onServiceConnectServer = server;
-				gotoChannelOnServiceConnect = true;
+				this.onServiceConnectChannel = channel;
+				this.onServiceConnectServer = server;
+				this.gotoChannelOnServiceConnect = true;
 			}
 		}
 		super.onNewIntent(intent);
@@ -174,235 +183,10 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 			return super.onOptionsItemSelected(item);
 		}
 	}
-
-	// Adapter that handles the message list
-	private class MessageAdapter extends ArrayAdapter<ChannelMessage> {
-
-		private ArrayList<ChannelMessage> items;
-
-		public MessageAdapter(Context context, int textViewResourceId, ArrayList<ChannelMessage> items) {
-			super(context, textViewResourceId, items);
-			this.items = items;
-		}
-
-		@Override
-		public View getView(int position, View convertView, ViewGroup parent) {
-			if (convertView == null) {
-				convertView = inflater.inflate(R.layout.channel_message_row, null);
-			}
-
-			ChannelMessage message = items.get(position);
-			TextView name = (TextView) convertView.findViewById(R.id.channelMessageName);
-			TextView content = (TextView) convertView.findViewById(R.id.channelMessageContent);
-			content.setText(message.getContent());
-			name.setText(message.getNickname());
-
-			if (message.isHighlighted())
-				convertView.setBackgroundColor(highlightCellColour);
-			else
-				convertView.setBackgroundColor(Color.TRANSPARENT);
-			return convertView;
-		}
-	}
-
-	/*
-	 * Sidebar
-	 */
-	// Adapter that handles the message list
-	private class ChannelListAdapter extends BaseExpandableListAdapter {
-
-		private ArrayList<Server> servers;
-
-		public ChannelListAdapter(ArrayList<Server> servers) {
-			super();
-			this.servers = servers;
-		}
-
-		public Object getChild(int groupPos, int childPos) {
-			return servers.get(groupPos).getChannels().get(childPos);
-		}
-
-		public long getChildId(int groupPosition, int childPosition) {
-			return childPosition;
-		}
-
-		public View getChildView(int groupPosition, int childPosition, boolean isLastChild, View convertView, ViewGroup parent) {
-			Channel c = servers.get(groupPosition).getChannels().get(childPosition);
-			if (convertView == null) {
-				convertView = inflater.inflate(R.layout.channellist_channel, null);
-			}
-			TextView name = (TextView) convertView.findViewById(R.id.name);
-			String text = c.getChannelInfo().getName();
-			if (c.getUnreadMessageCount() > 0)
-				text += "(" + String.valueOf(c.getUnreadMessageCount()) + ")";
-			name.setText(text);
-			return convertView;
-		}
-
-		public int getChildrenCount(int groupPosition) {
-			return servers.get(groupPosition).getChannels().size();
-		}
-
-		public Object getGroup(int groupPosition) {
-			return servers.get(groupPosition);
-		}
-
-		public int getGroupCount() {
-			return servers.size();
-		}
-
-		public long getGroupId(int groupPosition) {
-			return groupPosition;
-		}
-
-		public View getGroupView(int groupPosition, boolean isExpanded, View convertView, ViewGroup parent) {
-			Server s = servers.get(groupPosition);
-			if (convertView == null) {
-				convertView = inflater.inflate(R.layout.channellist_server, null);
-			}
-			TextView name = (TextView) convertView.findViewById(R.id.name);
-			name.setText(s.getName());
-			return convertView;
-		}
-
-		public boolean hasStableIds() {
-			return true;
-		}
-
-		public boolean isChildSelectable(int groupPosition, int childPosition) {
-			return true;
-		}
-
-	}
-
-	public boolean onGroupClick(ExpandableListView parent, View v, int groupPosition, long id) {
-		// Force groups to stay expanded
-		parent.expandGroup(groupPosition);
-		return true;
-	}
-
-	public boolean onChildClick(ExpandableListView parent, View v, int groupPosition, int childPosition, long id) {
-		Channel newChannel = moeService.getServers().get(groupPosition).getChannels().get(childPosition);
-		setCurrentChannelView(newChannel);
-		hideChannelList();
-		return false;
-	}
-
-	private ServiceConnection serviceConnection = new ServiceConnection() {
-		// Called when activity connects to the service.
-		public void onServiceConnected(ComponentName className, IBinder service) {
-			moeService = ((IRCService.IRCBinder) service).getService();
-			moeService.connectedEventListener = activity;
-			activity.serviceConnected();
-			if (moeService != null)
-				moeService.isAppActive(true);
-
-			activity.channelAdapter = new ChannelListAdapter(moeService.getServers());
-
-			// Set adapter of newly inflated container
-			LinearLayout channelListPanel = (LinearLayout) activity.findViewById(R.id.channelListPanel);
-			expandableChannelList = (ExpandableListView) channelListPanel.findViewById(android.R.id.list);
-			expandableChannelList.setAdapter(activity.channelAdapter);
-			expandableChannelList.setOnChildClickListener(activity);
-			expandableChannelList.setOnGroupClickListener(activity);
-			channelList = (LinearLayout) activity.findViewById(R.id.channelList);
-			// And hide it by default.
-			hideChannelList();
-
-			settingsButton = (Button) activity.findViewById(R.id.settingsButton);
-			settingsButton.setOnClickListener(activity);
-
-			// Goto certain channel
-			if (gotoChannelOnServiceConnect) {
-				gotoChannelOnServiceConnect = false;
-				activity.setCurrentChannelView(moeService.getServer(onServiceConnectServer).getChannel(onServiceConnectChannel));
-				onServiceConnectChannel = null;
-				onServiceConnectServer = null;
-			}
-		}
-
-		// Called when the activity disconnects from the service.
-		public void onServiceDisconnected(ComponentName className) {
-			if (moeService != null)
-				moeService.isAppActive(false);
-			moeService = null;
-		}
-	};
-
-	public void serviceConnected() {
-
-	}
-
-	private void hideChannelList() {
-		channelList.setVisibility(View.GONE);
-	}
-
-	public void activeChannelMessageReceived(Channel channel) {
-		// Update the message list
-		this.runOnUiThread(new Runnable() {
-			public void run() {
-				if (adapter != null)
-					adapter.notifyDataSetChanged();
-			}
-		});
-	}
 	
-	public void messageReceived(Server server) {
-		// See above.
-		this.runOnUiThread(new Runnable() {
-			public void run() {
-				if (adapter != null)
-					adapter.notifyDataSetChanged();
-			}
-		});
-	}
-
-	public void inactiveChannelMessageReceived(Channel channel) {
-		// Update the channel list for unread counts
-		this.runOnUiThread(new Runnable() {
-			public void run() {
-				if (channelAdapter != null)
-					channelAdapter.notifyDataSetChanged();
-			}
-		});
-	}
-
-	private void setCurrentChannelView(Channel channel) {
-		if (this.currentChannel != null)
-			this.currentChannel.isActive(false);
-		channel.isActive(true);
-		this.currentChannel = channel;
-		
-		// Update the sidebar
-		this.channelAdapter.notifyDataSetChanged();
-		this.activity.setTitle(channel.getChannelInfo().getName());
-		// Set list adapter to be the messages of the connected channel,
-		// TODO: Re-creating the adapter every time may be inefficient
-		this.activity.adapter = new MessageAdapter(getApplicationContext(), R.layout.channel_message_row, channel.getMessages());
-		this.activity.setListAdapter(this.activity.adapter);
-	}
-
-	private void expandAllServerGroups() {
-		int count = channelAdapter.getGroupCount();
-		for (int i = 0; i < count; i++)
-			expandableChannelList.expandGroup(i);
-	}
-
-	// Switch to the new channel when it is joined
-	public void channelJoined(Channel channel) {
-		final Channel chan = channel;
-		this.runOnUiThread(new Runnable() {
-			public void run() {
-				setCurrentChannelView(chan);
-				// Expand newest server entry
-				expandAllServerGroups();
-			}
-		});
-	}
-
 	public void onClick(View v) {
 		// Send button clicked
-		if (v.getId() == sendButton.getId()) {
+		if (v.getId() == this.sendButton.getId()) {
 			if (this.commandInterpreter == null) {
 				this.commandInterpreter = new CommandInterpreter(this.moeService, this);
 			}
@@ -412,10 +196,10 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 			} else {
 				this.sendMessage();
 			}
-		} else if (v.getId() == settingsButton.getId()) {
+		} else if (v.getId() == this.settingsButton.getId()) {
 			Intent settingsIntent = new Intent(getApplicationContext(), SettingsActivity.class);
 			this.startActivity(settingsIntent);
-		} else if (v.getId() == addServerButton.getId()) {
+		} else if (v.getId() == this.addServerButton.getId()) {
 			// Show add server dialog
 			final View dialogView = getLayoutInflater().inflate(R.layout.addserver_dialog, null);
 			final AlertDialog d = new AlertDialog.Builder(this).setView(dialogView).setTitle("Add Server")
@@ -521,8 +305,8 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 				}
 			});
 			d.show();
-		} else if (v.getId() == quitButton.getId()) {
-			moeService.stopService();
+		} else if (v.getId() == this.quitButton.getId()) {
+			this.moeService.stopService();
 			this.finish();
 		}
 	}
@@ -534,25 +318,280 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 		return false;
 	}
 
+	public boolean onGroupClick(ExpandableListView parent, View v, int groupPosition, long id) {
+		// Force groups to stay expanded
+		parent.expandGroup(groupPosition);
+		return true;
+	}
+
+	public boolean onChildClick(ExpandableListView parent, View v, int groupPosition, int childPosition, long id) {
+		Channel newChannel = moeService.getServers().get(groupPosition).getChannels().get(childPosition);
+		setCurrentChannelView(newChannel);
+		hideChannelList();
+		return false;
+	}
+	
+	/*
+	 * Helper classes.
+	 */
+	
+	// Adapter that handles the message list
+	private class MessageAdapter extends ArrayAdapter<ChannelMessage> {
+
+		private ArrayList<ChannelMessage> items;
+
+		public MessageAdapter(Context context, int textViewResourceId, ArrayList<ChannelMessage> items) {
+			super(context, textViewResourceId, items);
+			this.items = items;
+		}
+
+		@Override
+		public View getView(int position, View convertView, ViewGroup parent) {
+			if (convertView == null) {
+				convertView = inflater.inflate(R.layout.channel_message_row, null);
+			}
+
+			ChannelMessage message = this.items.get(position);
+			TextView name = (TextView) convertView.findViewById(R.id.channelMessageName);
+			TextView content = (TextView) convertView.findViewById(R.id.channelMessageContent);
+			content.setText(message.getContent());
+			name.setText(message.getNickname());
+			// TODO: Set colour here.
+
+			if (message.isHighlighted())
+				convertView.setBackgroundColor(highlightCellColour);
+			else
+				convertView.setBackgroundColor(Color.TRANSPARENT);
+			return convertView;
+		}
+	}
+
+	/*
+	 * Sidebar
+	 */
+	// Adapter that handles the message list
+	private class ChannelListAdapter extends BaseExpandableListAdapter {
+
+		private ArrayList<Server> servers;
+
+		public ChannelListAdapter(ArrayList<Server> servers) {
+			super();
+			this.servers = servers;
+		}
+
+		public Object getChild(int groupPos, int childPos) {
+			return servers.get(groupPos).getChannels().get(childPos);
+		}
+
+		public long getChildId(int groupPosition, int childPosition) {
+			return childPosition;
+		}
+
+		public View getChildView(int groupPosition, int childPosition, boolean isLastChild, View convertView, ViewGroup parent) {
+			Channel c = servers.get(groupPosition).getChannels().get(childPosition);
+			if (convertView == null) {
+				convertView = inflater.inflate(R.layout.channellist_channel, null);
+			}
+			TextView name = (TextView) convertView.findViewById(R.id.name);
+			String text = c.getChannelInfo().getName();
+			if (c.getUnreadMessageCount() > 0)
+				text += "(" + String.valueOf(c.getUnreadMessageCount()) + ")";
+			name.setText(text);
+			return convertView;
+		}
+
+		public int getChildrenCount(int groupPosition) {
+			return servers.get(groupPosition).getChannels().size();
+		}
+
+		public Object getGroup(int groupPosition) {
+			return servers.get(groupPosition);
+		}
+
+		public int getGroupCount() {
+			return servers.size();
+		}
+
+		public long getGroupId(int groupPosition) {
+			return groupPosition;
+		}
+
+		public View getGroupView(int groupPosition, boolean isExpanded, View convertView, ViewGroup parent) {
+			Server s = servers.get(groupPosition);
+			if (convertView == null) {
+				convertView = inflater.inflate(R.layout.channellist_server, null);
+			}
+			TextView name = (TextView) convertView.findViewById(R.id.name);
+			name.setText(s.getName());
+			return convertView;
+		}
+
+		public boolean hasStableIds() {
+			return true;
+		}
+
+		public boolean isChildSelectable(int groupPosition, int childPosition) {
+			return true;
+		}
+
+	}
+
+	private ServiceConnection serviceConnection = new ServiceConnection() {
+		// Called when activity connects to the service.
+		public void onServiceConnected(ComponentName className, IBinder service) {
+			moeService = ((IRCService.IRCBinder) service).getService();
+			moeService.connectedEventListener = activity;
+			activity.serviceConnected();
+			if (moeService != null)
+				moeService.isAppActive(true);
+
+			activity.channelAdapter = new ChannelListAdapter(moeService.getServers());
+
+			// Set adapter of newly inflated container
+			LinearLayout channelListPanel = (LinearLayout) activity.findViewById(R.id.channelListPanel);
+			expandableChannelList = (ExpandableListView) channelListPanel.findViewById(android.R.id.list);
+			expandableChannelList.setAdapter(activity.channelAdapter);
+			expandableChannelList.setOnChildClickListener(activity);
+			expandableChannelList.setOnGroupClickListener(activity);
+			channelList = (LinearLayout) activity.findViewById(R.id.channelList);
+			// And hide it by default.
+			hideChannelList();
+
+			settingsButton = (Button) activity.findViewById(R.id.settingsButton);
+			settingsButton.setOnClickListener(activity);
+
+			// Goto certain channel
+			if (gotoChannelOnServiceConnect) {
+				gotoChannelOnServiceConnect = false;
+				activity.setCurrentChannelView(moeService.getServer(onServiceConnectServer).getChannel(onServiceConnectChannel));
+				onServiceConnectChannel = null;
+				onServiceConnectServer = null;
+			}
+		}
+
+		// Called when the activity disconnects from the service.
+		public void onServiceDisconnected(ComponentName className) {
+			if (moeService != null)
+				moeService.isAppActive(false);
+			moeService = null;
+		}
+	};
+
+	public void serviceConnected() {
+
+	}
+
+	/*
+	 * IRC service callbacks.
+	 */
+	
+	public void activeChannelMessageReceived(Channel channel) {
+		// Update the message list
+		this.runOnUiThread(new Runnable() {
+			public void run() {
+				if (adapter != null)
+					adapter.notifyDataSetChanged();
+			}
+		});
+	}
+	
+	public void inactiveChannelMessageReceived(Channel channel) {
+		// Update the channel list for unread counts
+		this.runOnUiThread(new Runnable() {
+			public void run() {
+				if (channelAdapter != null)
+					channelAdapter.notifyDataSetChanged();
+			}
+		});
+	}
+
+	public void messageReceived(Server server) {
+		// See above.
+		this.runOnUiThread(new Runnable() {
+			public void run() {
+				if (adapter != null)
+					adapter.notifyDataSetChanged();
+			}
+		});
+	}
+	
+	// Switch to the new channel when it is joined
+	public void channelJoined(Channel channel) {
+		final Channel chan = channel;
+		this.runOnUiThread(new Runnable() {
+			public void run() {
+				setCurrentChannelView(chan);
+				// Expand newest server entry
+				expandAllServerGroups();
+			}
+		});
+	}
+	
+	/*
+	 * UI helpers.
+	 */
+	
+	private void expandAllServerGroups() {
+		int count = this.channelAdapter.getGroupCount();
+		for (int i = 0; i < count; i++)
+			this.expandableChannelList.expandGroup(i);
+	}
+	
+	private void setCurrentChannelView(Channel channel) {
+		if (this.currentChannel != null)
+			this.currentChannel.isActive(false);
+		channel.isActive(true);
+		this.currentChannel = channel;
+		
+		// Update the sidebar.
+		this.channelAdapter.notifyDataSetChanged();
+		this.activity.setTitle(channel.getChannelInfo().getName());
+		// Set list adapter to be the messages of the connected channel,
+		// TODO: Re-creating the adapter every time may be inefficient
+		this.activity.adapter = new MessageAdapter(getApplicationContext(), R.layout.channel_message_row, channel.getMessages());
+		this.activity.setListAdapter(this.activity.adapter);
+	}
+
+	private void hideChannelList() {
+		this.channelList.setVisibility(View.GONE);
+	}
+	
 	private void sendMessage() {
-		if (currentChannel != null) {
-			if (sendText.getText().length() > 0) {
-				currentChannel.sendMessage(sendText.getText().toString());
-				sendText.setText("");
+		if (this.currentChannel != null) {
+			if (this.sendText.getText().length() > 0) {
+				this.currentChannel.sendMessage(this.sendText.getText().toString());
+				this.sendText.setText("");
 				// Update UI because sent message does not come in as an
 				// event
-				adapter.notifyDataSetChanged();
+				this.adapter.notifyDataSetChanged();
 			}
 		}
 	}
+	
+	/*
+	 * Getters/setters.
+	 */
 	
 	public Channel getCurrentChannel() {
 		return this.currentChannel;
 	}
 
-	@Override
-	public void onConfigurationChanged(Configuration newConfig) {
-		super.onConfigurationChanged(newConfig);
+	public int getNickColour(String nick) {
+	    if(!this.nickColours.containsKey(nick)) {
+	        int colour = this.generateNickColour(nick);
+	        this.nickColours.put(nick, colour);
+	        return colour;
+	    }
+	    return this.nickColours.get(nick);
 	}
 
+	public void setNickColour(String nick, int colour) {
+	    this.nickColours.put(nick, colour);
+	}
+
+	private int generateNickColour(String nick) {
+	    int hash = nick.hashCode();
+	    return this.possibleNickColours[hash % this.possibleNickColours.length];
+	}
+	
 }
