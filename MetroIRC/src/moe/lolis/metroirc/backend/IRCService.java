@@ -255,12 +255,12 @@ public class IRCService extends Service implements ServiceEventListener {
 		this.connectedEventListener.channelJoined(channel);
 	}
 
-	public void setAppActive(boolean active) {
-		appActive = active;
+	public void isAppActive(boolean active) {
+		this.appActive = active;
 	}
 
 	public boolean isAppActive() {
-		return appActive;
+		return this.appActive;
 	}
 
 }

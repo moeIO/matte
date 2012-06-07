@@ -111,7 +111,7 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 	// When our activity is paused.
 	public void onPause() {
 		if (moeService != null)
-			moeService.setAppActive(false);
+			moeService.isAppActive(false);
 		// Unbind the service.
 		this.unbindService(serviceConnection);
 		super.onPause();
@@ -147,8 +147,8 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 
 	@Override
 	public void onDestroy() {
-		// make current channel inactive
-		currentChannel.setActive(false);
+		// Make current channel inactive.
+		this.currentChannel.isActive(false);
 		super.onDestroy();
 	}
 
@@ -293,7 +293,7 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 			moeService.connectedEventListener = activity;
 			activity.serviceConnected();
 			if (moeService != null)
-				moeService.setAppActive(true);
+				moeService.isAppActive(true);
 
 			activity.channelAdapter = new ChannelListAdapter(moeService.getServers());
 
@@ -322,7 +322,7 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 		// Called when the activity disconnects from the service.
 		public void onServiceDisconnected(ComponentName className) {
 			if (moeService != null)
-				moeService.setAppActive(false);
+				moeService.isAppActive(false);
 			moeService = null;
 		}
 	};
@@ -366,17 +366,18 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 	}
 
 	private void setCurrentChannelView(Channel channel) {
-		if (currentChannel != null)
-			currentChannel.setActive(false);
-		channel.setActive(true);
-		currentChannel = channel;
+		if (this.currentChannel != null)
+			this.currentChannel.isActive(false);
+		channel.isActive(true);
+		this.currentChannel = channel;
+		
 		// Update the sidebar
-		channelAdapter.notifyDataSetChanged();
-		activity.setTitle(channel.getChannelInfo().getName());
+		this.channelAdapter.notifyDataSetChanged();
+		this.activity.setTitle(channel.getChannelInfo().getName());
 		// Set list adapter to be the messages of the connected channel,
 		// TODO: Re-creating the adapter every time may be inefficient
-		activity.adapter = new MessageAdapter(getApplicationContext(), R.layout.channel_message_row, channel.getMessages());
-		activity.setListAdapter(activity.adapter);
+		this.activity.adapter = new MessageAdapter(getApplicationContext(), R.layout.channel_message_row, channel.getMessages());
+		this.activity.setListAdapter(this.activity.adapter);
 	}
 
 	private void expandAllServerGroups() {

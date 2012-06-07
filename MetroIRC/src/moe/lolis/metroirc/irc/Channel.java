@@ -8,7 +8,7 @@ public class Channel {
 	private org.pircbotx.ServerInfo serverInfo;
 	private ArrayList<ChannelMessage> messages;
 	private int unreadMessages;
-	private boolean isActive;
+	private boolean active;
 
 	public Channel() {
 		this.messages = new ArrayList<ChannelMessage>();
@@ -56,20 +56,21 @@ public class Channel {
 	}
 
 	public void incrementUnreadMessages() {
-		unreadMessages++;
+		this.unreadMessages++;
 	}
 
 	public int getUnreadMessageCount() {
-		return unreadMessages;
+		return this.unreadMessages;
 	}
 
-	public void setActive(boolean active) {
-		isActive = active;
-		if (isActive)
-			unreadMessages=0;
+	public void isActive(boolean active) {
+		this.active = active;
+		if (this.active) {
+			this.unreadMessages = 0;
+		}
 	}
 
 	public boolean isActive() {
-		return isActive;
+		return this.active;
 	}
 }
