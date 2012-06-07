@@ -12,7 +12,12 @@ public interface ServiceEventListener {
 	 * Called when an IRC message is received by the service. Passes the channel
 	 * the message belonged to
 	 */
-	public void messageReceived(Channel channel);
+	public void activeChannelMessageReceived(Channel channel);
+	
+	/*
+	 * Called when an IRC message is received by the service on an inactive channel
+	 */
+	public void inactiveChannelMessageReceived(Channel channel);
 
 	/*
 	 * Called when a server message is received. Passes the server the message

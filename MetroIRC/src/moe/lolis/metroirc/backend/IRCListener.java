@@ -38,7 +38,7 @@ public class IRCListener extends ListenerAdapter<Client> {
 	public void onJoin(JoinEvent<Client> event) {
 		Server server = this.service.getServer(event.getBot().getServerPreferences().getName());
 		Channel channel = server.getChannel(event.getChannel().getName());
-		
+
 		if (channel == null) {
 			// Newly encountered channel.
 			channel = new Channel();
@@ -59,7 +59,20 @@ public class IRCListener extends ListenerAdapter<Client> {
 		message.setTime(new Date());
 		channel.addMessage(message);
 
-		this.service.messageReceived(channel);
+		if (channel.isActive()) {
+			this.service.activeChannelMessageReceived(channel);
+		} else {
+			channel.incrementUnreadMessages();
+			this.service.inactiveChannelMessageReceived(channel);
+		}
+		if (message.getContent().toLowerCase().contains(event.getBot().getNick().toLowerCase())) {
+			message.isHighlighted(true);
+			if (!this.service.isAppActive() || !channel.isActive()) {
+				this.service.showMentionNotification(message, channel, event.getBot().getServerPreferences().getName());
+			}
+		} else {
+			message.isHighlighted(false);
+		}
 	}
 	
 	public void onServerResponse(ServerResponseEvent<Client> event) {

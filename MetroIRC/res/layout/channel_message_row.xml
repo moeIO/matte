@@ -16,11 +16,14 @@
             android:layout_height="wrap_content"
             android:layout_gravity="top|right"
             android:layout_marginRight="5dp"
+            android:ellipsize="end"
             android:gravity="right"
+            android:singleLine="true"
             android:text="Name"
-            android:textColor="#2f8699"
             android:textAppearance="?android:attr/textAppearanceSmall"
-            android:textSize="16dp" android:textStyle="bold"/>
+            android:textColor="#2f8699"
+            android:textSize="16dp"
+            android:textStyle="bold" />
 
     </TableRow>
 
