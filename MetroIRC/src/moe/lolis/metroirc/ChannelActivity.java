@@ -287,6 +287,16 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 			}
 		});
 	}
+	
+	public void messageReceived(Server server) {
+		// See above.
+		this.runOnUiThread(new Runnable() {
+			public void run() {
+				if (adapter != null)
+					adapter.notifyDataSetChanged();
+			}
+		});
+	}
 
 	private void setCurrentChannelView(Channel channel) {
 		currentChannel = channel;
@@ -295,7 +305,7 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 		activity.setTitle(channel.getChannelInfo().getName());
 		// Set list adapter to be the messages of the connected channel,
 		// TODO: Re-creating the adapter every time may be inefficient
-		activity.adapter = new MessageAdapter(getApplicationContext(), R.layout.channel_message_row, channel.getMesages());
+		activity.adapter = new MessageAdapter(getApplicationContext(), R.layout.channel_message_row, channel.getMessages());
 		activity.setListAdapter(activity.adapter);
 	}
 

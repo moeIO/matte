@@ -7,9 +7,11 @@ public class Server {
 	private org.pircbotx.ServerInfo serverInfo;
 	private HashMap<String, Channel> channels;
 	private String name;
+	private ArrayList<ServerMessage> messages;
 	
 	public Server() {
 		this.channels = new HashMap<String, Channel>();
+		this.messages = new ArrayList<ServerMessage>();
 		this.name = "Unnamed";
 	}
 	
@@ -27,4 +29,24 @@ public class Server {
 	}
 	public void setName(String name) { this.name = name; }
 	public String getName() { return this.name; }
+	
+	public void addMessage(ServerMessage message) {
+		this.messages.add(message);
+	}
+
+	public ArrayList<ServerMessage> getMessages() {
+		return this.messages;
+	}
+
+	public void removeMessage(ServerMessage message) {
+		this.messages.remove(message);
+	}
+
+	public void setMessages(ArrayList<ServerMessage> messages) {
+		this.messages = messages;
+	}
+	
+	public void sendRawCommand(String rawCommand) {
+		this.getServerInfo().getBot().sendRawLine(rawCommand);
+	}
 }

@@ -32,7 +32,7 @@ public class Channel {
 		this.messages.add(message);
 	}
 
-	public ArrayList<ChannelMessage> getMesages() {
+	public ArrayList<ChannelMessage> getMessages() {
 		return this.messages;
 	}
 

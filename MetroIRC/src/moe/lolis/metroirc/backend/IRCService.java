@@ -199,6 +199,10 @@ public class IRCService extends Service implements ServiceEventListener {
 	public void messageReceived(Channel channel) {
 		this.connectedEventListener.messageReceived(channel);
 	}
+	
+	public void messageReceived(Server server) {
+		this.connectedEventListener.messageReceived(server);
+	}
 
 	public Server getServer(String name) {
 		return this.serverMap.get(name);
