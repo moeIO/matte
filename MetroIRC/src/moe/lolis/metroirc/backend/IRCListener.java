@@ -35,7 +35,7 @@ public class IRCListener extends ListenerAdapter<Client> {
 			channel.incrementUnreadMessages();
 			this.service.inactiveChannelMessageReceived(channel);
 		}
-		if (message.getContent().contains(event.getBot().getNick())) {
+		if (message.getContent().toLowerCase().contains(event.getBot().getNick().toLowerCase())) {
 			message.setisHighlighted(true);
 			if (!this.service.isAppActive() || !channel.isActive()) {
 				this.service.showMentionNotification(message, channel, event.getBot().getServerPreferences().getName());
