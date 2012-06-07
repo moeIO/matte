@@ -6,6 +6,7 @@ import moe.lolis.metroirc.backend.IRCService;
 import moe.lolis.metroirc.backend.ServiceEventListener;
 import moe.lolis.metroirc.irc.Channel;
 import moe.lolis.metroirc.irc.ChannelMessage;
+import moe.lolis.metroirc.irc.CommandInterpreter;
 import moe.lolis.metroirc.irc.Server;
 import moe.lolis.metroirc.irc.ServerPreferences;
 import android.app.ActionBar;
@@ -53,6 +54,7 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 	private ChannelListAdapter channelAdapter;
 
 	private IRCService moeService;
+	private CommandInterpreter commandInterpreter;
 	private Channel currentChannel;
 
 	private LinearLayout channelList;
@@ -401,7 +403,15 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 	public void onClick(View v) {
 		// Send button clicked
 		if (v.getId() == sendButton.getId()) {
-			this.sendMessage();
+			if (this.commandInterpreter == null) {
+				this.commandInterpreter = new CommandInterpreter(this.moeService, this);
+			}
+			
+			if (this.commandInterpreter.isCommand(this.sendText.getText().toString())) {
+				this.commandInterpreter.interpret(this.sendText.getText().toString());
+			} else {
+				this.sendMessage();
+			}
 		} else if (v.getId() == settingsButton.getId()) {
 			Intent settingsIntent = new Intent(getApplicationContext(), SettingsActivity.class);
 			this.startActivity(settingsIntent);
@@ -534,6 +544,10 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 				adapter.notifyDataSetChanged();
 			}
 		}
+	}
+	
+	public Channel getCurrentChannel() {
+		return this.currentChannel;
 	}
 
 	@Override

@@ -42,7 +42,7 @@ public class IRCListener extends ListenerAdapter<Client> {
 		if (channel == null) {
 			// Newly encountered channel.
 			channel = new Channel();
-			channel.setServerInfo(event.getBot().getServerInfo());
+			channel.setServer(server);
 			channel.setChannelInfo(event.getChannel());
 			server.addChannel(channel);
 		}

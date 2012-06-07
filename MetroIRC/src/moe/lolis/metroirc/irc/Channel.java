@@ -5,7 +5,7 @@ import java.util.Date;
 
 public class Channel {
 	private org.pircbotx.Channel channelInfo;
-	private org.pircbotx.ServerInfo serverInfo;
+	private Server server;
 	private ArrayList<ChannelMessage> messages;
 	private int unreadMessages;
 	private boolean active;
@@ -22,16 +22,24 @@ public class Channel {
 		return this.channelInfo;
 	}
 
-	public void setServerInfo(org.pircbotx.ServerInfo serverInfo) {
-		this.serverInfo = serverInfo;
+	public void setServer(Server server) {
+		this.server = server;
 	}
 
-	public org.pircbotx.ServerInfo getServerInfo() {
-		return this.serverInfo;
+	public Server getServer() {
+		return this.server;
 	}
 
 	public void addMessage(ChannelMessage message) {
 		this.messages.add(message);
+	}
+	
+	public void addError(String error) {
+		ChannelMessage message = new ChannelMessage();
+		message.setNickname("!");
+		message.setContent(error);
+		message.setTime(new Date());
+		this.addMessage(message);
 	}
 
 	public ArrayList<ChannelMessage> getMessages() {
