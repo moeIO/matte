@@ -2,16 +2,24 @@ package moe.lolis.metroirc;
 
 import java.util.ArrayList;
 
+import moe.lolis.metroirc.backend.IRCService;
+import moe.lolis.metroirc.backend.ServiceEventListener;
+import moe.lolis.metroirc.irc.Channel;
+import moe.lolis.metroirc.irc.ChannelMessage;
+import moe.lolis.metroirc.irc.Server;
+import moe.lolis.metroirc.irc.ServerPreferences;
 import android.app.ActionBar;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ListActivity;
+import android.app.NotificationManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.res.Configuration;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.view.KeyEvent;
@@ -37,13 +45,6 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.TextView.OnEditorActionListener;
 
-import moe.lolis.metroirc.backend.IRCService;
-import moe.lolis.metroirc.backend.ServiceEventListener;
-import moe.lolis.metroirc.irc.Channel;
-import moe.lolis.metroirc.irc.ChannelMessage;
-import moe.lolis.metroirc.irc.Server;
-import moe.lolis.metroirc.irc.ServerPreferences;
-
 public class ChannelActivity extends ListActivity implements ServiceEventListener, OnClickListener, OnEditorActionListener, OnChildClickListener,
 		OnGroupClickListener {
 	private ChannelActivity activity;
@@ -62,6 +63,11 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 	private Button settingsButton;
 	private Button addServerButton;
 	private Button quitButton;
+	private int highlightCellColour;
+
+	private boolean gotoChannelOnServiceConnect;
+	private String onServiceConnectChannel;
+	private String onServiceConnectServer;
 
 	/** Called when the activity is first created. */
 	@Override
@@ -83,6 +89,8 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 		bar.setDisplayHomeAsUpEnabled(true);
 		this.setTitle("MetroIRC");
 
+		highlightCellColour = Color.rgb(182, 232, 243);
+
 		// Set up sidebar,
 		ViewStub channelListContainer = (ViewStub) activity.findViewById(R.id.channelListStub);
 		channelListContainer.inflate();
@@ -97,10 +105,13 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 		quitButton.setOnClickListener(this);
 
 		this.getListView().setTranscriptMode(ListView.TRANSCRIPT_MODE_ALWAYS_SCROLL);
+
 	}
 
 	// When our activity is paused.
 	public void onPause() {
+		if (moeService != null)
+			moeService.setAppActive(false);
 		// Unbind the service.
 		this.unbindService(serviceConnection);
 		super.onPause();
@@ -108,10 +119,37 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 
 	// When our activity is resumed.
 	public void onResume() {
+		// Remove mentions/notifications
+		NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+		mNotificationManager.cancelAll();
 		// Bind the service.
 		Intent servIntent = new Intent(this.getApplicationContext(), IRCService.class);
 		this.bindService(servIntent, serviceConnection, Context.BIND_AUTO_CREATE);
 		super.onResume();
+	}
+
+	@Override
+	public void onNewIntent(Intent intent) {
+		Bundle extras = intent.getExtras();
+		if (extras != null) {
+			String server = extras.getString("server");
+			String channel = extras.getString("channel");
+			if (server != null && channel != null) {
+				// Set as values, for the goto to occur when the service
+				// connects (shortly after onNewIntent in onResume)
+				onServiceConnectChannel = channel;
+				onServiceConnectServer = server;
+				gotoChannelOnServiceConnect = true;
+			}
+		}
+		super.onNewIntent(intent);
+	}
+
+	@Override
+	public void onDestroy() {
+		// make current channel inactive
+		currentChannel.setActive(false);
+		super.onDestroy();
 	}
 
 	// Action bar button pressed
@@ -125,7 +163,7 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 				channelList.setVisibility(View.GONE);
 			} else if (channelList.getVisibility() == View.GONE) {
 				channelList.setVisibility(View.VISIBLE);
-				//In case returning to activity
+				// In case returning to activity
 				expandAllServerGroups();
 			}
 
@@ -157,6 +195,10 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 			content.setText(message.getContent());
 			name.setText(message.getNickname());
 
+			if (message.isHighlighted())
+				convertView.setBackgroundColor(highlightCellColour);
+			else
+				convertView.setBackgroundColor(Color.TRANSPARENT);
 			return convertView;
 		}
 	}
@@ -188,7 +230,10 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 				convertView = inflater.inflate(R.layout.channellist_channel, null);
 			}
 			TextView name = (TextView) convertView.findViewById(R.id.name);
-			name.setText(c.getChannelInfo().getName());
+			String text = c.getChannelInfo().getName();
+			if (c.getUnreadMessageCount() > 0)
+				text += "(" + String.valueOf(c.getUnreadMessageCount()) + ")";
+			name.setText(text);
 			return convertView;
 		}
 
@@ -247,6 +292,8 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 			moeService = ((IRCService.IRCBinder) service).getService();
 			moeService.connectedEventListener = activity;
 			activity.serviceConnected();
+			if (moeService != null)
+				moeService.setAppActive(true);
 
 			activity.channelAdapter = new ChannelListAdapter(moeService.getServers());
 
@@ -262,10 +309,20 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 
 			settingsButton = (Button) activity.findViewById(R.id.settingsButton);
 			settingsButton.setOnClickListener(activity);
+
+			// Goto certain channel
+			if (gotoChannelOnServiceConnect) {
+				gotoChannelOnServiceConnect = false;
+				activity.setCurrentChannelView(moeService.getServer(onServiceConnectServer).getChannel(onServiceConnectChannel));
+				onServiceConnectChannel = null;
+				onServiceConnectServer = null;
+			}
 		}
 
 		// Called when the activity disconnects from the service.
 		public void onServiceDisconnected(ComponentName className) {
+			if (moeService != null)
+				moeService.setAppActive(false);
 			moeService = null;
 		}
 	};
@@ -278,7 +335,7 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 		channelList.setVisibility(View.GONE);
 	}
 
-	public void messageReceived(Channel channel) {
+	public void activeChannelMessageReceived(Channel channel) {
 		// Update the message list
 		this.runOnUiThread(new Runnable() {
 			public void run() {
@@ -288,7 +345,20 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 		});
 	}
 
+	public void inactiveChannelMessageReceived(Channel channel) {
+		// Update the channel list for unread counts
+		this.runOnUiThread(new Runnable() {
+			public void run() {
+				if (channelAdapter != null)
+					channelAdapter.notifyDataSetChanged();
+			}
+		});
+	}
+
 	private void setCurrentChannelView(Channel channel) {
+		if (currentChannel != null)
+			currentChannel.setActive(false);
+		channel.setActive(true);
 		currentChannel = channel;
 		// Update the sidebar
 		channelAdapter.notifyDataSetChanged();
@@ -430,7 +500,7 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 				}
 			});
 			d.show();
-		} else if (v.getId()==quitButton.getId()) 	{
+		} else if (v.getId() == quitButton.getId()) {
 			moeService.stopService();
 			this.finish();
 		}

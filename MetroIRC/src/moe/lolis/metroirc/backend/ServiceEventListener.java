@@ -8,10 +8,14 @@ import moe.lolis.metroirc.irc.Channel;
 public interface ServiceEventListener {
 
 	/*
-	 * Called when an IRC message is received by the service Passes the channel
-	 * the message belonged to
+	 * Called when an IRC message is received by the service on the active channel
 	 */
-	public void messageReceived(Channel channel);
+	public void activeChannelMessageReceived(Channel channel);
+	
+	/*
+	 * Called when an IRC message is received by the service on an inactive channel
+	 */
+	public void inactiveChannelMessageReceived(Channel channel);
 
 	/*
 	 * Called when a channel is joined (durr)
