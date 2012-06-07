@@ -196,7 +196,7 @@ public class ServerPreferences {
 	public void isLogged(boolean doLog) {
 		this.doLog = doLog;
 	}
-	
+
 	// Load from SharedPreferences.
 	public void loadFromSharedPreferences(SharedPreferences sharedPreferences, int i) {
 		String prefix = "server_" + i + "_";
@@ -228,13 +228,14 @@ public class ServerPreferences {
 		}
 		this.isAutoConnected(sharedPreferences.getBoolean(prefix + "auto_connect", false));
 		this.isLogged(sharedPreferences.getBoolean(prefix + "log", false));
-		
+
 		this.preferenceSpot = i;
 	}
-		
+
 	// Save the preference to SharedPreferences.
 	public void saveToSharedPreferences(SharedPreferences sharedPreferences) {
-		// If we're already in the preferences, use our existing spot for updating.
+		// If we're already in the preferences, use our existing spot for
+		// updating.
 		// Else, create a new spot.
 		String prefix = "server_";
 		SharedPreferences.Editor editor = sharedPreferences.edit();
@@ -245,7 +246,7 @@ public class ServerPreferences {
 			editor.putInt("server_count", count + 1);
 			prefix += (count + 1) + "_";
 		}
-		
+
 		editor.putString(prefix + "name", this.getName());
 		editor.putInt(prefix + "nick_count", this.nicknames.size());
 		for (int i = 0; i < this.nicknames.size(); i++) {
@@ -253,13 +254,13 @@ public class ServerPreferences {
 		}
 		editor.putString(prefix + "username", this.getUsername());
 		editor.putString(prefix + "realname", this.getRealname());
-		
+
 		editor.putString(prefix + "host_hostname", this.host.getHostname());
 		editor.putInt(prefix + "host_port", this.host.getPort());
 		editor.putBoolean(prefix + "host_ssl", this.host.isSSL());
 		editor.putBoolean(prefix + "host_verify_ssl", this.host.verifySSL());
 		editor.putString(prefix + "host_password", this.host.getPassword());
-		
+
 		editor.putInt(prefix + "auto_channel_count", this.autoChannels.size());
 		for (int i = 0; i < this.autoChannels.size(); i++) {
 			editor.putString(prefix + "auto_channel_" + i, this.autoChannels.get(i));
@@ -268,9 +269,18 @@ public class ServerPreferences {
 		for (int i = 0; i < this.autoCommands.size(); i++) {
 			editor.putString(prefix + "auto_command_" + i, this.autoCommands.get(i));
 		}
-		
+
 		editor.putBoolean(prefix + "auto_connect", this.isAutoConnected());
 		editor.putBoolean(prefix + "log", this.isLogged());
 		editor.apply();
+	}
+
+	public void deleteFromSharedPrefereces(SharedPreferences sharedPreferences) {
+		// TODO Implement
+	}
+
+	public static boolean serverNameExists(SharedPreferences sharedPreferences, String name) {
+		// TODO Implement
+		return false;
 	}
 }

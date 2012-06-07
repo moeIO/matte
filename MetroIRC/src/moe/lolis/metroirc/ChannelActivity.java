@@ -19,10 +19,13 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.view.ContextMenu;
+import android.view.ContextMenu.ContextMenuInfo;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -32,12 +35,14 @@ import android.view.ViewGroup;
 import android.view.ViewStub;
 import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.BaseExpandableListAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ExpandableListView;
+import android.widget.ExpandableListView.ExpandableListContextMenuInfo;
 import android.widget.ExpandableListView.OnChildClickListener;
 import android.widget.ExpandableListView.OnGroupClickListener;
 import android.widget.ImageButton;
@@ -305,6 +310,7 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 			expandableChannelList.setAdapter(activity.channelAdapter);
 			expandableChannelList.setOnChildClickListener(activity);
 			expandableChannelList.setOnGroupClickListener(activity);
+			activity.registerForContextMenu(expandableChannelList);
 			channelList = (LinearLayout) activity.findViewById(R.id.channelList);
 			// And hide it by default.
 			hideChannelList();
@@ -346,7 +352,7 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 			}
 		});
 	}
-	
+
 	public void messageReceived(Server server) {
 		// See above.
 		this.runOnUiThread(new Runnable() {
@@ -372,7 +378,7 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 			this.currentChannel.isActive(false);
 		channel.isActive(true);
 		this.currentChannel = channel;
-		
+
 		// Update the sidebar
 		this.channelAdapter.notifyDataSetChanged();
 		this.activity.setTitle(channel.getChannelInfo().getName());
@@ -406,7 +412,7 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 			if (this.commandInterpreter == null) {
 				this.commandInterpreter = new CommandInterpreter(this.moeService, this);
 			}
-			
+
 			if (this.commandInterpreter.isCommand(this.sendText.getText().toString())) {
 				this.commandInterpreter.interpret(this.sendText.getText().toString());
 			} else {
@@ -430,6 +436,7 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 					b.setOnClickListener(new View.OnClickListener() {
 
 						public void onClick(View view) {
+							SharedPreferences rawPreferences = activity.getSharedPreferences("servers", Context.MODE_PRIVATE);
 							ServerPreferences prefs = new ServerPreferences();
 							ServerPreferences.Host host = prefs.new Host();
 							prefs.setHost(host);
@@ -438,9 +445,20 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 
 							TextView nameView = (TextView) dialogView.findViewById(R.id.addServer_name);
 							if (nameView.getText().length() == 0) {
-								host.setHostname("New Server");
+								success = false;
+								AlertDialog.Builder b = new AlertDialog.Builder(activity);
+								b.setMessage("You need to enter a server name");
+								b.setPositiveButton("OK", null);
+								b.show();
 							} else {
-								prefs.setName(nameView.getText().toString());
+								if (ServerPreferences.serverNameExists(rawPreferences, nameView.getText().toString())) {
+									success = false;
+									AlertDialog.Builder b = new AlertDialog.Builder(activity);
+									b.setMessage("A server with this name already exists");
+									b.setPositiveButton("OK", null);
+									b.show();
+								} else
+									prefs.setName(nameView.getText().toString());
 							}
 
 							TextView hostView = (TextView) dialogView.findViewById(R.id.addServer_host);
@@ -514,8 +532,11 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 							CheckBox log = (CheckBox) dialogView.findViewById(R.id.addServer_log);
 							prefs.isLogged(log.isChecked());
 
-							if (success)
+							if (success) {
+								prefs.saveToSharedPreferences(rawPreferences);
+								moeService.connect(prefs);
 								d.dismiss();
+							}
 						}
 					});
 				}
@@ -545,7 +566,7 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 			}
 		}
 	}
-	
+
 	public Channel getCurrentChannel() {
 		return this.currentChannel;
 	}
@@ -555,4 +576,43 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 		super.onConfigurationChanged(newConfig);
 	}
 
+	private static final int CONTEXTMENU_SERVEROPTIONS = 0;
+
+	private static final int SERVEROPTIONS_EDIT = 0;
+	private static final int SERVEROPTIONS_DELETE = 1;
+
+	@Override
+	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
+		ExpandableListContextMenuInfo info = (ExpandableListContextMenuInfo) menuInfo;
+		if (v.getId() == expandableChannelList.getId()) {
+			int selectionType = ExpandableListView.getPackedPositionType(info.packedPosition);
+			switch (selectionType) {
+			case ExpandableListView.PACKED_POSITION_TYPE_GROUP:
+				menu.setHeaderTitle("Server Options");
+				menu.add(CONTEXTMENU_SERVEROPTIONS, SERVEROPTIONS_EDIT, 0, "Edit");
+				menu.add(CONTEXTMENU_SERVEROPTIONS, SERVEROPTIONS_DELETE, 1, "Delete");
+				break;
+			}
+		}
+	}
+
+	@Override
+	public boolean onContextItemSelected(MenuItem item) {
+		ExpandableListContextMenuInfo info = (ExpandableListContextMenuInfo) item.getMenuInfo();
+		switch (item.getGroupId()) {
+		case CONTEXTMENU_SERVEROPTIONS:
+			int groupPosition = ExpandableListView.getPackedPositionGroup(info.packedPosition);
+			Server server = moeService.getServers().get(groupPosition);
+			switch (item.getItemId()) {
+			case SERVEROPTIONS_EDIT:
+				break;
+			case SERVEROPTIONS_DELETE:
+				moeService.disconnect(server.getName());
+				server.getClient().getServerPreferences().deleteFromSharedPrefereces(activity.getSharedPreferences("servers", Context.MODE_PRIVATE));
+				break;
+			}
+			break;
+		}
+		return super.onContextItemSelected(item);
+	}
 }
