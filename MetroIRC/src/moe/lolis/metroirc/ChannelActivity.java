@@ -393,10 +393,15 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 				convertView = inflater.inflate(R.layout.channellist_channel, null);
 			}
 			TextView name = (TextView) convertView.findViewById(R.id.name);
-			String text = c.getChannelInfo().getName();
-			if (c.getUnreadMessageCount() > 0)
-				text += "(" + String.valueOf(c.getUnreadMessageCount()) + ")";
-			name.setText(text);
+			//TextView messages = (TextView) convertView.findViewById(R.id.unreadMessages);
+			name.setText(c.getChannelInfo().getName());
+			
+			//if (c.getUnreadMessageCount() > 0) {
+			//	messages.setText(String.valueOf(c.getUnreadMessageCount()));
+			//} else {
+			//	messages.setText("");
+			//}
+			
 			return convertView;
 		}
 

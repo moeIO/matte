@@ -19,7 +19,7 @@
     <Button
         android:id="@+id/addServerButton"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="30dp"
         android:layout_marginBottom="1dp"
         android:layout_marginLeft="10dp"
         android:layout_weight="0"
@@ -28,13 +28,12 @@
         android:text="@string/addServer"
         android:textColor="#9f9f9f"
         android:textSize="14dp"
-        android:textStyle="bold"
-         />
+        android:textStyle="bold" />
 
     <Button
         android:id="@+id/settingsButton"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="30dp"
         android:layout_marginBottom="1dp"
         android:layout_marginLeft="10dp"
         android:layout_weight="0"
@@ -48,7 +47,7 @@
     <Button
         android:id="@+id/quitButton"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="30dp"
         android:layout_marginBottom="1dp"
         android:layout_marginLeft="10dp"
         android:layout_weight="0"

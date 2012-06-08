@@ -8,13 +8,6 @@
         android:layout_height="match_parent"
         android:orientation="vertical" >
 
-        <TextView
-            android:id="@+id/textView1"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/name"
-            android:textAppearance="?android:attr/textAppearanceSmall" />
-
         <EditText
             android:id="@+id/addServer_name"
             android:layout_width="match_parent"
@@ -40,6 +33,7 @@
                     android:id="@+id/textView2"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:paddingLeft="10dp"
                     android:text="@string/hostname"
                     android:textAppearance="?android:attr/textAppearanceSmall" />
 
@@ -81,6 +75,7 @@
             android:id="@+id/textView4"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:paddingLeft="10dp"
             android:text="@string/password"
             android:textAppearance="?android:attr/textAppearanceSmall" />
 
@@ -95,27 +90,29 @@
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" >
+            android:layout_height="wrap_content"
+            android:gravity="right" >
 
             <CheckBox
                 android:id="@+id/addServer_ssl"
-                android:layout_width="match_parent"
+                android:layout_width="91dp"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
                 android:text="@string/ssl" />
 
             <CheckBox
                 android:id="@+id/addServer_verifyssl"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
+                android:paddingRight="25dp"
                 android:text="@string/verifyssl" />
+
         </LinearLayout>
 
         <TextView
             android:id="@+id/textView5"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:paddingLeft="10dp"
             android:text="@string/nicknames"
             android:textAppearance="?android:attr/textAppearanceSmall" />
 
@@ -131,6 +128,7 @@
             android:id="@+id/textView6"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:paddingLeft="10dp"
             android:text="@string/username"
             android:textAppearance="?android:attr/textAppearanceSmall" />
 
@@ -146,6 +144,7 @@
             android:id="@+id/textView7"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:paddingLeft="10dp"
             android:text="@string/realname"
             android:textAppearance="?android:attr/textAppearanceSmall" />
 
@@ -161,6 +160,7 @@
             android:id="@+id/textView8"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:paddingLeft="10dp"
             android:text="@string/autoconnect_commands"
             android:textAppearance="?android:attr/textAppearanceSmall" />
 
@@ -187,7 +187,9 @@
                     android:id="@+id/addServer_connectatstartup"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:checked="true"
                     android:text="@string/connectatstartup" />
+
             </LinearLayout>
 
             <LinearLayout
@@ -200,7 +202,9 @@
                     android:id="@+id/addServer_log"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:checked="true"
                     android:text="@string/log" />
+
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>
