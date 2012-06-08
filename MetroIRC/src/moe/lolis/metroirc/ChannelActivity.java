@@ -301,9 +301,7 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 							}
 
 							TextView autoconnectCommands = (TextView) dialogView.findViewById(R.id.addServer_autoconnectcommands);
-							if (autoconnectCommands.getText().length() == 0) {
-								prefs.setAutoCommands(null);
-							} else {
+							if (autoconnectCommands.getText().length() > 0) {
 								ArrayList<String> commands = new ArrayList<String>();
 								for (String c : autoconnectCommands.getText().toString().split("\n"))
 									commands.add(c);
