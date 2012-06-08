@@ -24,8 +24,7 @@ public class IRCListener extends ListenerAdapter<Client> {
 		Server server = this.service.getServer(event.getBot().getServerPreferences().getName());
 		for (String command : server.getClient().getServerPreferences().getAutoCommands())
 			event.respond(command);
-		//XXX Seems to cause IllegalStateException in ChannelActivity
-		//this.service.channelJoined(server);
+		this.service.channelJoined(server,server.getClient().getName());
 	}
 
 	public void onMotd(MotdEvent<Client> event) {
@@ -35,10 +34,9 @@ public class IRCListener extends ListenerAdapter<Client> {
 			ServerMessage message = new ServerMessage();
 			message.setContent(s);
 			message.setTime(new Date());
-			server.addMessage(message);
+			//XXX I don't like this, new runnable for each MOTD
+			this.service.messageReceived(server,message);
 		}
-
-		this.service.messageReceived(server);
 	}
 
 	public void onJoin(JoinEvent<Client> event) {
@@ -58,8 +56,8 @@ public class IRCListener extends ListenerAdapter<Client> {
 		message.setNickname("-->");
 		message.setContent(event.getUser().getNick() + " (" + event.getUser().getLogin() + "@" + event.getUser().getHostmask() + ") has joined " + event.getChannel().getName());
 		message.setTime(new Date());
-		channel.addMessage(message);
-		
+		//channel.addMessage(message);
+		this.service.messageReceived(channel, message);
 		this.service.channelJoined(channel, event.getUser().getNick());
 	}
 	
@@ -71,8 +69,8 @@ public class IRCListener extends ListenerAdapter<Client> {
 		message.setNickname("<--");
 		message.setContent(event.getUser().getNick() + " (" + event.getUser().getLogin() + "@" + event.getUser().getHostmask() + ") has left " + event.getChannel().getName() + " (" + event.getReason() + ")");
 		message.setTime(new Date());
-		channel.addMessage(message);
-		
+		//channel.addMessage(message);
+		this.service.messageReceived(channel, message);
 		this.service.channelParted(channel, event.getUser().getNick());
 	}
 	
@@ -95,7 +93,8 @@ public class IRCListener extends ListenerAdapter<Client> {
 					message.setContent(event.getUser().getNick() + " (" + event.getUser().getLogin() + "@" + event.getUser().getHostmask() + ") has quit (" + event.getReason() + ")");
 					message.setTime(new Date());
 				}
-				ch.addMessage(message);
+				//ch.addMessage(message);
+				this.service.messageReceived(server, message);
 			}
 		}
 		
@@ -110,13 +109,13 @@ public class IRCListener extends ListenerAdapter<Client> {
 		message.setNickname(event.getUser().getNick());
 		message.setContent(event.getMessage());
 		message.setTime(new Date());
-		channel.addMessage(message);
+		//channel.addMessage(message);
 
 		if (channel.isActive()) {
-			this.service.activeChannelMessageReceived(channel);
+			this.service.activeChannelMessageReceived(channel,message);
 		} else {
 			channel.incrementUnreadMessages();
-			this.service.inactiveChannelMessageReceived(channel);
+			this.service.inactiveChannelMessageReceived(channel,message);
 		}
 		if (message.getContent().toLowerCase().contains(event.getBot().getNick().toLowerCase())) {
 			message.isHighlighted(true);
@@ -141,13 +140,11 @@ public class IRCListener extends ListenerAdapter<Client> {
 		}
 
 		ServerMessage message = new ServerMessage();
-		if (server.getName()==null)
-		message.setServerName(server.getName());
 		message.setContent(response);
 		message.setTime(new Date());
-		server.addMessage(message);
+		//server.addMessage(message);
 
-		this.service.messageReceived(server);
+		this.service.messageReceived(server,message);
 	}
 
 }

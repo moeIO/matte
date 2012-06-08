@@ -2,6 +2,7 @@ package moe.lolis.metroirc.backend;
 
 import java.util.Collection;
 import moe.lolis.metroirc.irc.Channel;
+import moe.lolis.metroirc.irc.GenericMessage;
 import moe.lolis.metroirc.irc.Server;
 
 /*
@@ -13,18 +14,18 @@ public interface ServiceEventListener {
 	 * Called when an IRC message is received by the service. Passes the channel
 	 * the message belonged to
 	 */
-	public void activeChannelMessageReceived(Channel channel);
+	public void activeChannelMessageReceived(Channel channel,GenericMessage message);
 	
 	/*
 	 * Called when an IRC message is received by the service on an inactive channel
 	 */
-	public void inactiveChannelMessageReceived(Channel channel);
+	public void inactiveChannelMessageReceived(Channel channel,GenericMessage message);
 
 	/*
 	 * Called when a server message is received. Passes the server the message
 	 * belongs to.
 	 */
-	public void messageReceived(Server server);
+	public void messageReceived(Channel channel,GenericMessage message);
 	
 	/*
 	 * Called when a channel is joined (durr)

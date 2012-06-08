@@ -78,12 +78,9 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 	private boolean gotoChannelOnServiceConnect;
 	private String onServiceConnectChannel;
 	private String onServiceConnectServer;
-	private int[] possibleNickColours = { 
-		R.color.nickcolor0, R.color.nickcolor1, R.color.nickcolor2, R.color.nickcolor3,
-		R.color.nickcolor4, R.color.nickcolor5, R.color.nickcolor6, R.color.nickcolor7,
-		R.color.nickcolor8, R.color.nickcolor9, R.color.nickcolor10, R.color.nickcolor11,
-		R.color.nickcolor12, R.color.nickcolor13, R.color.nickcolor14, R.color.nickcolor15
-	};
+	private int[] possibleNickColours = { R.color.nickcolor0, R.color.nickcolor1, R.color.nickcolor2, R.color.nickcolor3, R.color.nickcolor4,
+			R.color.nickcolor5, R.color.nickcolor6, R.color.nickcolor7, R.color.nickcolor8, R.color.nickcolor9, R.color.nickcolor10,
+			R.color.nickcolor11, R.color.nickcolor12, R.color.nickcolor13, R.color.nickcolor14, R.color.nickcolor15 };
 	private HashMap<String, Integer> nickColours;
 
 	private static final int CONTEXTMENU_SERVEROPTIONS = 0;
@@ -128,7 +125,7 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 		this.quitButton = (Button) this.findViewById(R.id.quitButton);
 		this.quitButton.setOnClickListener(this);
 		this.highlightCellColour = Color.rgb(182, 232, 243);
-		
+
 		this.nickColours = new HashMap<String, Integer>();
 		// Add predefined 'special' nicknames.
 		this.nickColours.put("!", this.activity.getResources().getColor(R.color.nickcolor4));
@@ -367,7 +364,6 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 		hideChannelList();
 		return false;
 	}
-	
 
 	@Override
 	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
@@ -417,6 +413,17 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 			super(context, textViewResourceId, items);
 			this.items = items;
 		}
+
+		public void setMessages(ArrayList<GenericMessage> newList) {
+			this.notifyDataSetInvalidated();
+			this.items = newList;
+			this.notifyDataSetChanged();
+		}
+		
+		@Override
+	     public int getCount(){
+	           return this.items!=null ? items.size() : 0;
+	     }
 
 		@Override
 		public View getView(int position, View convertView, ViewGroup parent) {
@@ -564,30 +571,39 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 	 * IRC service callbacks.
 	 */
 
-	public void activeChannelMessageReceived(Channel channel) {
+	public void activeChannelMessageReceived(Channel channel, GenericMessage message) {
+		final Channel chan = channel;
+		final GenericMessage mess = message;
 		// Update the message list
 		this.runOnUiThread(new Runnable() {
 			public void run() {
+				chan.addMessage(mess);
 				if (adapter != null)
 					adapter.notifyDataSetChanged();
 			}
 		});
 	}
 
-	public void inactiveChannelMessageReceived(Channel channel) {
+	public void inactiveChannelMessageReceived(Channel channel, GenericMessage message) {
+		final Channel chan = channel;
+		final GenericMessage mess = message;
 		// Update the channel list for unread counts
 		this.runOnUiThread(new Runnable() {
 			public void run() {
+				chan.addMessage(mess);
 				if (channelAdapter != null)
 					channelAdapter.notifyDataSetChanged();
 			}
 		});
 	}
 
-	public void messageReceived(Server server) {
+	public void messageReceived(Channel channel, GenericMessage message) {
+		final Channel chan = channel;
+		final GenericMessage mess = message;
 		// See above.
 		this.runOnUiThread(new Runnable() {
 			public void run() {
+				chan.addMessage(mess);
 				if (adapter != null)
 					adapter.notifyDataSetChanged();
 			}
@@ -596,7 +612,7 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 
 	public void channelJoined(Channel channel, String nickname) {
 		final Channel chan = channel;
-		
+
 		this.runOnUiThread(new Runnable() {
 			public void run() {
 				// Expand newest server entry
@@ -606,7 +622,7 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 				setCurrentChannelView(chan);
 			}
 		});
-		
+
 		// Switch to the new channel when it is joined
 		if (nickname.equals(channel.getServer().getClient().getNick())) {
 			this.runOnUiThread(new Runnable() {
@@ -618,7 +634,7 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 			});
 		}
 	}
-	
+
 	public void channelParted(Channel channel, String nickname) {
 		this.runOnUiThread(new Runnable() {
 			public void run() {
@@ -626,10 +642,10 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 					adapter.notifyDataSetChanged();
 			}
 		});
-		
+
 		// TODO: Close channel if user is us.
 	}
-	
+
 	public void networkQuit(Collection<Channel> commonChannels, String nickname) {
 		if (commonChannels.contains(this.currentChannel)) {
 			this.runOnUiThread(new Runnable() {
@@ -662,8 +678,16 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 		this.channelAdapter.notifyDataSetChanged();
 		// Set list adapter to be the messages of the connected channel,
 		// TODO: Re-creating the adapter every time may be inefficient
-		this.activity.adapter = new MessageAdapter(getApplicationContext(), R.layout.channel_message_row, channel.getMessages());
-		this.activity.setListAdapter(this.activity.adapter);
+		if (this.activity.adapter == null)
+		{
+			this.activity.adapter = new MessageAdapter(getApplicationContext(), R.layout.channel_message_row, channel.getMessages());
+			this.activity.setListAdapter(this.activity.adapter);
+		}
+		else
+			this.activity.adapter.setMessages(channel.getMessages());
+
+		// this.activity.setListAdapter(this.activity.adapter);
+		// this.activity.adapter.notifyDataSetChanged();
 	}
 
 	private void hideChannelList() {
@@ -704,10 +728,10 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 
 	private int generateNickColour(String nick) {
 		int hash = 0;
-		for (byte b : nick.getBytes()){
+		for (byte b : nick.getBytes()) {
 			hash += b;
 		}
-		
+
 		return this.activity.getResources().getColor(this.possibleNickColours[hash % this.possibleNickColours.length]);
 	}
 

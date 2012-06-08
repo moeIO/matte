@@ -5,7 +5,6 @@ import java.util.Date;
 public class ServerMessage implements GenericMessage {
 	private String content;
 	private Date time;
-	private String serverName;
 
 	public void setContent(String content) {
 		this.content = content;
@@ -28,7 +27,7 @@ public class ServerMessage implements GenericMessage {
 	}
 
 	public String getNickname() {
-		return serverName;
+		return "";
 	}
 
 	public void isHighlighted(boolean highlighted) {
@@ -39,11 +38,4 @@ public class ServerMessage implements GenericMessage {
 		return false;
 	}
 
-	public void setServerName(String serverName) {
-		this.serverName = serverName;
-	}
-
-	public String getServerName() {
-		return this.serverName;
-	}
 }

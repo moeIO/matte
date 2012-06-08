@@ -12,6 +12,7 @@ import moe.lolis.metroirc.irc.Channel;
 import moe.lolis.metroirc.irc.ChannelMessage;
 import moe.lolis.metroirc.irc.Client;
 import moe.lolis.metroirc.irc.ClientManager;
+import moe.lolis.metroirc.irc.GenericMessage;
 import moe.lolis.metroirc.irc.Server;
 import moe.lolis.metroirc.irc.ServerPreferences;
 
@@ -250,16 +251,16 @@ public class IRCService extends Service implements ServiceEventListener {
 		mNotificationManager.notify(NOTIFICATION_ID, notification);
 	}
 
-	public void activeChannelMessageReceived(Channel channel) {
-		this.connectedEventListener.activeChannelMessageReceived(channel);
+	public void activeChannelMessageReceived(Channel channel,GenericMessage message) {
+		this.connectedEventListener.activeChannelMessageReceived(channel,message);
 	}
 
-	public void inactiveChannelMessageReceived(Channel channel) {
-		this.connectedEventListener.inactiveChannelMessageReceived(channel);
+	public void inactiveChannelMessageReceived(Channel channel,GenericMessage message) {
+		this.connectedEventListener.inactiveChannelMessageReceived(channel,message);
 	}
 
-	public void messageReceived(Server server) {
-		this.connectedEventListener.messageReceived(server);
+	public void messageReceived(Channel channel,GenericMessage message) {
+		this.connectedEventListener.messageReceived(channel,message);
 	}
 
 	public Server getServer(String name) {

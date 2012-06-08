@@ -31,16 +31,16 @@ public class Channel {
 		return this.server;
 	}
 
-	public void addMessage(ChannelMessage message) {
+	public void addMessage(GenericMessage message) {
 		this.messages.add(message);
 	}
 	
-	public void addError(String error) {
+	public GenericMessage createError(String error) {
 		ChannelMessage message = new ChannelMessage();
 		message.setNickname("!");
 		message.setContent(error);
 		message.setTime(new Date());
-		this.addMessage(message);
+		return message;
 	}
 
 	public ArrayList<GenericMessage> getMessages() {
