@@ -182,13 +182,18 @@ public class IRCService extends Service implements ServiceEventListener {
 			ServerPreferences.Host host = this.preferences.getHost();
 			Server server = new Server();
 			try {
-				
+
 				server.setName(this.preferences.getName());
 				server.setServerInfo(this.client.getServerInfo());
 				server.setClient(this.client);
 				IRCService.this.servers.add(server);
 				IRCService.this.serverMap.put(this.preferences.getName(), server);
-				
+				// If activity is already bound, get it to switch to the new
+				// server tab, otherwise it will switch tab once it has bound on
+				// it's own
+				if (IRCService.this.connectedEventListener!=null)
+					IRCService.this.channelJoined(server, null);
+
 				if (host.isSSL()) {
 					if (host.verifySSL()) {
 						this.client.connect(host.getHostname(), host.getPort(), host.getPassword(), SSLSocketFactory.getDefault());
@@ -203,9 +208,8 @@ public class IRCService extends Service implements ServiceEventListener {
 				connected = true;
 			} catch (Exception ex) {
 				Log.e("IRC Connection failed", ex.getMessage());
-				//Clean-up server list
-				IRCService.this.servers.remove(server);
-				IRCService.this.serverMap.remove(this.preferences.getName());
+				// Leave failed server in list for error-logging purposes (and
+				// since ChannelList adapter will still want it)
 				return false;
 			}
 
@@ -251,16 +255,16 @@ public class IRCService extends Service implements ServiceEventListener {
 		mNotificationManager.notify(NOTIFICATION_ID, notification);
 	}
 
-	public void activeChannelMessageReceived(Channel channel,GenericMessage message) {
-		this.connectedEventListener.activeChannelMessageReceived(channel,message);
+	public void activeChannelMessageReceived(Channel channel, GenericMessage message) {
+		this.connectedEventListener.activeChannelMessageReceived(channel, message);
 	}
 
-	public void inactiveChannelMessageReceived(Channel channel,GenericMessage message) {
-		this.connectedEventListener.inactiveChannelMessageReceived(channel,message);
+	public void inactiveChannelMessageReceived(Channel channel, GenericMessage message) {
+		this.connectedEventListener.inactiveChannelMessageReceived(channel, message);
 	}
 
-	public void messageReceived(Channel channel,GenericMessage message) {
-		this.connectedEventListener.messageReceived(channel,message);
+	public void messageReceived(Channel channel, GenericMessage message) {
+		this.connectedEventListener.messageReceived(channel, message);
 	}
 
 	public Server getServer(String name) {
@@ -274,11 +278,11 @@ public class IRCService extends Service implements ServiceEventListener {
 	public void channelJoined(Channel channel, String nickname) {
 		this.connectedEventListener.channelJoined(channel, nickname);
 	}
-	
+
 	public void channelParted(Channel channel, String nickname) {
 		this.connectedEventListener.channelParted(channel, nickname);
 	}
-	
+
 	public void networkQuit(Collection<Channel> commonChannels, String nickname) {
 		this.connectedEventListener.networkQuit(commonChannels, nickname);
 	}

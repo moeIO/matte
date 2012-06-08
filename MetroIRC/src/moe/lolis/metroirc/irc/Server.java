@@ -56,14 +56,6 @@ public class Server extends Channel{
 		return this.name;
 	}
 
-	public void addMessage(ServerMessage message) {
-		this.messages.add(message);
-	}
-
-	public void removeMessage(ServerMessage message) {
-		this.messages.remove(message);
-	}
-
 	public void sendRawCommand(String rawCommand) {
 		this.getServerInfo().getBot().sendRawLine(rawCommand);
 	}

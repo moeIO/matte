@@ -9,10 +9,11 @@ public class Channel {
 	protected ArrayList<GenericMessage> messages;
 	protected int unreadMessages;
 	protected boolean active;
-	
+
+	private static final int MAX_BUFFER_MESSAGES = 50;
 
 	public Channel() {
-		this.messages = new ArrayList<GenericMessage>();
+		this.messages = new ArrayList<GenericMessage>(MAX_BUFFER_MESSAGES);
 	}
 
 	public void setChannelInfo(org.pircbotx.Channel channelInfo) {
@@ -32,9 +33,17 @@ public class Channel {
 	}
 
 	public void addMessage(GenericMessage message) {
+		if (messages.size() == MAX_BUFFER_MESSAGES) {
+			this.logMessage(messages.get(0));
+			this.messages.remove(0);
+		}
 		this.messages.add(message);
 	}
-	
+
+	private void logMessage(GenericMessage message) {
+		// TODO: Implement
+	}
+
 	public GenericMessage createError(String error) {
 		ChannelMessage message = new ChannelMessage();
 		message.setNickname("!");
@@ -82,9 +91,8 @@ public class Channel {
 	public boolean isActive() {
 		return this.active;
 	}
-	
-	public String getName()
-	{
+
+	public String getName() {
 		return getChannelInfo().getName();
 	}
 }

@@ -419,11 +419,11 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 			this.items = newList;
 			this.notifyDataSetChanged();
 		}
-		
+
 		@Override
-	     public int getCount(){
-	           return this.items!=null ? items.size() : 0;
-	     }
+		public int getCount() {
+			return this.items != null ? items.size() : 0;
+		}
 
 		@Override
 		public View getView(int position, View convertView, ViewGroup parent) {
@@ -472,15 +472,14 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 				convertView = inflater.inflate(R.layout.channellist_channel, null);
 			}
 			TextView name = (TextView) convertView.findViewById(R.id.name);
-			// TextView messages = (TextView)
-			// convertView.findViewById(R.id.unreadMessages);
+			TextView messages = (TextView) convertView.findViewById(R.id.unreadCount);
 			name.setText(c.getChannelInfo().getName());
 
-			// if (c.getUnreadMessageCount() > 0) {
-			// messages.setText(String.valueOf(c.getUnreadMessageCount()));
-			// } else {
-			// messages.setText("");
-			// }
+			if (c.getUnreadMessageCount() > 0) {
+				messages.setText("(" + String.valueOf(c.getUnreadMessageCount()) + ")");
+			} else {
+				messages.setText("");
+			}
 
 			return convertView;
 		}
@@ -553,6 +552,17 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 				onServiceConnectChannel = null;
 				onServiceConnectServer = null;
 			}
+
+			// Right, we can't switch to the server tab in the server connection
+			// task since due to a race, the task beats this binding and the
+			// activity reference is null. Therefore the best we can do is
+			// switch to the latest server in the server list at the end of
+			// binding being completed
+			// ==
+			// Works reliably from what I see, and shouldn't cause any issues if
+			// binding out-races the connection task
+			if (moeService.getServers().size() > 0)
+				activity.channelJoined(moeService.getServers().get(moeService.getServers().size() - 1), null);
 		}
 
 		// Called when the activity disconnects from the service.
@@ -612,7 +622,6 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 
 	public void channelJoined(Channel channel, String nickname) {
 		final Channel chan = channel;
-
 		this.runOnUiThread(new Runnable() {
 			public void run() {
 				// Expand newest server entry
@@ -624,7 +633,9 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 		});
 
 		// Switch to the new channel when it is joined
-		if (nickname.equals(channel.getServer().getClient().getNick())) {
+		// Accept 0-length nick for time when server is connecting and has no
+		// nick
+		if (nickname == null || nickname.equals(channel.getServer().getClient().getNick())) {
 			this.runOnUiThread(new Runnable() {
 				public void run() {
 					setCurrentChannelView(chan);
@@ -678,12 +689,10 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 		this.channelAdapter.notifyDataSetChanged();
 		// Set list adapter to be the messages of the connected channel,
 		// TODO: Re-creating the adapter every time may be inefficient
-		if (this.activity.adapter == null)
-		{
+		if (this.activity.adapter == null) {
 			this.activity.adapter = new MessageAdapter(getApplicationContext(), R.layout.channel_message_row, channel.getMessages());
 			this.activity.setListAdapter(this.activity.adapter);
-		}
-		else
+		} else
 			this.activity.adapter.setMessages(channel.getMessages());
 
 		// this.activity.setListAdapter(this.activity.adapter);
