@@ -272,11 +272,53 @@ public class ServerPreferences {
 
 		editor.putBoolean(prefix + "auto_connect", this.isAutoConnected());
 		editor.putBoolean(prefix + "log", this.isLogged());
-		editor.apply();
+		editor.commit();
 	}
 
-	public void deleteFromSharedPrefereces(SharedPreferences sharedPreferences) {
-		// TODO Implement
+	public void deleteFromSharedPreferences(SharedPreferences sharedPreferences) {
+		SharedPreferences.Editor editor = sharedPreferences.edit();
+		
+		int serverCount = sharedPreferences.getInt("server_count", 0);
+		
+		// Move all servers back one spot.
+		for (int i = this.preferenceSpot; i < serverCount - 1; i++) {
+			this.loadFromSharedPreferences(sharedPreferences, i + 1);
+			this.preferenceSpot = i;
+			this.saveToSharedPreferences(sharedPreferences);
+		}
+		
+		// Delete the last server.
+		String prefix = "server_" + serverCount + "_";
+		editor.remove(prefix + "name");
+		editor.remove(prefix + "username");
+		editor.remove(prefix + "realname");
+		editor.remove(prefix + "host_hostname");
+		editor.remove(prefix + "host_port");
+		editor.remove(prefix + "host_ssl");
+		editor.remove(prefix + "host_verify_ssl");
+		editor.remove(prefix + "host_password");
+		editor.remove(prefix + "auto_connect");
+		editor.remove(prefix + "log");
+		
+		int nickCount = sharedPreferences.getInt(prefix + "nick_count", 0);
+		for (int i = 0; i < nickCount; i++) {
+			editor.remove(prefix + "nick" + i);
+		}
+		editor.remove(prefix + "nick_count");
+		int autoChannelCount = sharedPreferences.getInt(prefix + "auto_channel_count", 0);
+		for (int i = 0; i < autoChannelCount; i++) {
+			editor.remove(prefix + "auto_channel_" + i);
+		}
+		editor.remove(prefix + "auto_channel_count");
+		int autoCommandCount = sharedPreferences.getInt(prefix + "auto_command_count", 0);
+		for (int i = 0; i < autoCommandCount; i++) {
+			editor.remove(prefix + "auto_command_" + i);
+		}
+		editor.remove(prefix + "auto_command_count");
+		
+		// Decrement the server count.
+		editor.putInt("server_count", serverCount - 1);
+		editor.commit();
 	}
 
 	public static boolean serverNameExists(SharedPreferences sharedPreferences, String name) {

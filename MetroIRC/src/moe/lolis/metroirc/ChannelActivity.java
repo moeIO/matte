@@ -641,7 +641,7 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 				break;
 			case SERVEROPTIONS_DELETE:
 				moeService.disconnect(server.getName());
-				server.getClient().getServerPreferences().deleteFromSharedPrefereces(activity.getSharedPreferences("servers", Context.MODE_PRIVATE));
+				server.getClient().getServerPreferences().deleteFromSharedPreferences(activity.getSharedPreferences("servers", Context.MODE_PRIVATE));
 				break;
 			}
 			break;
