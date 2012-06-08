@@ -79,8 +79,17 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 	private boolean gotoChannelOnServiceConnect;
 	private String onServiceConnectChannel;
 	private String onServiceConnectServer;
-	private int[] possibleNickColours = {};
+	private int[] possibleNickColours = { 
+		R.color.nickcolor0, R.color.nickcolor1, R.color.nickcolor2, R.color.nickcolor3,
+		R.color.nickcolor4, R.color.nickcolor5, R.color.nickcolor6, R.color.nickcolor7,
+		R.color.nickcolor8, R.color.nickcolor9, R.color.nickcolor10, R.color.nickcolor11,
+		R.color.nickcolor12, R.color.nickcolor13, R.color.nickcolor14, R.color.nickcolor15
+	};
 	private HashMap<String, Integer> nickColours;
+
+	private static final int CONTEXTMENU_SERVEROPTIONS = 0;
+	private static final int SERVEROPTIONS_EDIT = 0;
+	private static final int SERVEROPTIONS_DELETE = 1;
 
 	/*
 	 * UI callbacks.
@@ -120,6 +129,7 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 		this.quitButton = (Button) this.findViewById(R.id.quitButton);
 		this.quitButton.setOnClickListener(this);
 		this.highlightCellColour = Color.rgb(182, 232, 243);
+		this.nickColours = new HashMap<String, Integer>();
 
 		this.getListView().setTranscriptMode(ListView.TRANSCRIPT_MODE_ALWAYS_SCROLL);
 
@@ -349,6 +359,42 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 		hideChannelList();
 		return false;
 	}
+	
+
+	@Override
+	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
+		ExpandableListContextMenuInfo info = (ExpandableListContextMenuInfo) menuInfo;
+		if (v.getId() == expandableChannelList.getId()) {
+			int selectionType = ExpandableListView.getPackedPositionType(info.packedPosition);
+			switch (selectionType) {
+			case ExpandableListView.PACKED_POSITION_TYPE_GROUP:
+				menu.setHeaderTitle("Server Options");
+				menu.add(CONTEXTMENU_SERVEROPTIONS, SERVEROPTIONS_EDIT, 0, "Edit");
+				menu.add(CONTEXTMENU_SERVEROPTIONS, SERVEROPTIONS_DELETE, 1, "Delete");
+				break;
+			}
+		}
+	}
+
+	@Override
+	public boolean onContextItemSelected(MenuItem item) {
+		ExpandableListContextMenuInfo info = (ExpandableListContextMenuInfo) item.getMenuInfo();
+		switch (item.getGroupId()) {
+		case CONTEXTMENU_SERVEROPTIONS:
+			int groupPosition = ExpandableListView.getPackedPositionGroup(info.packedPosition);
+			Server server = moeService.getServers().get(groupPosition);
+			switch (item.getItemId()) {
+			case SERVEROPTIONS_EDIT:
+				break;
+			case SERVEROPTIONS_DELETE:
+				moeService.disconnect(server.getName());
+				server.getClient().getServerPreferences().deleteFromSharedPreferences(activity.getSharedPreferences("servers", Context.MODE_PRIVATE));
+				break;
+			}
+			break;
+		}
+		return super.onContextItemSelected(item);
+	}
 
 	/*
 	 * Helper classes.
@@ -375,8 +421,7 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 			TextView content = (TextView) convertView.findViewById(R.id.channelMessageContent);
 			content.setText(message.getContent());
 			name.setText(message.getNickname());
-			// TODO: Set colour here.
-
+			name.setTextColor(getNickColour(message.getNickname()));
 			if (message.isHighlighted())
 				convertView.setBackgroundColor(highlightCellColour);
 			else
@@ -609,53 +654,13 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 		return this.nickColours.get(nick);
 	}
 
-	private static final int CONTEXTMENU_SERVEROPTIONS = 0;
-
-	private static final int SERVEROPTIONS_EDIT = 0;
-	private static final int SERVEROPTIONS_DELETE = 1;
-
-	@Override
-	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
-		ExpandableListContextMenuInfo info = (ExpandableListContextMenuInfo) menuInfo;
-		if (v.getId() == expandableChannelList.getId()) {
-			int selectionType = ExpandableListView.getPackedPositionType(info.packedPosition);
-			switch (selectionType) {
-			case ExpandableListView.PACKED_POSITION_TYPE_GROUP:
-				menu.setHeaderTitle("Server Options");
-				menu.add(CONTEXTMENU_SERVEROPTIONS, SERVEROPTIONS_EDIT, 0, "Edit");
-				menu.add(CONTEXTMENU_SERVEROPTIONS, SERVEROPTIONS_DELETE, 1, "Delete");
-				break;
-			}
-		}
-	}
-
-	@Override
-	public boolean onContextItemSelected(MenuItem item) {
-		ExpandableListContextMenuInfo info = (ExpandableListContextMenuInfo) item.getMenuInfo();
-		switch (item.getGroupId()) {
-		case CONTEXTMENU_SERVEROPTIONS:
-			int groupPosition = ExpandableListView.getPackedPositionGroup(info.packedPosition);
-			Server server = moeService.getServers().get(groupPosition);
-			switch (item.getItemId()) {
-			case SERVEROPTIONS_EDIT:
-				break;
-			case SERVEROPTIONS_DELETE:
-				moeService.disconnect(server.getName());
-				server.getClient().getServerPreferences().deleteFromSharedPreferences(activity.getSharedPreferences("servers", Context.MODE_PRIVATE));
-				break;
-			}
-			break;
-		}
-		return super.onContextItemSelected(item);
-	}
-
 	public void setNickColour(String nick, int colour) {
 		this.nickColours.put(nick, colour);
 	}
 
 	private int generateNickColour(String nick) {
-		int hash = nick.hashCode();
-		return this.possibleNickColours[hash % this.possibleNickColours.length];
+		int hash = Math.abs(nick.hashCode());
+		return this.activity.getResources().getColor(this.possibleNickColours[hash % this.possibleNickColours.length]);
 	}
 
 }
