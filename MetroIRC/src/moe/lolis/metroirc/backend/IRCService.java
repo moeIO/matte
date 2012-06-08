@@ -1,6 +1,7 @@
 package moe.lolis.metroirc.backend;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 
 import javax.net.ssl.SSLSocketFactory;
@@ -263,8 +264,16 @@ public class IRCService extends Service implements ServiceEventListener {
 		return this.servers;
 	}
 
-	public void channelJoined(Channel channel) {
-		this.connectedEventListener.channelJoined(channel);
+	public void channelJoined(Channel channel, String nickname) {
+		this.connectedEventListener.channelJoined(channel, nickname);
+	}
+	
+	public void channelParted(Channel channel, String nickname) {
+		this.connectedEventListener.channelParted(channel, nickname);
+	}
+	
+	public void networkQuit(Collection<Channel> commonChannels, String nickname) {
+		this.connectedEventListener.networkQuit(commonChannels, nickname);
 	}
 
 	public void isAppActive(boolean active) {
