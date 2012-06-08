@@ -706,7 +706,11 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 	}
 
 	private int generateNickColour(String nick) {
-		int hash = Math.abs(nick.hashCode());
+		int hash = 0;
+		for (byte b : nick.getBytes()){
+			hash += b;
+		}
+		
 		return this.activity.getResources().getColor(this.possibleNickColours[hash % this.possibleNickColours.length]);
 	}
 
