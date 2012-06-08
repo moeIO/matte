@@ -2,6 +2,14 @@ package moe.lolis.metroirc;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+
+import moe.lolis.metroirc.backend.IRCService;
+import moe.lolis.metroirc.backend.ServiceEventListener;
+import moe.lolis.metroirc.irc.Channel;
+import moe.lolis.metroirc.irc.CommandInterpreter;
+import moe.lolis.metroirc.irc.GenericMessage;
+import moe.lolis.metroirc.irc.Server;
+import moe.lolis.metroirc.irc.ServerPreferences;
 import android.app.ActionBar;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -13,7 +21,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
-import android.content.res.Configuration;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -28,7 +35,6 @@ import android.view.ViewGroup;
 import android.view.ViewStub;
 import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.BaseExpandableListAdapter;
 import android.widget.Button;
@@ -43,15 +49,6 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.TextView.OnEditorActionListener;
-
-import moe.lolis.metroirc.backend.IRCService;
-import moe.lolis.metroirc.backend.ServiceEventListener;
-import moe.lolis.metroirc.irc.Channel;
-import moe.lolis.metroirc.irc.ChannelMessage;
-import moe.lolis.metroirc.irc.CommandInterpreter;
-import moe.lolis.metroirc.irc.GenericMessage;
-import moe.lolis.metroirc.irc.Server;
-import moe.lolis.metroirc.irc.ServerPreferences;
 
 public class ChannelActivity extends ListActivity implements ServiceEventListener, OnClickListener, OnEditorActionListener, OnChildClickListener,
 		OnGroupClickListener {
