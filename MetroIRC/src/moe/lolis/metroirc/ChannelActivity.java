@@ -256,7 +256,7 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 							if (portView.getText().length() == 0) {
 								host.setPort(6667);
 							} else {
-								host.setPort(Integer.parseInt(hostView.getText().toString()));
+								host.setPort(Integer.parseInt(portView.getText().toString()));
 							}
 
 							TextView passwordView = (TextView) dialogView.findViewById(R.id.addServer_password);
