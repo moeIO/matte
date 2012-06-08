@@ -209,6 +209,7 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 
 			if (this.commandInterpreter.isCommand(this.sendText.getText().toString())) {
 				this.commandInterpreter.interpret(this.sendText.getText().toString());
+				this.sendText.setText("");
 			} else {
 				this.sendMessage();
 			}

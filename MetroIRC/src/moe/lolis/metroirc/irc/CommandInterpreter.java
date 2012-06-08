@@ -18,7 +18,7 @@ public class CommandInterpreter {
 	
 	public void interpret(String message) {
 		if (message.startsWith("/")) {
-			message = message.substring(0, message.length() - 1);
+			message = message.substring(1, message.length());
 		}
 		
 		String[] parts = message.split(" ");
