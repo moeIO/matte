@@ -2,7 +2,7 @@ package moe.lolis.metroirc.irc;
 
 import java.util.Date;
 
-public class ChannelMessage {
+public class ChannelMessage implements GenericMessage{
 	private String nickname;
 	private String content;
 	private Date time;

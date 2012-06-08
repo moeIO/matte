@@ -6,12 +6,13 @@ import java.util.Date;
 public class Channel {
 	private org.pircbotx.Channel channelInfo;
 	private Server server;
-	private ArrayList<ChannelMessage> messages;
-	private int unreadMessages;
-	private boolean active;
+	protected ArrayList<GenericMessage> messages;
+	protected int unreadMessages;
+	protected boolean active;
+	
 
 	public Channel() {
-		this.messages = new ArrayList<ChannelMessage>();
+		this.messages = new ArrayList<GenericMessage>();
 	}
 
 	public void setChannelInfo(org.pircbotx.Channel channelInfo) {
@@ -42,7 +43,7 @@ public class Channel {
 		this.addMessage(message);
 	}
 
-	public ArrayList<ChannelMessage> getMessages() {
+	public ArrayList<GenericMessage> getMessages() {
 		return this.messages;
 	}
 
@@ -50,7 +51,7 @@ public class Channel {
 		this.messages.remove(message);
 	}
 
-	public void setMessages(ArrayList<ChannelMessage> messages) {
+	public void setMessages(ArrayList<GenericMessage> messages) {
 		this.messages = messages;
 	}
 
@@ -80,5 +81,10 @@ public class Channel {
 
 	public boolean isActive() {
 		return this.active;
+	}
+	
+	public String getName()
+	{
+		return getChannelInfo().getName();
 	}
 }

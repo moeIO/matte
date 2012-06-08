@@ -21,22 +21,26 @@ public class IRCListener extends ListenerAdapter<Client> {
 	}
 
 	public void onConnect(ConnectEvent<Client> event) {
-
+		Server server = this.service.getServer(event.getBot().getServerPreferences().getName());
+		for (String command : server.getClient().getServerPreferences().getAutoCommands())
+			event.respond(command);
+		//XXX Seems to cause IllegalStateException in ChannelActivity
+		//this.service.channelJoined(server);
 	}
-	
+
 	public void onMotd(MotdEvent<Client> event) {
 		Server server = this.service.getServer(event.getBot().getServerPreferences().getName());
-		
+
 		for (String s : event.getMotd().split("\n")) {
 			ServerMessage message = new ServerMessage();
 			message.setContent(s);
 			message.setTime(new Date());
 			server.addMessage(message);
 		}
-		
+
 		this.service.messageReceived(server);
 	}
-	
+
 	public void onJoin(JoinEvent<Client> event) {
 		Server server = this.service.getServer(event.getBot().getServerPreferences().getName());
 		Channel channel = server.getChannel(event.getChannel().getName());
@@ -97,7 +101,7 @@ public class IRCListener extends ListenerAdapter<Client> {
 		
 		this.service.networkQuit(commonChannels, event.getUser().getNick());
 	}
-	
+
 	public void onMessage(MessageEvent<Client> event) throws Exception {
 		Server server = this.service.getServer(event.getBot().getServerPreferences().getName());
 		Channel channel = server.getChannel(event.getChannel().getName());
@@ -123,24 +127,26 @@ public class IRCListener extends ListenerAdapter<Client> {
 			message.isHighlighted(false);
 		}
 	}
-	
+
 	public void onServerResponse(ServerResponseEvent<Client> event) {
 		Server server = this.service.getServer(event.getBot().getServerPreferences().getName());
 		String response = event.getResponse();
 		if (response == null || response.isEmpty()) {
 			return;
 		}
-		
+
 		// Not *that* raw...
 		if (response.startsWith(":")) {
 			response = response.substring(1, response.length() - 1);
 		}
-		
+
 		ServerMessage message = new ServerMessage();
+		if (server.getName()==null)
+		message.setServerName(server.getName());
 		message.setContent(response);
 		message.setTime(new Date());
 		server.addMessage(message);
-		
+
 		this.service.messageReceived(server);
 	}
 
