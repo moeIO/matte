@@ -12,9 +12,13 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.view.ContextMenu;
+import android.view.ContextMenu.ContextMenuInfo;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -24,12 +28,14 @@ import android.view.ViewGroup;
 import android.view.ViewStub;
 import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.BaseExpandableListAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ExpandableListView;
+import android.widget.ExpandableListView.ExpandableListContextMenuInfo;
 import android.widget.ExpandableListView.OnChildClickListener;
 import android.widget.ExpandableListView.OnGroupClickListener;
 import android.widget.ImageButton;
@@ -73,13 +79,13 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 	private boolean gotoChannelOnServiceConnect;
 	private String onServiceConnectChannel;
 	private String onServiceConnectServer;
-	private int[] possibleNickColours = { };
+	private int[] possibleNickColours = {};
 	private HashMap<String, Integer> nickColours;
 
 	/*
 	 * UI callbacks.
 	 */
-	
+
 	/** Called when the activity is first created. */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -183,14 +189,14 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 			return super.onOptionsItemSelected(item);
 		}
 	}
-	
+
 	public void onClick(View v) {
 		// Send button clicked
 		if (v.getId() == this.sendButton.getId()) {
 			if (this.commandInterpreter == null) {
 				this.commandInterpreter = new CommandInterpreter(this.moeService, this);
 			}
-			
+
 			if (this.commandInterpreter.isCommand(this.sendText.getText().toString())) {
 				this.commandInterpreter.interpret(this.sendText.getText().toString());
 			} else {
@@ -214,6 +220,7 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 					b.setOnClickListener(new View.OnClickListener() {
 
 						public void onClick(View view) {
+							SharedPreferences rawPreferences = activity.getSharedPreferences("servers", Context.MODE_PRIVATE);
 							ServerPreferences prefs = new ServerPreferences();
 							ServerPreferences.Host host = prefs.new Host();
 							prefs.setHost(host);
@@ -222,9 +229,20 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 
 							TextView nameView = (TextView) dialogView.findViewById(R.id.addServer_name);
 							if (nameView.getText().length() == 0) {
-								host.setHostname("New Server");
+								success = false;
+								AlertDialog.Builder b = new AlertDialog.Builder(activity);
+								b.setMessage("You need to enter a server name");
+								b.setPositiveButton("OK", null);
+								b.show();
 							} else {
-								prefs.setName(nameView.getText().toString());
+								if (ServerPreferences.serverNameExists(rawPreferences, nameView.getText().toString())) {
+									success = false;
+									AlertDialog.Builder b = new AlertDialog.Builder(activity);
+									b.setMessage("A server with this name already exists");
+									b.setPositiveButton("OK", null);
+									b.show();
+								} else
+									prefs.setName(nameView.getText().toString());
 							}
 
 							TextView hostView = (TextView) dialogView.findViewById(R.id.addServer_host);
@@ -298,8 +316,11 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 							CheckBox log = (CheckBox) dialogView.findViewById(R.id.addServer_log);
 							prefs.isLogged(log.isChecked());
 
-							if (success)
+							if (success) {
+								prefs.saveToSharedPreferences(rawPreferences);
+								moeService.connect(prefs);
 								d.dismiss();
+							}
 						}
 					});
 				}
@@ -330,11 +351,11 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 		hideChannelList();
 		return false;
 	}
-	
+
 	/*
 	 * Helper classes.
 	 */
-	
+
 	// Adapter that handles the message list
 	private class MessageAdapter extends ArrayAdapter<ChannelMessage> {
 
@@ -458,6 +479,7 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 			expandableChannelList.setAdapter(activity.channelAdapter);
 			expandableChannelList.setOnChildClickListener(activity);
 			expandableChannelList.setOnGroupClickListener(activity);
+			activity.registerForContextMenu(expandableChannelList);
 			channelList = (LinearLayout) activity.findViewById(R.id.channelList);
 			// And hide it by default.
 			hideChannelList();
@@ -489,7 +511,7 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 	/*
 	 * IRC service callbacks.
 	 */
-	
+
 	public void activeChannelMessageReceived(Channel channel) {
 		// Update the message list
 		this.runOnUiThread(new Runnable() {
@@ -499,7 +521,7 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 			}
 		});
 	}
-	
+
 	public void inactiveChannelMessageReceived(Channel channel) {
 		// Update the channel list for unread counts
 		this.runOnUiThread(new Runnable() {
@@ -519,7 +541,7 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 			}
 		});
 	}
-	
+
 	// Switch to the new channel when it is joined
 	public void channelJoined(Channel channel) {
 		final Channel chan = channel;
@@ -531,23 +553,23 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 			}
 		});
 	}
-	
+
 	/*
 	 * UI helpers.
 	 */
-	
+
 	private void expandAllServerGroups() {
 		int count = this.channelAdapter.getGroupCount();
 		for (int i = 0; i < count; i++)
 			this.expandableChannelList.expandGroup(i);
 	}
-	
+
 	private void setCurrentChannelView(Channel channel) {
 		if (this.currentChannel != null)
 			this.currentChannel.isActive(false);
 		channel.isActive(true);
 		this.currentChannel = channel;
-		
+
 		// Update the sidebar.
 		this.channelAdapter.notifyDataSetChanged();
 		this.activity.setTitle(channel.getChannelInfo().getName());
@@ -560,7 +582,7 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 	private void hideChannelList() {
 		this.channelList.setVisibility(View.GONE);
 	}
-	
+
 	private void sendMessage() {
 		if (this.currentChannel != null) {
 			if (this.sendText.getText().length() > 0) {
@@ -572,31 +594,70 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 			}
 		}
 	}
-	
+
 	/*
 	 * Getters/setters.
 	 */
-	
 	public Channel getCurrentChannel() {
 		return this.currentChannel;
 	}
 
 	public int getNickColour(String nick) {
-	    if(!this.nickColours.containsKey(nick)) {
-	        int colour = this.generateNickColour(nick);
-	        this.nickColours.put(nick, colour);
-	        return colour;
-	    }
-	    return this.nickColours.get(nick);
+		if (!this.nickColours.containsKey(nick)) {
+			int colour = this.generateNickColour(nick);
+			this.nickColours.put(nick, colour);
+			return colour;
+		}
+		return this.nickColours.get(nick);
+	}
+
+	private static final int CONTEXTMENU_SERVEROPTIONS = 0;
+
+	private static final int SERVEROPTIONS_EDIT = 0;
+	private static final int SERVEROPTIONS_DELETE = 1;
+
+	@Override
+	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
+		ExpandableListContextMenuInfo info = (ExpandableListContextMenuInfo) menuInfo;
+		if (v.getId() == expandableChannelList.getId()) {
+			int selectionType = ExpandableListView.getPackedPositionType(info.packedPosition);
+			switch (selectionType) {
+			case ExpandableListView.PACKED_POSITION_TYPE_GROUP:
+				menu.setHeaderTitle("Server Options");
+				menu.add(CONTEXTMENU_SERVEROPTIONS, SERVEROPTIONS_EDIT, 0, "Edit");
+				menu.add(CONTEXTMENU_SERVEROPTIONS, SERVEROPTIONS_DELETE, 1, "Delete");
+				break;
+			}
+		}
+	}
+
+	@Override
+	public boolean onContextItemSelected(MenuItem item) {
+		ExpandableListContextMenuInfo info = (ExpandableListContextMenuInfo) item.getMenuInfo();
+		switch (item.getGroupId()) {
+		case CONTEXTMENU_SERVEROPTIONS:
+			int groupPosition = ExpandableListView.getPackedPositionGroup(info.packedPosition);
+			Server server = moeService.getServers().get(groupPosition);
+			switch (item.getItemId()) {
+			case SERVEROPTIONS_EDIT:
+				break;
+			case SERVEROPTIONS_DELETE:
+				moeService.disconnect(server.getName());
+				server.getClient().getServerPreferences().deleteFromSharedPrefereces(activity.getSharedPreferences("servers", Context.MODE_PRIVATE));
+				break;
+			}
+			break;
+		}
+		return super.onContextItemSelected(item);
 	}
 
 	public void setNickColour(String nick, int colour) {
-	    this.nickColours.put(nick, colour);
+		this.nickColours.put(nick, colour);
 	}
 
 	private int generateNickColour(String nick) {
-	    int hash = nick.hashCode();
-	    return this.possibleNickColours[hash % this.possibleNickColours.length];
+		int hash = nick.hashCode();
+		return this.possibleNickColours[hash % this.possibleNickColours.length];
 	}
-	
+
 }

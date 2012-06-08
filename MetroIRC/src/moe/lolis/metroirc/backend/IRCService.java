@@ -42,7 +42,6 @@ public class IRCService extends Service implements ServiceEventListener {
 	private final IBinder binder = new IRCBinder();
 	public ServiceEventListener connectedEventListener;
 	private IRCListener listener;
-	private ConnectTask connectionTask;
 	private ClientManager clientManager;
 	private HashMap<String, Server> serverMap;
 	private ArrayList<Server> servers;
@@ -66,7 +65,6 @@ public class IRCService extends Service implements ServiceEventListener {
 		this.serverMap = new HashMap<String, Server>();
 		this.clientManager = new ClientManager();
 		this.listener = new IRCListener(this);
-		this.connectionTask = new ConnectTask();
 
 		// Load preferences from configuration.
 		ArrayList<ServerPreferences> preferences = this.loadPreferences();
@@ -86,10 +84,23 @@ public class IRCService extends Service implements ServiceEventListener {
 
 		for (ServerPreferences serverPrefs : preferences) {
 			if (serverPrefs.isAutoConnected()) {
-				this.connectionTask.execute(new ServerPreferences[] { serverPrefs });
+				this.connect(serverPrefs);
 			}
 		}
 		super.onCreate();
+	}
+
+	public void connect(ServerPreferences serverPrefs) {
+		ConnectTask connectionTask = new ConnectTask();
+		connectionTask.execute(new ServerPreferences[] { serverPrefs });
+	}
+
+	public void disconnect(String serverName) {
+		Server s = this.getServer(serverName);
+		if (s != null) {
+			if (s.getServerInfo().getBot().isConnected())
+				s.getServerInfo().getBot().disconnect();
+		}
 	}
 
 	@Override
@@ -127,7 +138,7 @@ public class IRCService extends Service implements ServiceEventListener {
 	public void stopService() {
 		// IRC Cleanup
 		for (Server s : servers) {
-			s.getServerInfo().getBot().disconnect();
+			this.disconnect(s.getName());
 		}
 		// TODO store connected channels
 		this.stopForeground(true);
@@ -192,6 +203,7 @@ public class IRCService extends Service implements ServiceEventListener {
 				Server server = new Server();
 				server.setName(this.preferences.getName());
 				server.setServerInfo(this.client.getServerInfo());
+				server.setClient(this.client);
 				IRCService.this.servers.add(server);
 				IRCService.this.serverMap.put(this.preferences.getName(), server);
 
@@ -238,7 +250,7 @@ public class IRCService extends Service implements ServiceEventListener {
 	public void inactiveChannelMessageReceived(Channel channel) {
 		this.connectedEventListener.inactiveChannelMessageReceived(channel);
 	}
-	
+
 	public void messageReceived(Server server) {
 		this.connectedEventListener.messageReceived(server);
 	}
