@@ -92,6 +92,7 @@ public class IRCListener extends ListenerAdapter<Client> {
 		}
 
 		ServerMessage message = new ServerMessage();
+		if (server.getName()==null)
 		message.setServerName(server.getName());
 		message.setContent(response);
 		message.setTime(new Date());
