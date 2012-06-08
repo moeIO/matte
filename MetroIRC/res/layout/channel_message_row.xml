@@ -7,8 +7,8 @@
         android:id="@+id/tableRow1"
         android:layout_width="80dp"
         android:layout_height="match_parent"
-        android:layout_marginBottom="5dp"
-        android:layout_marginTop="5dp" >
+        android:layout_marginBottom="2dp"
+        android:layout_marginTop="2dp" >
 
         <TextView
             android:id="@+id/channelMessageName"
@@ -31,8 +31,8 @@
         android:id="@+id/tableRow2"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginBottom="5dp"
-        android:layout_marginTop="5dp" >
+        android:layout_marginBottom="2dp"
+        android:layout_marginTop="2dp" >
 
         <TextView
             android:id="@+id/channelMessageContent"

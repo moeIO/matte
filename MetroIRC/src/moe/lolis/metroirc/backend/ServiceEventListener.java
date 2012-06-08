@@ -1,5 +1,6 @@
 package moe.lolis.metroirc.backend;
 
+import java.util.Collection;
 import moe.lolis.metroirc.irc.Channel;
 import moe.lolis.metroirc.irc.Server;
 
@@ -28,5 +29,15 @@ public interface ServiceEventListener {
 	/*
 	 * Called when a channel is joined (durr)
 	 */
-	public void channelJoined(Channel channel);
+	public void channelJoined(Channel channel, String nickname);
+	
+	/*
+	 * Called when a channel is parted.
+	 */
+	public void channelParted(Channel channel, String nickname);
+	
+	/*
+	 * Called when a network is quit.
+	 */
+	public void networkQuit(Collection<Channel> commonChannels, String nickname);
 }

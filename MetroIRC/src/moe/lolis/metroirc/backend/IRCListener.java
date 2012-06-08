@@ -1,6 +1,8 @@
 package moe.lolis.metroirc.backend;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.Set;
 
 import moe.lolis.metroirc.irc.Client;
 import moe.lolis.metroirc.irc.Channel;
@@ -43,6 +45,7 @@ public class IRCListener extends ListenerAdapter<Client> {
 		Server server = this.service.getServer(event.getBot().getServerPreferences().getName());
 		Channel channel = server.getChannel(event.getChannel().getName());
 
+		// We joined the channel.
 		if (channel == null) {
 			// Newly encountered channel.
 			channel = new Channel();
@@ -50,7 +53,53 @@ public class IRCListener extends ListenerAdapter<Client> {
 			channel.setChannelInfo(event.getChannel());
 			server.addChannel(channel);
 		}
-		this.service.channelJoined(channel);
+		
+		ChannelMessage message = new ChannelMessage();
+		message.setNickname("-->");
+		message.setContent(event.getUser().getNick() + " (" + event.getUser().getLogin() + "@" + event.getUser().getHostmask() + ") has joined " + event.getChannel().getName());
+		message.setTime(new Date());
+		channel.addMessage(message);
+		
+		this.service.channelJoined(channel, event.getUser().getNick());
+	}
+	
+	public void onPart(PartEvent<Client> event) {
+		Server server = this.service.getServer(event.getBot().getServerPreferences().getName());
+		Channel channel = server.getChannel(event.getChannel().getName());
+		
+		ChannelMessage message = new ChannelMessage();
+		message.setNickname("<--");
+		message.setContent(event.getUser().getNick() + " (" + event.getUser().getLogin() + "@" + event.getUser().getHostmask() + ") has left " + event.getChannel().getName() + " (" + event.getReason() + ")");
+		message.setTime(new Date());
+		channel.addMessage(message);
+		
+		this.service.channelParted(channel, event.getUser().getNick());
+	}
+	
+	public void onQuit(QuitEvent<Client> event) {
+		Server server = this.service.getServer(event.getBot().getServerPreferences().getName());
+		Client client = server.getClient();
+		Set<org.pircbotx.Channel> ownChannels = client.getChannels();
+		ArrayList<Channel> commonChannels = new ArrayList<Channel>();
+		
+		ChannelMessage message = null;
+		
+		for (org.pircbotx.Channel channel : event.getUser().getChannels()) {
+			if (ownChannels.contains(channel)) {
+				Channel ch = server.getChannel(channel.getName());
+				commonChannels.add(ch);
+				
+				if (message == null) {
+					message = new ChannelMessage();
+					message.setNickname("<--");
+					message.setContent(event.getUser().getNick() + " (" + event.getUser().getLogin() + "@" + event.getUser().getHostmask() + ") has quit (" + event.getReason() + ")");
+					message.setTime(new Date());
+				}
+				ch.addMessage(message);
+			}
+		}
+		
+		this.service.networkQuit(commonChannels, event.getUser().getNick());
 	}
 
 	public void onMessage(MessageEvent<Client> event) throws Exception {

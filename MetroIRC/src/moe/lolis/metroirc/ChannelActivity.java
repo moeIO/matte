@@ -1,6 +1,7 @@
 package moe.lolis.metroirc;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 
 import moe.lolis.metroirc.backend.IRCService;
@@ -127,7 +128,12 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 		this.quitButton = (Button) this.findViewById(R.id.quitButton);
 		this.quitButton.setOnClickListener(this);
 		this.highlightCellColour = Color.rgb(182, 232, 243);
+		
 		this.nickColours = new HashMap<String, Integer>();
+		// Add predefined 'special' nicknames.
+		this.nickColours.put("!", this.activity.getResources().getColor(R.color.nickcolor4));
+		this.nickColours.put("<--", this.activity.getResources().getColor(R.color.nickcolor5));
+		this.nickColours.put("-->", this.activity.getResources().getColor(R.color.nickcolor5));
 
 		this.getListView().setTranscriptMode(ListView.TRANSCRIPT_MODE_ALWAYS_SCROLL);
 
@@ -588,16 +594,51 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 		});
 	}
 
-	// Switch to the new channel when it is joined
-	public void channelJoined(Channel channel) {
+	public void channelJoined(Channel channel, String nickname) {
 		final Channel chan = channel;
-		activity.runOnUiThread(new Runnable() {
+		
+		this.runOnUiThread(new Runnable() {
 			public void run() {
 				// Expand newest server entry
 				expandAllServerGroups();
+				if (adapter != null)
+					adapter.notifyDataSetChanged();
 				setCurrentChannelView(chan);
 			}
 		});
+		
+		// Switch to the new channel when it is joined
+		if (nickname.equals(channel.getServer().getClient().getNick())) {
+			this.runOnUiThread(new Runnable() {
+				public void run() {
+					setCurrentChannelView(chan);
+					// Expand newest server entry
+					expandAllServerGroups();
+				}
+			});
+		}
+	}
+	
+	public void channelParted(Channel channel, String nickname) {
+		this.runOnUiThread(new Runnable() {
+			public void run() {
+				if (adapter != null)
+					adapter.notifyDataSetChanged();
+			}
+		});
+		
+		// TODO: Close channel if user is us.
+	}
+	
+	public void networkQuit(Collection<Channel> commonChannels, String nickname) {
+		if (commonChannels.contains(this.currentChannel)) {
+			this.runOnUiThread(new Runnable() {
+				public void run() {
+					if (adapter != null)
+						adapter.notifyDataSetChanged();
+				}
+			});
+		}
 	}
 
 	/*
