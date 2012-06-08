@@ -49,6 +49,7 @@ import moe.lolis.metroirc.backend.ServiceEventListener;
 import moe.lolis.metroirc.irc.Channel;
 import moe.lolis.metroirc.irc.ChannelMessage;
 import moe.lolis.metroirc.irc.CommandInterpreter;
+import moe.lolis.metroirc.irc.GenericMessage;
 import moe.lolis.metroirc.irc.Server;
 import moe.lolis.metroirc.irc.ServerPreferences;
 
@@ -340,6 +341,9 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 	public boolean onGroupClick(ExpandableListView parent, View v, int groupPosition, long id) {
 		// Force groups to stay expanded
 		parent.expandGroup(groupPosition);
+		Channel newChannel = moeService.getServers().get(groupPosition);
+		setCurrentChannelView(newChannel);
+		hideChannelList();
 		return true;
 	}
 
@@ -355,11 +359,11 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 	 */
 
 	// Adapter that handles the message list
-	private class MessageAdapter extends ArrayAdapter<ChannelMessage> {
+	private class MessageAdapter extends ArrayAdapter<GenericMessage> {
 
-		private ArrayList<ChannelMessage> items;
+		private ArrayList<GenericMessage> items;
 
-		public MessageAdapter(Context context, int textViewResourceId, ArrayList<ChannelMessage> items) {
+		public MessageAdapter(Context context, int textViewResourceId, ArrayList<GenericMessage> items) {
 			super(context, textViewResourceId, items);
 			this.items = items;
 		}
@@ -370,7 +374,7 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 				convertView = inflater.inflate(R.layout.channel_message_row, null);
 			}
 
-			ChannelMessage message = this.items.get(position);
+			GenericMessage message = this.items.get(position);
 			TextView name = (TextView) convertView.findViewById(R.id.channelMessageName);
 			TextView content = (TextView) convertView.findViewById(R.id.channelMessageContent);
 			content.setText(message.getContent());
@@ -412,15 +416,16 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 				convertView = inflater.inflate(R.layout.channellist_channel, null);
 			}
 			TextView name = (TextView) convertView.findViewById(R.id.name);
-			//TextView messages = (TextView) convertView.findViewById(R.id.unreadMessages);
+			// TextView messages = (TextView)
+			// convertView.findViewById(R.id.unreadMessages);
 			name.setText(c.getChannelInfo().getName());
-			
-			//if (c.getUnreadMessageCount() > 0) {
-			//	messages.setText(String.valueOf(c.getUnreadMessageCount()));
-			//} else {
-			//	messages.setText("");
-			//}
-			
+
+			// if (c.getUnreadMessageCount() > 0) {
+			// messages.setText(String.valueOf(c.getUnreadMessageCount()));
+			// } else {
+			// messages.setText("");
+			// }
+
 			return convertView;
 		}
 
@@ -543,11 +548,11 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 	// Switch to the new channel when it is joined
 	public void channelJoined(Channel channel) {
 		final Channel chan = channel;
-		this.runOnUiThread(new Runnable() {
+		activity.runOnUiThread(new Runnable() {
 			public void run() {
-				setCurrentChannelView(chan);
 				// Expand newest server entry
 				expandAllServerGroups();
+				setCurrentChannelView(chan);
 			}
 		});
 	}
@@ -555,7 +560,6 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 	/*
 	 * UI helpers.
 	 */
-
 	private void expandAllServerGroups() {
 		int count = this.channelAdapter.getGroupCount();
 		for (int i = 0; i < count; i++)
@@ -563,14 +567,15 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 	}
 
 	private void setCurrentChannelView(Channel channel) {
+
 		if (this.currentChannel != null)
 			this.currentChannel.isActive(false);
 		channel.isActive(true);
 		this.currentChannel = channel;
+		this.activity.setTitle(channel.getName());
 
 		// Update the sidebar.
 		this.channelAdapter.notifyDataSetChanged();
-		this.activity.setTitle(channel.getChannelInfo().getName());
 		// Set list adapter to be the messages of the connected channel,
 		// TODO: Re-creating the adapter every time may be inefficient
 		this.activity.adapter = new MessageAdapter(getApplicationContext(), R.layout.channel_message_row, channel.getMessages());

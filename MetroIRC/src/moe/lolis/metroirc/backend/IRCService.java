@@ -178,7 +178,15 @@ public class IRCService extends Service implements ServiceEventListener {
 			// Attempt to connect to the server.
 			boolean connected = false;
 			ServerPreferences.Host host = this.preferences.getHost();
+			Server server = new Server();
 			try {
+				
+				server.setName(this.preferences.getName());
+				server.setServerInfo(this.client.getServerInfo());
+				server.setClient(this.client);
+				IRCService.this.servers.add(server);
+				IRCService.this.serverMap.put(this.preferences.getName(), server);
+				
 				if (host.isSSL()) {
 					if (host.verifySSL()) {
 						this.client.connect(host.getHostname(), host.getPort(), host.getPassword(), SSLSocketFactory.getDefault());
@@ -189,9 +197,13 @@ public class IRCService extends Service implements ServiceEventListener {
 				} else {
 					this.client.connect(host.getHostname(), host.getPort(), host.getPassword());
 				}
+
 				connected = true;
 			} catch (Exception ex) {
-				Log.e("whoops", ex.getMessage());
+				Log.e("IRC Connection failed", ex.getMessage());
+				//Clean-up server list
+				IRCService.this.servers.remove(server);
+				IRCService.this.serverMap.remove(this.preferences.getName());
 				return false;
 			}
 
@@ -200,12 +212,6 @@ public class IRCService extends Service implements ServiceEventListener {
 
 		protected void onPostExecute(Boolean succesful) {
 			if (succesful) {
-				Server server = new Server();
-				server.setName(this.preferences.getName());
-				server.setServerInfo(this.client.getServerInfo());
-				server.setClient(this.client);
-				IRCService.this.servers.add(server);
-				IRCService.this.serverMap.put(this.preferences.getName(), server);
 
 				// Automatically join channels after connecting (Afterwards so
 				// that server list is ready)
