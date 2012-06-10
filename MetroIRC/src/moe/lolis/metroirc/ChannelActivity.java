@@ -59,6 +59,7 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 	private MessageAdapter adapter;
 	private ChannelListAdapter channelAdapter;
 
+	private static boolean isStarted;
 	// IRC backend.
 	private IRCService moeService;
 	private CommandInterpreter commandInterpreter;
@@ -391,8 +392,14 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 			case SERVEROPTIONS_EDIT:
 				break;
 			case SERVEROPTIONS_DELETE:
+				if (currentChannel.getServer().getName().equals(server.getName()))
+				{
+					activity.adapter.setMessages(new ArrayList<GenericMessage>());
+					activity.setTitle("");
+				}
 				moeService.disconnect(server.getName());
 				server.getClient().getServerPreferences().deleteFromSharedPreferences(activity.getSharedPreferences("servers", Context.MODE_PRIVATE));
+				activity.channelAdapter.notifyDataSetChanged();
 				break;
 			}
 			break;
@@ -553,16 +560,21 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 				onServiceConnectServer = null;
 			}
 
-			// Right, we can't switch to the server tab in the server connection
-			// task since due to a race, the task beats this binding and the
-			// activity reference is null. Therefore the best we can do is
-			// switch to the latest server in the server list at the end of
-			// binding being completed
-			// ==
-			// Works reliably from what I see, and shouldn't cause any issues if
-			// binding out-races the connection task
-			if (moeService.getServers().size() > 0)
-				activity.channelJoined(moeService.getServers().get(moeService.getServers().size() - 1), null);
+			if (!isStarted) {
+				isStarted = true;
+				// Right, we can't switch to the server tab in the server
+				// connection
+				// task since due to a race, the task beats this binding and the
+				// activity reference is null. Therefore the best we can do is
+				// switch to the latest server in the server list at the end of
+				// binding being completed
+				// ==
+				// Works reliably from what I see, and shouldn't cause any
+				// issues if
+				// binding out-races the connection task
+				if (moeService.getServers().size() > 0)
+					activity.channelJoined(moeService.getServers().get(moeService.getServers().size() - 1), null);
+			}
 		}
 
 		// Called when the activity disconnects from the service.
@@ -695,6 +707,10 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 		} else
 			this.activity.adapter.setMessages(channel.getMessages());
 
+		if (channel instanceof Server)
+			activity.sendText.setHint(R.string.server_hint);
+		else
+			activity.sendText.setHint(R.string.channel_hint);
 		// this.activity.setListAdapter(this.activity.adapter);
 		// this.activity.adapter.notifyDataSetChanged();
 	}

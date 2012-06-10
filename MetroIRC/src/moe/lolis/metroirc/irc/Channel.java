@@ -95,4 +95,9 @@ public class Channel {
 	public String getName() {
 		return getChannelInfo().getName();
 	}
+	
+	public Client getClient()
+	{
+		return this.getServer().getClient();
+	}
 }

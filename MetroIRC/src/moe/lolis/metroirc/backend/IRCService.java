@@ -102,6 +102,8 @@ public class IRCService extends Service implements ServiceEventListener {
 		if (s != null) {
 			if (s.getServerInfo().getBot().isConnected())
 				s.getServerInfo().getBot().disconnect();
+			this.serverMap.remove(serverName);
+			this.servers.remove(s);
 		}
 	}
 
@@ -191,7 +193,7 @@ public class IRCService extends Service implements ServiceEventListener {
 				// If activity is already bound, get it to switch to the new
 				// server tab, otherwise it will switch tab once it has bound on
 				// it's own
-				if (IRCService.this.connectedEventListener!=null)
+				if (IRCService.this.connectedEventListener != null)
 					IRCService.this.channelJoined(server, null);
 
 				if (host.isSSL()) {
@@ -232,7 +234,7 @@ public class IRCService extends Service implements ServiceEventListener {
 	public void showMentionNotification(ChannelMessage message, Channel channel, String serverName) {
 		String ns = Context.NOTIFICATION_SERVICE;
 		NotificationManager mNotificationManager = (NotificationManager) getSystemService(ns);
-		int icon = R.drawable.ic_launcher;
+		int icon = R.drawable.notification;
 		CharSequence tickerText = message.getContent();
 		long when = System.currentTimeMillis();
 		Notification notification = new Notification(icon, tickerText, when);
@@ -256,15 +258,24 @@ public class IRCService extends Service implements ServiceEventListener {
 	}
 
 	public void activeChannelMessageReceived(Channel channel, GenericMessage message) {
-		this.connectedEventListener.activeChannelMessageReceived(channel, message);
+		if (this.connectedEventListener == null) {
+			channel.addMessage(message);
+		} else
+			this.connectedEventListener.activeChannelMessageReceived(channel, message);
 	}
 
 	public void inactiveChannelMessageReceived(Channel channel, GenericMessage message) {
-		this.connectedEventListener.inactiveChannelMessageReceived(channel, message);
+		if (this.connectedEventListener == null) {
+			channel.addMessage(message);
+		} else
+			this.connectedEventListener.inactiveChannelMessageReceived(channel, message);
 	}
 
 	public void messageReceived(Channel channel, GenericMessage message) {
-		this.connectedEventListener.messageReceived(channel, message);
+		if (this.connectedEventListener == null) {
+			channel.addMessage(message);
+		} else
+			this.connectedEventListener.messageReceived(channel, message);
 	}
 
 	public Server getServer(String name) {

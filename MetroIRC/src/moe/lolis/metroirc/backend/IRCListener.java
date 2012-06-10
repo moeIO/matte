@@ -98,7 +98,7 @@ public class IRCListener extends ListenerAdapter<Client> {
 					message.setTime(new Date());
 				}
 				// ch.addMessage(message);
-				this.service.messageReceived(server, message);
+				this.service.messageReceived(ch, message);
 			}
 		}
 

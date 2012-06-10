@@ -22,7 +22,7 @@ public class CommandInterpreter {
 		}
 
 		String[] parts = message.split(" ");
-		Client client = (Client) this.activity.getCurrentChannel().getChannelInfo().getBot();
+		Client client = this.activity.getCurrentChannel().getClient();
 		Server server = this.activity.getCurrentChannel().getServer();
 
 		// HUGE FUCKLOAD LIST OF COMMANDS INCOMING
