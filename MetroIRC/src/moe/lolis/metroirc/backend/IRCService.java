@@ -297,6 +297,11 @@ public class IRCService extends Service implements ServiceEventListener {
 		this.getServer(channel.getServer().getName()).removeChannel(channel);
 		return pos;
 	}
+	
+	public void partChannel(Channel channel)
+	{
+		
+	}
 
 	public void channelJoined(Channel channel, String nickname) {
 		this.connectedEventListener.channelJoined(channel, nickname);
