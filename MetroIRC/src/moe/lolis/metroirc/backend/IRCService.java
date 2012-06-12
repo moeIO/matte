@@ -271,12 +271,12 @@ public class IRCService extends Service implements ServiceEventListener {
 			this.connectedEventListener.inactiveChannelMessageReceived(channel, message);
 	}
 
-	public void messageReceived(Channel channel, GenericMessage message) {
+	public void statusMessageReceived(Channel channel, GenericMessage message) {
 		message.isChannelNotificationType(true);
 		if (this.connectedEventListener == null) {
 			channel.addMessage(message);
 		} else
-			this.connectedEventListener.messageReceived(channel, message);
+			this.connectedEventListener.statusMessageReceived(channel, message);
 	}
 
 	public Server getServer(String name) {
@@ -323,6 +323,10 @@ public class IRCService extends Service implements ServiceEventListener {
 
 	public void networkQuit(Collection<Channel> commonChannels, String nickname) {
 		this.connectedEventListener.networkQuit(commonChannels, nickname);
+	}
+	
+	public void nickChanged(Collection<Channel> commonChannels, String from, String to) {
+		this.connectedEventListener.nickChanged(commonChannels, from, to);
 	}
 
 	public void isAppActive(boolean active) {

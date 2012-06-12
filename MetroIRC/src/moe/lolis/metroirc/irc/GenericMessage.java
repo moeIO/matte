@@ -1,12 +1,13 @@
 package moe.lolis.metroirc.irc;
 
 import java.util.Date;
+import android.text.Spanned;
 
 public abstract interface GenericMessage {
 	public abstract void setNickname(String nickname);
 	public abstract String getNickname();
-	public abstract void setContent(String content) ;
-	public abstract String getContent();
+	public abstract void setContent(Spanned content) ;
+	public abstract Spanned getContent();
 	public abstract void setTime(Date time);
 	public abstract Date getTime();
 	public abstract void isHighlighted(boolean highlighted);

@@ -7,11 +7,16 @@ import java.util.Set;
 import moe.lolis.metroirc.irc.Client;
 import moe.lolis.metroirc.irc.Channel;
 import moe.lolis.metroirc.irc.ChannelMessage;
+import moe.lolis.metroirc.irc.MessageParser;
 import moe.lolis.metroirc.irc.Server;
 import moe.lolis.metroirc.irc.ServerMessage;
 
 import org.pircbotx.hooks.ListenerAdapter;
 import org.pircbotx.hooks.events.*;
+
+import android.text.Html;
+import android.text.Spanned;
+import android.text.SpannedString;
 
 public class IRCListener extends ListenerAdapter<Client> {
 	private IRCService service;
@@ -33,11 +38,43 @@ public class IRCListener extends ListenerAdapter<Client> {
 
 		for (String s : event.getMotd().split("\n")) {
 			ServerMessage message = new ServerMessage();
-			message.setContent(s);
+			message.setContent(SpannedString.valueOf(s));
 			message.setTime(new Date());
-			// XXX I don't like this, new runnable for each MOTD
-			this.service.messageReceived(server, message);
+			// XXX I don't like this, new runnable for each MOTD line
+			this.service.statusMessageReceived(server, message);
 		}
+	}
+	
+	public void onQuit(QuitEvent<Client> event) {
+		Server server = this.service.getServer(event.getBot().getServerPreferences().getName());
+		Client client = server.getClient();
+		Set<org.pircbotx.Channel> ownChannels = client.getChannels();
+		ArrayList<Channel> commonChannels = new ArrayList<Channel>();
+
+		ChannelMessage message = null;
+
+		for (org.pircbotx.Channel channel : event.getUser().getChannels()) {
+			if (ownChannels.contains(channel)) {
+				Channel ch = server.getChannel(channel.getName());
+				commonChannels.add(ch);
+
+				if (message == null) {
+					String msg = "<strong>" + event.getUser().getNick() + "</strong> (" + event.getUser().getLogin() + "@" + event.getUser().getHostmask() + ") has quit";
+					if (event.getReason().length() > 0) {
+						msg += " (<em>" + event.getReason() + "</em>)";
+					}
+					
+					message = new ChannelMessage();
+					message.setNickname("<--");
+					message.setContent(Html.fromHtml(msg));
+					message.setTime(new Date());
+				}
+				// ch.addMessage(message);
+				this.service.statusMessageReceived(ch, message);
+			}
+		}
+
+		this.service.networkQuit(commonChannels, event.getUser().getNick());
 	}
 
 	public void onJoin(JoinEvent<Client> event) {
@@ -55,11 +92,11 @@ public class IRCListener extends ListenerAdapter<Client> {
 
 		ChannelMessage message = new ChannelMessage();
 		message.setNickname("-->");
-		message.setContent(event.getUser().getNick() + " (" + event.getUser().getLogin() + "@" + event.getUser().getHostmask() + ") has joined "
-				+ event.getChannel().getName());
+		message.setContent(Html.fromHtml("<strong>" + event.getUser().getNick() + "</strong> (" + event.getUser().getLogin() + "@" + event.getUser().getHostmask() + ") has joined "
+				+ event.getChannel().getName()));
 		message.setTime(new Date());
 		// channel.addMessage(message);
-		this.service.messageReceived(channel, message);
+		this.service.statusMessageReceived(channel, message);
 		this.service.channelJoined(channel, event.getUser().getNick());
 	}
 
@@ -69,15 +106,41 @@ public class IRCListener extends ListenerAdapter<Client> {
 
 		ChannelMessage message = new ChannelMessage();
 		message.setNickname("<--");
-		message.setContent(event.getUser().getNick() + " (" + event.getUser().getLogin() + "@" + event.getUser().getHostmask() + ") has left "
-				+ event.getChannel().getName() + " (" + event.getReason() + ")");
+		message.setContent(Html.fromHtml("<strong>" + event.getUser().getNick() + "</strong> (" + event.getUser().getLogin() + "@" + event.getUser().getHostmask() + ") has left "
+				+ event.getChannel().getName() + " (<em>" + event.getReason() + "</em>)"));
 		message.setTime(new Date());
 		// channel.addMessage(message);
-		this.service.messageReceived(channel, message);
+		this.service.statusMessageReceived(channel, message);
 		this.service.channelParted(channel, event.getUser().getNick());
 	}
 
-	public void onQuit(QuitEvent<Client> event) {
+	public void onMessage(MessageEvent<Client> event) throws Exception {
+		Server server = this.service.getServer(event.getBot().getServerPreferences().getName());
+		Channel channel = server.getChannel(event.getChannel().getName());
+
+		ChannelMessage message = new ChannelMessage();
+		message.setNickname(event.getUser().getNick());
+		message.setContent(Html.fromHtml(MessageParser.parseToHTML(event.getMessage())));
+		message.setTime(new Date());
+		// channel.addMessage(message);
+
+		if (channel.isActive()) {
+			this.service.activeChannelMessageReceived(channel, message);
+		} else {
+			channel.incrementUnreadMessages();
+			this.service.inactiveChannelMessageReceived(channel, message);
+		}
+		if (message.getContent().toString().toLowerCase().contains(event.getBot().getNick().toLowerCase())) {
+			message.isHighlighted(true);
+			if (!this.service.isAppActive() || !channel.isActive()) {
+				this.service.showMentionNotification(message, channel, event.getBot().getServerPreferences().getName());
+			}
+		} else {
+			message.isHighlighted(false);
+		}
+	}
+	
+	public void onNickChange(NickChangeEvent<Client> event) {
 		Server server = this.service.getServer(event.getBot().getServerPreferences().getName());
 		Client client = server.getClient();
 		Set<org.pircbotx.Channel> ownChannels = client.getChannels();
@@ -92,43 +155,32 @@ public class IRCListener extends ListenerAdapter<Client> {
 
 				if (message == null) {
 					message = new ChannelMessage();
-					message.setNickname("<--");
-					message.setContent(event.getUser().getNick() + " (" + event.getUser().getLogin() + "@" + event.getUser().getHostmask()
-							+ ") has quit (" + event.getReason() + ")");
+					message.setNickname("--");
+					message.setContent(Html.fromHtml("<strong>" + event.getOldNick() + "</strong> is now known as <strong>" + event.getNewNick() + "</strong>"));
 					message.setTime(new Date());
 				}
 				// ch.addMessage(message);
-				this.service.messageReceived(ch, message);
+				this.service.statusMessageReceived(ch, message);
 			}
 		}
-
-		this.service.networkQuit(commonChannels, event.getUser().getNick());
+		
+		this.service.nickChanged(commonChannels, event.getOldNick(), event.getNewNick());
 	}
-
-	public void onMessage(MessageEvent<Client> event) throws Exception {
+	
+	public void onTopic(TopicEvent<Client> event) {
 		Server server = this.service.getServer(event.getBot().getServerPreferences().getName());
 		Channel channel = server.getChannel(event.getChannel().getName());
-
+		
 		ChannelMessage message = new ChannelMessage();
-		message.setNickname(event.getUser().getNick());
-		message.setContent(event.getMessage());
+		message.setNickname("--");
 		message.setTime(new Date());
-		// channel.addMessage(message);
-
-		if (channel.isActive()) {
-			this.service.activeChannelMessageReceived(channel, message);
+		if (event.isChanged()) {
+			message.setContent(Html.fromHtml(event.getUser().getNick() + " changed the topic to: <strong>" + MessageParser.parseToHTML(event.getTopic()) + "</strong>"));
 		} else {
-			channel.incrementUnreadMessages();
-			this.service.inactiveChannelMessageReceived(channel, message);
+			message.setContent(Html.fromHtml(event.getChannel().getName() + "'s topic is: <strong>" + MessageParser.parseToHTML(event.getTopic()) + "</strong>"));
 		}
-		if (message.getContent().toLowerCase().contains(event.getBot().getNick().toLowerCase())) {
-			message.isHighlighted(true);
-			if (!this.service.isAppActive() || !channel.isActive()) {
-				this.service.showMentionNotification(message, channel, event.getBot().getServerPreferences().getName());
-			}
-		} else {
-			message.isHighlighted(false);
-		}
+		
+		this.service.statusMessageReceived(channel, message);
 	}
 
 	public void onServerResponse(ServerResponseEvent<Client> event) {
@@ -139,16 +191,20 @@ public class IRCListener extends ListenerAdapter<Client> {
 		}
 
 		// Not *that* raw...
+		response = response.trim();
+		if (response.startsWith("*")) {
+			response = response.substring(1, response.length() - 1).trim();
+		}
 		if (response.startsWith(":")) {
-			response = response.substring(1, response.length() - 1);
+			response = response.substring(1, response.length() - 1).trim();
 		}
 
 		ServerMessage message = new ServerMessage();
-		message.setContent(response);
+		message.setContent(Html.fromHtml(MessageParser.parseToHTML(response)));
 		message.setTime(new Date());
 		// server.addMessage(message);
 
-		this.service.messageReceived(server, message);
+		this.service.statusMessageReceived(server, message);
 	}
 
 }

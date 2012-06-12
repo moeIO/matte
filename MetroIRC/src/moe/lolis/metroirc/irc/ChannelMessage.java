@@ -1,18 +1,19 @@
 package moe.lolis.metroirc.irc;
 
 import java.util.Date;
+import android.text.Spanned;
 
 public class ChannelMessage implements GenericMessage{
 	private String nickname;
-	private String content;
+	private Spanned content;
 	private Date time;
 	private boolean highlight;
 	private boolean isChannelNotificationType;
 	
 	public void setNickname(String nickname) { this.nickname = nickname; }
 	public String getNickname() { return this.nickname; }
-	public void setContent(String content) { this.content = content; }
-	public String getContent() { return this.content; }
+	public void setContent(Spanned content) { this.content = content; }
+	public Spanned getContent() { return this.content; }
 	public void setTime(Date time) { this.time = time; }
 	public Date getTime() { return this.time; }
 	public void isHighlighted(boolean highlighted) { this.highlight = highlighted; }

@@ -215,6 +215,9 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 				this.commandInterpreter.interpret(this.sendText.getText().toString());
 				this.sendText.setText("");
 			} else {
+				if (this.sendText.getText().toString().substring(0, 2).equals("//")) {
+					this.sendText.setText(this.sendText.getText().toString().substring(1, this.sendText.getText().length()));
+				}
 				this.sendMessage();
 			}
 		} else if (v.getId() == this.settingsButton.getId()) {
@@ -373,7 +376,7 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 
 						if (success) {
 							prefs.saveToSharedPreferences(rawPreferences);
-							if (server != null)
+							if (server != null && server.getServerInfo().getBot().isConnected())
 								moeService.disconnect(originalServerName);
 							moeService.connect(prefs);
 							d.dismiss();
@@ -677,7 +680,7 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 	}
 
 	// Non-user message, channel notifications etc
-	public void messageReceived(Channel channel, GenericMessage message) {
+	public void statusMessageReceived(Channel channel, GenericMessage message) {
 		final Channel chan = channel;
 		final GenericMessage mess = message;
 		// See above.
@@ -745,6 +748,17 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 	}
 
 	public void networkQuit(Collection<Channel> commonChannels, String nickname) {
+		if (commonChannels.contains(this.currentChannel)) {
+			this.runOnUiThread(new Runnable() {
+				public void run() {
+					if (adapter != null)
+						adapter.notifyDataSetChanged();
+				}
+			});
+		}
+	}
+	
+	public void nickChanged(Collection<Channel> commonChannels, String from, String to) {
 		if (commonChannels.contains(this.currentChannel)) {
 			this.runOnUiThread(new Runnable() {
 				public void run() {

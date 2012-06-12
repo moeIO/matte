@@ -1,5 +1,6 @@
 package moe.lolis.metroirc.irc;
 
+import android.text.SpannedString;
 import moe.lolis.metroirc.ChannelActivity;
 import moe.lolis.metroirc.backend.IRCService;
 
@@ -38,7 +39,7 @@ public class CommandInterpreter {
 				if (!this.looksLikeChannel(channels[i])) {
 					// Send message.
 					this.service.activeChannelMessageReceived(this.activity.getCurrentChannel(),
-							this.activity.getCurrentChannel().createError("Invalid channel name: " + channels[i]));
+							this.activity.getCurrentChannel().createError(SpannedString.valueOf("Invalid channel name: " + channels[i])));
 					continue;
 				}
 
@@ -77,7 +78,7 @@ public class CommandInterpreter {
 				client.changeNick(parts[1]);
 			} else {
 				this.service.activeChannelMessageReceived(this.activity.getCurrentChannel(),
-						this.activity.getCurrentChannel().createError("Nickname is already in use: " + parts[1]));
+						this.activity.getCurrentChannel().createError(SpannedString.valueOf("Nickname is already in use: " + parts[1])));
 			}
 		} else if ((parts[0].equalsIgnoreCase("whois") || parts[0].equalsIgnoreCase("who")) && parts.length > 1) {
 			for (int i = 1; i < parts.length; i++) {
@@ -85,13 +86,10 @@ public class CommandInterpreter {
 			}
 	 	} else if (parts[0].equalsIgnoreCase("mode") && parts.length > 1) {
 	 		Channel channel;
-	 		int start;
 	 		if (this.looksLikeChannel(parts[1])) {
 	 			channel = server.getChannel(parts[1]);
-	 			start = 2;
 	 		} else {
 	 			channel = this.activity.getCurrentChannel();
-	 			start = 1;
 	 		}
 	 		
 	 		client.setMode(channel.getChannelInfo(), message.substring("mode".length() + 1, message.length()));

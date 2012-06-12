@@ -3,6 +3,9 @@ package moe.lolis.metroirc.irc;
 import java.util.ArrayList;
 import java.util.Date;
 
+import android.text.Spanned;
+import android.text.SpannedString;
+
 public class Channel {
 	private org.pircbotx.Channel channelInfo;
 	private Server server;
@@ -44,7 +47,7 @@ public class Channel {
 		// TODO: Implement
 	}
 
-	public GenericMessage createError(String error) {
+	public GenericMessage createError(Spanned error) {
 		ChannelMessage message = new ChannelMessage();
 		message.setNickname("!");
 		message.setContent(error);
@@ -69,7 +72,7 @@ public class Channel {
 		ChannelMessage m = new ChannelMessage();
 		m.setTime(new Date());
 		m.setNickname(this.getChannelInfo().getBot().getNick());
-		m.setContent(message);
+		m.setContent(SpannedString.valueOf(message));
 		this.addMessage(m);
 	}
 

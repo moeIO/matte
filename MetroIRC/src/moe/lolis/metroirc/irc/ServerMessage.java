@@ -1,17 +1,18 @@
 package moe.lolis.metroirc.irc;
 
 import java.util.Date;
+import android.text.Spanned;
 
 public class ServerMessage implements GenericMessage {
-	private String content;
+	private Spanned content;
 	private Date time;
 
 
-	public void setContent(String content) {
+	public void setContent(Spanned content) {
 		this.content = content;
 	}
 
-	public String getContent() {
+	public Spanned getContent() {
 		return this.content;
 	}
 

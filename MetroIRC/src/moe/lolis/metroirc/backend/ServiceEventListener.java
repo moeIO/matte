@@ -25,7 +25,12 @@ public interface ServiceEventListener {
 	 * Called when a server message is received. Passes the server the message
 	 * belongs to.
 	 */
-	public void messageReceived(Channel channel,GenericMessage message);
+	public void statusMessageReceived(Channel channel,GenericMessage message);
+	
+	/*
+	 * Called when a user changes their nickname.
+	 */
+	public void nickChanged(Collection<Channel> commonChannels, String from, String to);
 	
 	/*
 	 * Called when a channel is joined (durr)
