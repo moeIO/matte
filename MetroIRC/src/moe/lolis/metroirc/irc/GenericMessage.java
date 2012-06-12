@@ -11,4 +11,6 @@ public abstract interface GenericMessage {
 	public abstract Date getTime();
 	public abstract void isHighlighted(boolean highlighted);
 	public abstract boolean isHighlighted();
+	public abstract void isChannelNotificationType(boolean type);
+	public abstract boolean isChannelNotificationType();
 }

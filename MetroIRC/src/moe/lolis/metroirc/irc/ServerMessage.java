@@ -6,6 +6,7 @@ public class ServerMessage implements GenericMessage {
 	private String content;
 	private Date time;
 
+
 	public void setContent(String content) {
 		this.content = content;
 	}
@@ -36,6 +37,14 @@ public class ServerMessage implements GenericMessage {
 
 	public boolean isHighlighted() {
 		return false;
+	}
+
+	public void isChannelNotificationType(boolean val) {
+		// Ignore
+	}
+
+	public boolean isChannelNotificationType() {
+		return true;
 	}
 
 }

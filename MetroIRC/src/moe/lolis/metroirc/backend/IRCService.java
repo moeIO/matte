@@ -272,6 +272,7 @@ public class IRCService extends Service implements ServiceEventListener {
 	}
 
 	public void messageReceived(Channel channel, GenericMessage message) {
+		message.isChannelNotificationType(true);
 		if (this.connectedEventListener == null) {
 			channel.addMessage(message);
 		} else

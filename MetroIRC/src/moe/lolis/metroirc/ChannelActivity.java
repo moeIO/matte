@@ -494,6 +494,10 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 			GenericMessage message = this.items.get(position);
 			TextView name = (TextView) convertView.findViewById(R.id.channelMessageName);
 			TextView content = (TextView) convertView.findViewById(R.id.channelMessageContent);
+			if (message.isChannelNotificationType())
+				content.setTextColor(activity.getResources().getColor(R.color.channelNotification));
+			else
+				content.setTextColor(activity.getResources().getColor(R.color.channelNormal));
 			content.setText(message.getContent());
 			name.setText(message.getNickname());
 			name.setTextColor(getNickColour(message.getNickname()));
@@ -672,6 +676,7 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 		});
 	}
 
+	// Non-user message, channel notifications etc
 	public void messageReceived(Channel channel, GenericMessage message) {
 		final Channel chan = channel;
 		final GenericMessage mess = message;

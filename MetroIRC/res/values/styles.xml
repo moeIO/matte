@@ -1,19 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+
     <color name="nickcolor0">#33B5E5</color>
-	<color name="nickcolor1">#AA66CC</color>
-	<color name="nickcolor2">#99CC00</color>
-	<color name="nickcolor3">#FFBB33</color>
-	<color name="nickcolor4">#FF4444</color>
-	<color name="nickcolor5">#0099CC</color>
-	<color name="nickcolor6">#9933CC</color>
-	<color name="nickcolor7">#669900</color>
-	<color name="nickcolor8">#FF8800</color>
-	<color name="nickcolor9">#CC0000</color>
-	<color name="nickcolor10">#5D71BA</color>
-	<color name="nickcolor11">#30499B</color>
-	<color name="nickcolor12">#B37EA9</color>
-	<color name="nickcolor13">#A75798</color>
-	<color name="nickcolor14">#499B30</color>
-	<color name="nickcolor15">#307424</color>
+    <color name="nickcolor1">#AA66CC</color>
+    <color name="nickcolor2">#99CC00</color>
+    <color name="nickcolor3">#FFBB33</color>
+    <color name="nickcolor4">#FF4444</color>
+    <color name="nickcolor5">#0099CC</color>
+    <color name="nickcolor6">#9933CC</color>
+    <color name="nickcolor7">#669900</color>
+    <color name="nickcolor8">#FF8800</color>
+    <color name="nickcolor9">#CC0000</color>
+    <color name="nickcolor10">#5D71BA</color>
+    <color name="nickcolor11">#30499B</color>
+    <color name="nickcolor12">#B37EA9</color>
+    <color name="nickcolor13">#A75798</color>
+    <color name="nickcolor14">#499B30</color>
+    <color name="nickcolor15">#307424</color>
+    <color name="channelNotification">#a0a0a0</color>
+    <color name="channelNormal">#000000</color>
+
 </resources>

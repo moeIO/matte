@@ -7,6 +7,7 @@ public class ChannelMessage implements GenericMessage{
 	private String content;
 	private Date time;
 	private boolean highlight;
+	private boolean isChannelNotificationType;
 	
 	public void setNickname(String nickname) { this.nickname = nickname; }
 	public String getNickname() { return this.nickname; }
@@ -16,4 +17,6 @@ public class ChannelMessage implements GenericMessage{
 	public Date getTime() { return this.time; }
 	public void isHighlighted(boolean highlighted) { this.highlight = highlighted; }
 	public boolean isHighlighted() { return this.highlight; }
+	public void isChannelNotificationType(boolean val){this.isChannelNotificationType=val;}
+	public boolean isChannelNotificationType() { return this.isChannelNotificationType;}
 }
