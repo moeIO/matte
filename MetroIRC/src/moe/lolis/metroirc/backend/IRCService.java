@@ -124,7 +124,7 @@ public class IRCService extends Service implements ServiceEventListener {
 		// XXX Using the deprecated API to support <3.0 (Need to switch to new
 		// API + compat package)
 		int icon = moe.lolis.metroirc.R.drawable.ic_launcher;
-		this.constantNotification = new Notification(icon, "Full moe", 0);
+		this.constantNotification = new Notification(icon, "", 0);
 
 		Context context = getApplicationContext();
 		CharSequence contentTitle = "MetroIRC";
@@ -284,6 +284,18 @@ public class IRCService extends Service implements ServiceEventListener {
 
 	public ArrayList<Server> getServers() {
 		return this.servers;
+	}
+
+	// Returns the position the channel was in the server
+	public int removeChannel(Channel channel) {
+		int pos = -1;
+		for (int i = 0; i < channel.getServer().getChannels().size(); i++) {
+			Channel c = channel.getServer().getChannels().get(i);
+			if (c.getName().equals(channel.getName()))
+				pos = i;
+		}
+		this.getServer(channel.getServer().getName()).removeChannel(channel);
+		return pos;
 	}
 
 	public void channelJoined(Channel channel, String nickname) {
