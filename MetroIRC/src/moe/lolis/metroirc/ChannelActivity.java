@@ -220,127 +220,167 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 			this.startActivity(settingsIntent);
 		} else if (v.getId() == this.addServerButton.getId()) {
 			// Show add server dialog
-			final View dialogView = getLayoutInflater().inflate(R.layout.addserver_dialog, null);
-			final AlertDialog d = new AlertDialog.Builder(this).setView(dialogView).setTitle("Add Server")
-					.setPositiveButton(android.R.string.ok, new Dialog.OnClickListener() {
-						public void onClick(DialogInterface d, int which) {
-							// Do nothing here.
-						}
-					}).setNegativeButton(android.R.string.cancel, null).create();
-			d.setOnShowListener(new DialogInterface.OnShowListener() {
-				public void onShow(DialogInterface dialog) {
-					Button b = d.getButton(AlertDialog.BUTTON_POSITIVE);
-					b.setOnClickListener(new View.OnClickListener() {
-
-						public void onClick(View view) {
-							SharedPreferences rawPreferences = activity.getSharedPreferences("servers", Context.MODE_PRIVATE);
-							ServerPreferences prefs = new ServerPreferences();
-							ServerPreferences.Host host = prefs.new Host();
-							prefs.setHost(host);
-
-							boolean success = true;
-
-							TextView nameView = (TextView) dialogView.findViewById(R.id.addServer_name);
-							if (nameView.getText().length() == 0) {
-								success = false;
-								AlertDialog.Builder b = new AlertDialog.Builder(activity);
-								b.setMessage("You need to enter a server name");
-								b.setPositiveButton("OK", null);
-								b.show();
-							} else {
-								if (ServerPreferences.serverNameExists(rawPreferences, nameView.getText().toString())) {
-									success = false;
-									AlertDialog.Builder b = new AlertDialog.Builder(activity);
-									b.setMessage("A server with this name already exists");
-									b.setPositiveButton("OK", null);
-									b.show();
-								} else
-									prefs.setName(nameView.getText().toString());
-							}
-
-							TextView hostView = (TextView) dialogView.findViewById(R.id.addServer_host);
-							if (hostView.getText().length() == 0) {
-								host.setHostname("irc.lolipower.org");
-							} else {
-								host.setHostname(hostView.getText().toString());
-							}
-
-							TextView portView = (TextView) dialogView.findViewById(R.id.addServer_port);
-							if (portView.getText().length() == 0) {
-								host.setPort(6667);
-							} else {
-								host.setPort(Integer.parseInt(portView.getText().toString()));
-							}
-
-							TextView passwordView = (TextView) dialogView.findViewById(R.id.addServer_password);
-							if (passwordView.getText().length() == 0) {
-								host.setPassword(null);
-							} else {
-								host.setPassword(passwordView.getText().toString());
-							}
-
-							CheckBox ssl = (CheckBox) dialogView.findViewById(R.id.addServer_ssl);
-							host.isSSL(ssl.isChecked());
-
-							CheckBox verifyssl = (CheckBox) dialogView.findViewById(R.id.addServer_verifyssl);
-							host.isSSL(verifyssl.isChecked());
-
-							TextView nickName = (TextView) dialogView.findViewById(R.id.addServer_nicknames);
-							if (nickName.getText().length() == 0) {
-								success = false;
-								AlertDialog.Builder b = new AlertDialog.Builder(activity);
-								b.setMessage("You need a nickname silly :(");
-								b.setPositiveButton("OK", null);
-								b.show();
-							} else {
-								ArrayList<String> nicks = new ArrayList<String>();
-								for (String s : nickName.getText().toString().split(","))
-									nicks.add(s);
-								prefs.setNicknames(nicks);
-							}
-
-							TextView usernameView = (TextView) dialogView.findViewById(R.id.addServer_username);
-							if (usernameView.getText().length() == 0) {
-								prefs.setUsername("MetroIRCUser");
-							} else {
-								prefs.setUsername(usernameView.getText().toString());
-							}
-
-							TextView realnameView = (TextView) dialogView.findViewById(R.id.addServer_realname);
-							if (realnameView.getText().length() == 0) {
-								prefs.setRealname("MetroIRCUser");
-							} else {
-								prefs.setRealname(realnameView.getText().toString());
-							}
-
-							TextView autoconnectCommands = (TextView) dialogView.findViewById(R.id.addServer_autoconnectcommands);
-							if (autoconnectCommands.getText().length() > 0) {
-								ArrayList<String> commands = new ArrayList<String>();
-								for (String c : autoconnectCommands.getText().toString().split("\n"))
-									commands.add(c);
-								prefs.setAutoCommands(commands);
-							}
-
-							CheckBox autoconnect = (CheckBox) dialogView.findViewById(R.id.addServer_connectatstartup);
-							prefs.isAutoConnected(autoconnect.isChecked());
-
-							CheckBox log = (CheckBox) dialogView.findViewById(R.id.addServer_log);
-							prefs.isLogged(log.isChecked());
-
-							if (success) {
-								prefs.saveToSharedPreferences(rawPreferences);
-								moeService.connect(prefs);
-								d.dismiss();
-							}
-						}
-					});
-				}
-			});
-			d.show();
+			this.showServerEditDialog(null);
 		} else if (v.getId() == this.quitButton.getId()) {
 			this.moeService.stopService();
 			this.finish();
 		}
+	}
+
+	private void showServerEditDialog(Server existingServer) {
+		final Server server = existingServer;
+		final View dialogView = getLayoutInflater().inflate(R.layout.addserver_dialog, null);
+		final AlertDialog d = new AlertDialog.Builder(this).setView(dialogView).setTitle("Add Server")
+				.setPositiveButton(android.R.string.ok, new Dialog.OnClickListener() {
+					public void onClick(DialogInterface d, int which) {
+						// Do nothing here.
+					}
+				}).setNegativeButton(android.R.string.cancel, null).create();
+		d.setOnShowListener(new DialogInterface.OnShowListener() {
+			public void onShow(DialogInterface dialog) {
+
+				Button b = d.getButton(AlertDialog.BUTTON_POSITIVE);
+				final TextView nameView = (TextView) dialogView.findViewById(R.id.addServer_name);
+				final TextView hostView = (TextView) dialogView.findViewById(R.id.addServer_host);
+				final TextView portView = (TextView) dialogView.findViewById(R.id.addServer_port);
+				final TextView passwordView = (TextView) dialogView.findViewById(R.id.addServer_password);
+				final CheckBox ssl = (CheckBox) dialogView.findViewById(R.id.addServer_ssl);
+				final CheckBox verifyssl = (CheckBox) dialogView.findViewById(R.id.addServer_verifyssl);
+				final TextView nickName = (TextView) dialogView.findViewById(R.id.addServer_nicknames);
+				final TextView usernameView = (TextView) dialogView.findViewById(R.id.addServer_username);
+				final TextView realnameView = (TextView) dialogView.findViewById(R.id.addServer_realname);
+				final TextView autoconnectCommands = (TextView) dialogView.findViewById(R.id.addServer_autoconnectcommands);
+				final CheckBox autoconnect = (CheckBox) dialogView.findViewById(R.id.addServer_connectatstartup);
+				final CheckBox log = (CheckBox) dialogView.findViewById(R.id.addServer_log);
+
+				String n = null;
+				if (server != null)
+					n = server.getClient().getServerPreferences().getName();
+				final String originalServerName = n;
+				if (server != null) {
+					ServerPreferences prefs = server.getClient().getServerPreferences();
+					nameView.setText(prefs.getName());
+					hostView.setText(prefs.getHost().getHostname());
+					portView.setText(String.valueOf(prefs.getHost().getPort()));
+					passwordView.setText(prefs.getHost().getPassword());
+					ssl.setChecked(prefs.getHost().isSSL());
+					verifyssl.setChecked(prefs.getHost().verifySSL());
+					String nicks = "";
+					for (int i = 0; i < prefs.getNicknames().size(); i++) {
+						if (i != 0)
+							nicks += ",";
+						nicks += prefs.getNicknames().get(i);
+					}
+					nickName.setText(nicks);
+					usernameView.setText(prefs.getUsername());
+					realnameView.setText(prefs.getRealname());
+					String commands = "";
+					for (int i = 0; i < prefs.getAutoCommands().size(); i++) {
+						if (i != 0)
+							commands += "\n";
+						commands += prefs.getAutoCommands().get(i);
+					}
+					autoconnectCommands.setText(commands);
+					autoconnect.setChecked(prefs.isAutoConnected());
+					log.setChecked(prefs.isLogged());
+				}
+				b.setOnClickListener(new View.OnClickListener() {
+
+					public void onClick(View view) {
+						SharedPreferences rawPreferences = activity.getSharedPreferences("servers", Context.MODE_PRIVATE);
+						ServerPreferences prefs = new ServerPreferences();
+						ServerPreferences.Host host = prefs.new Host();
+						prefs.setHost(host);
+
+						boolean success = true;
+						if (nameView.getText().length() == 0) {
+							success = false;
+							AlertDialog.Builder b = new AlertDialog.Builder(activity);
+							b.setMessage("You need to enter a server name");
+							b.setPositiveButton("OK", null);
+							b.show();
+						} else {
+							if (!nameView.getText().toString().equals(originalServerName)
+									&& ServerPreferences.serverNameExists(rawPreferences, nameView.getText().toString())) {
+								success = false;
+								AlertDialog.Builder b = new AlertDialog.Builder(activity);
+								b.setMessage("A server with this name already exists");
+								b.setPositiveButton("OK", null);
+								b.show();
+							} else
+								prefs.setName(nameView.getText().toString());
+						}
+
+						if (hostView.getText().length() == 0) {
+							host.setHostname("irc.lolipower.org");
+						} else {
+							host.setHostname(hostView.getText().toString());
+						}
+
+						if (portView.getText().length() == 0) {
+							host.setPort(6667);
+						} else {
+							host.setPort(Integer.parseInt(portView.getText().toString()));
+						}
+
+						if (passwordView.getText().length() == 0) {
+							host.setPassword(null);
+						} else {
+							host.setPassword(passwordView.getText().toString());
+						}
+
+						host.isSSL(ssl.isChecked());
+
+						host.isSSL(verifyssl.isChecked());
+
+						if (nickName.getText().length() == 0) {
+							success = false;
+							AlertDialog.Builder b = new AlertDialog.Builder(activity);
+							b.setMessage("You need a nickname silly :(");
+							b.setPositiveButton("OK", null);
+							b.show();
+						} else {
+							ArrayList<String> nicks = new ArrayList<String>();
+							for (String s : nickName.getText().toString().split(","))
+								nicks.add(s);
+							prefs.setNicknames(nicks);
+						}
+
+						if (usernameView.getText().length() == 0) {
+							prefs.setUsername("MetroIRCUser");
+						} else {
+							prefs.setUsername(usernameView.getText().toString());
+						}
+
+						if (realnameView.getText().length() == 0) {
+							prefs.setRealname("MetroIRCUser");
+						} else {
+							prefs.setRealname(realnameView.getText().toString());
+						}
+
+						if (autoconnectCommands.getText().length() > 0) {
+							ArrayList<String> commands = new ArrayList<String>();
+							for (String c : autoconnectCommands.getText().toString().split("\n"))
+								commands.add(c);
+							prefs.setAutoCommands(commands);
+						}
+
+						prefs.isAutoConnected(autoconnect.isChecked());
+
+						prefs.isLogged(log.isChecked());
+
+						if (success) {
+							prefs.saveToSharedPreferences(rawPreferences);
+							if (server != null)
+								moeService.disconnect(originalServerName);
+							moeService.connect(prefs);
+							d.dismiss();
+						}
+					}
+				});
+			}
+		});
+		d.show();
 	}
 
 	public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
@@ -390,10 +430,10 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 			Server server = moeService.getServers().get(groupPosition);
 			switch (item.getItemId()) {
 			case SERVEROPTIONS_EDIT:
+				this.showServerEditDialog(server);
 				break;
 			case SERVEROPTIONS_DELETE:
-				if (currentChannel.getServer().getName().equals(server.getName()))
-				{
+				if (currentChannel.getServer().getName().equals(server.getName())) {
 					activity.adapter.setMessages(new ArrayList<GenericMessage>());
 					activity.setTitle("");
 				}
@@ -666,7 +706,20 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 			}
 		});
 
-		// TODO: Close channel if user is us.
+		if (nickname.equals(channel.getServer().getClient().getNick())) {
+			// Remove channel and switch to another
+			final Channel chan = channel;
+			this.runOnUiThread(new Runnable() {
+				public void run() {
+					int previousPos = moeService.removeChannel(chan);
+					if (adapter != null)
+						adapter.notifyDataSetChanged();
+					if (previousPos != 0 && previousPos != -1)
+						activity.setCurrentChannelView(chan.getServer().getChannels().get(previousPos));
+				//TODO remove channel from auto list
+				}
+			});
+		}
 	}
 
 	public void networkQuit(Collection<Channel> commonChannels, String nickname) {

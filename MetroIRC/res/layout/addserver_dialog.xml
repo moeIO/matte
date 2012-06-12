@@ -95,16 +95,16 @@
 
             <CheckBox
                 android:id="@+id/addServer_ssl"
-                android:layout_width="91dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/ssl" />
+                android:text="@string/ssl" android:layout_weight="1"/>
 
             <CheckBox
                 android:id="@+id/addServer_verifyssl"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:paddingRight="25dp"
-                android:text="@string/verifyssl" />
+                android:text="@string/verifyssl" android:layout_weight="1"/>
 
         </LinearLayout>
 
