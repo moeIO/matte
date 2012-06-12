@@ -49,23 +49,26 @@ public class CommandInterpreter {
 				}
 			}
 		} else if (parts[0].equalsIgnoreCase("leave") || parts[0].equalsIgnoreCase("part")) {
-			String[] channels = { this.activity.getCurrentChannel().getChannelInfo().getName() };
 			if (parts.length == 1) {
 				// /part
 				client.partChannel(this.activity.getCurrentChannel().getChannelInfo());
+				this.service.channelParted(this.activity.getCurrentChannel(), client.getNick());
 			} else {
 				if (!this.looksLikeChannel(parts[1])) {
 					// /part $reason
 					client.partChannel(this.activity.getCurrentChannel().getChannelInfo(), parts[1]);
+					this.service.channelParted(this.activity.getCurrentChannel(), client.getNick());
 				} else {
 					if (parts.length < 3) {
 						// /part $channel
-						org.pircbotx.Channel channel = server.getChannel(parts[1]).getChannelInfo();
-						client.partChannel(channel);
+						Channel channel = server.getChannel(parts[1]);
+						client.partChannel(channel.getChannelInfo());
+						this.service.channelParted(channel, client.getNick());
 					} else {
 						// /part $channel $reason
-						org.pircbotx.Channel channel = server.getChannel(parts[1]).getChannelInfo();
-						client.partChannel(channel, parts[2]);
+						Channel channel = server.getChannel(parts[1]);
+						client.partChannel(channel.getChannelInfo(), parts[2]);
+						this.service.channelParted(channel, client.getNick());
 					}
 				}
 			}
