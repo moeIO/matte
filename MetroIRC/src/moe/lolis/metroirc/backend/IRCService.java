@@ -293,15 +293,24 @@ public class IRCService extends Service implements ServiceEventListener {
 		for (int i = 0; i < channel.getServer().getChannels().size(); i++) {
 			Channel c = channel.getServer().getChannels().get(i);
 			if (c.getName().equals(channel.getName()))
+			{
 				pos = i;
+				break;
+			}
 		}
-		this.getServer(channel.getServer().getName()).removeChannel(channel);
-		return pos;
+		// next channel to show
+		if (pos >0)
+			pos--;
+		else if (channel.getServer().getChannels().size()>pos+1)
+			pos++;
+		this.getServer(channel.getServer().getName()).removeChannel(channel.getName());
+		return pos-1;
 	}
 	
 	public void partChannel(Channel channel)
 	{
-		
+		channel.getServer().getClient().partChannel(channel.getChannelInfo());
+		this.channelParted(channel, channel.getServer().getClient().getNick());
 	}
 
 	public void channelJoined(Channel channel, String nickname) {

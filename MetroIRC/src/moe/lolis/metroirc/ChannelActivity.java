@@ -729,11 +729,15 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 			final Channel chan = channel;
 			this.runOnUiThread(new Runnable() {
 				public void run() {
-					int previousPos = moeService.removeChannel(chan);
-					if (adapter != null)
+					int nextPos = moeService.removeChannel(chan);
+					if (adapter != null) {
 						adapter.notifyDataSetChanged();
-					if (previousPos != 0 && previousPos != -1)
-						activity.setCurrentChannelView(chan.getServer().getChannels().get(previousPos));
+						channelAdapter.notifyDataSetChanged();
+					}
+					if (nextPos > -1)
+						activity.setCurrentChannelView(chan.getServer().getChannels().get(nextPos));
+					else
+						activity.setCurrentChannelView(chan.getServer());
 					// TODO remove channel from auto list
 				}
 			});

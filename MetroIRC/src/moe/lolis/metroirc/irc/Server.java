@@ -2,10 +2,11 @@ package moe.lolis.metroirc.irc;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+
 /*
  * Server extends Channel so that it can act as a channel when listing messages sent to this server
  */
-public class Server extends Channel{
+public class Server extends Channel {
 	private org.pircbotx.ServerInfo serverInfo;
 	private HashMap<String, Channel> channels;
 	private String name;
@@ -37,8 +38,8 @@ public class Server extends Channel{
 		return new ArrayList<Channel>(this.channels.values());
 	}
 
-	public void removeChannel(Channel channel) {
-		this.channels.remove(channel);
+	public void removeChannel(String name) {
+		this.channels.remove(name);
 	}
 
 	public void setChannels(ArrayList<Channel> channels) {
@@ -67,5 +68,9 @@ public class Server extends Channel{
 	public Client getClient() {
 		return this.client;
 	}
-	
+
+	public Server getServer() {
+		return this;
+	}
+
 }
