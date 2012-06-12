@@ -85,8 +85,10 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 	private HashMap<String, Integer> nickColours;
 
 	private static final int CONTEXTMENU_SERVEROPTIONS = 0;
+	private static final int CONTEXTMENU_CHANNELOPTIONS = 1;
 	private static final int SERVEROPTIONS_EDIT = 0;
 	private static final int SERVEROPTIONS_DELETE = 1;
+	private static final int CHANNELOPTIONS_PART = 1;
 
 	/*
 	 * UI callbacks.
@@ -417,6 +419,9 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 				menu.add(CONTEXTMENU_SERVEROPTIONS, SERVEROPTIONS_EDIT, 0, "Edit");
 				menu.add(CONTEXTMENU_SERVEROPTIONS, SERVEROPTIONS_DELETE, 1, "Delete");
 				break;
+			case ExpandableListView.PACKED_POSITION_TYPE_CHILD:
+				menu.setHeaderTitle("Channel Options");
+				menu.add(CONTEXTMENU_CHANNELOPTIONS, CHANNELOPTIONS_PART, 0, "Part");
 			}
 		}
 	}
@@ -424,9 +429,10 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 	@Override
 	public boolean onContextItemSelected(MenuItem item) {
 		ExpandableListContextMenuInfo info = (ExpandableListContextMenuInfo) item.getMenuInfo();
+		int groupPosition = ExpandableListView.getPackedPositionGroup(info.packedPosition);
+		int childPosition = ExpandableListView.getPackedPositionChild(info.packedPosition);
 		switch (item.getGroupId()) {
 		case CONTEXTMENU_SERVEROPTIONS:
-			int groupPosition = ExpandableListView.getPackedPositionGroup(info.packedPosition);
 			Server server = moeService.getServers().get(groupPosition);
 			switch (item.getItemId()) {
 			case SERVEROPTIONS_EDIT:
@@ -440,6 +446,13 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 				moeService.disconnect(server.getName());
 				server.getClient().getServerPreferences().deleteFromSharedPreferences(activity.getSharedPreferences("servers", Context.MODE_PRIVATE));
 				activity.channelAdapter.notifyDataSetChanged();
+				break;
+			}
+			break;
+		case CONTEXTMENU_CHANNELOPTIONS:
+			switch (item.getItemId()) {
+			case CHANNELOPTIONS_PART:
+				moeService.partChannel(moeService.getServers().get(groupPosition).getChannels().get(childPosition));
 				break;
 			}
 			break;
@@ -716,7 +729,7 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 						adapter.notifyDataSetChanged();
 					if (previousPos != 0 && previousPos != -1)
 						activity.setCurrentChannelView(chan.getServer().getChannels().get(previousPos));
-				//TODO remove channel from auto list
+					// TODO remove channel from auto list
 				}
 			});
 		}
