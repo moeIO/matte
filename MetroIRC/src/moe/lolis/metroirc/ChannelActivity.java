@@ -1,5 +1,7 @@
 package moe.lolis.metroirc;
 
+import java.io.InputStream;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -7,12 +9,9 @@ import java.util.HashMap;
 import moe.lolis.metroirc.backend.IRCService;
 import moe.lolis.metroirc.backend.ServiceEventListener;
 import moe.lolis.metroirc.irc.Channel;
-import moe.lolis.metroirc.irc.ChannelMessage;
 import moe.lolis.metroirc.irc.CommandInterpreter;
 import moe.lolis.metroirc.irc.GenericMessage;
-import moe.lolis.metroirc.irc.MessageParser;
 import moe.lolis.metroirc.irc.Server;
-import moe.lolis.metroirc.irc.ServerMessage;
 import moe.lolis.metroirc.irc.ServerPreferences;
 import android.app.ActionBar;
 import android.app.AlertDialog;
@@ -26,9 +25,13 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.graphics.drawable.Drawable;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.text.Spannable;
 import android.text.SpannableString;
+import android.text.style.ImageSpan;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.KeyEvent;
@@ -521,6 +524,13 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 			else
 				content.setTextColor(activity.getResources().getColor(R.color.channelNormal));
 			content.setText(message.getContent());
+			if (message.getEmbeddedYoutube() != null) {
+				// TODO: Toggle
+				if (false) {
+					AsyncYoutubeLoad videoPreviewLoader = new AsyncYoutubeLoad();
+					videoPreviewLoader.execute(new Object[] { content, message });
+				}
+			}
 			name.setText(message.getNickname());
 			name.setTextColor(getNickColour(message.getNickname()));
 			if (message.isHighlighted())
@@ -529,6 +539,46 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 				convertView.setBackgroundColor(Color.TRANSPARENT);
 			return convertView;
 		}
+	}
+
+	private class AsyncYoutubeLoad extends AsyncTask<Object, Void, Boolean> {
+		private TextView view;
+		private GenericMessage message;
+		private SpannableString spanToSet;
+
+		@Override
+		protected Boolean doInBackground(Object... params) {
+			view = (TextView) params[0];
+			message = (GenericMessage) params[1];
+
+			spanToSet = new SpannableString(" \n" + message.getContent().toString());
+			Drawable d = null;
+			try {
+				InputStream is = (InputStream) new URL("http://img.youtube.com/vi/" + message.getEmbeddedYoutube() + "/hqdefault.jpg").getContent();
+				d = Drawable.createFromStream(is, "src name");
+			} catch (Exception e) {
+				// No-one cares
+				return false;
+			}
+			d.setBounds(0, 0, d.getIntrinsicWidth(), d.getIntrinsicHeight());
+			ImageSpan span = new ImageSpan(d, ImageSpan.ALIGN_BASELINE);
+			spanToSet.setSpan(span, 0, 1, Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
+
+			return true;
+		}
+
+		@Override
+		protected void onPostExecute(Boolean success) {
+			if (success) {
+				try {
+					if (view != null)
+						view.setText(spanToSet);
+				} catch (Exception ex) {
+					// Whatever
+				}
+			}
+		}
+
 	}
 
 	/*

@@ -1,6 +1,8 @@
 package moe.lolis.metroirc.irc;
 
 import java.util.Date;
+
+import android.text.SpannableString;
 import android.text.Spanned;
 
 public class ChannelMessage implements GenericMessage {
@@ -9,10 +11,12 @@ public class ChannelMessage implements GenericMessage {
 	private Date time;
 	private boolean highlight;
 	private boolean isChannelNotificationType;
+	private String embeddedYoutubeID;
 
-	public ChannelMessage(){
-		
+	public ChannelMessage() {
+
 	}
+
 	public ChannelMessage(String nickname, Spanned content) {
 		this.nickname = nickname;
 		this.content = content;
@@ -57,5 +61,13 @@ public class ChannelMessage implements GenericMessage {
 
 	public boolean isChannelNotificationType() {
 		return this.isChannelNotificationType;
+	}
+
+	public String getEmbeddedYoutube() {
+		return embeddedYoutubeID;
+	}
+
+	public void setEmbeddedYoutube(String id) {
+		embeddedYoutubeID = id;
 	}
 }

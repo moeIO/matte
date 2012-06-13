@@ -13,6 +13,7 @@ import moe.lolis.metroirc.irc.ChannelMessage;
 import moe.lolis.metroirc.irc.Client;
 import moe.lolis.metroirc.irc.ClientManager;
 import moe.lolis.metroirc.irc.GenericMessage;
+import moe.lolis.metroirc.irc.MessageParser;
 import moe.lolis.metroirc.irc.Server;
 import moe.lolis.metroirc.irc.ServerPreferences;
 
@@ -270,6 +271,7 @@ public class IRCService extends Service implements ServiceEventListener {
 	}
 
 	public void activeChannelMessageReceived(Channel channel, GenericMessage message) {
+		MessageParser.parseMessage(message);
 		if (this.connectedEventListener == null) {
 			channel.addMessage(message);
 		} else
