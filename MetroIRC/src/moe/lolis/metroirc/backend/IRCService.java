@@ -25,7 +25,6 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Binder;
 import android.os.IBinder;
@@ -128,7 +127,7 @@ public class IRCService extends Service implements ServiceEventListener {
 
 		Context context = getApplicationContext();
 		CharSequence contentTitle = "MetroIRC";
-		CharSequence contentText = "Connected";
+		CharSequence contentText = "Running";
 		Intent notificationIntent = new Intent(this, ChannelActivity.class);
 		PendingIntent contentIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
 
@@ -257,6 +256,19 @@ public class IRCService extends Service implements ServiceEventListener {
 		mNotificationManager.notify(NOTIFICATION_ID, notification);
 	}
 
+	public void updateNotification(int icon, String message) {
+		Context context = getApplicationContext();
+		Intent notificationIntent = new Intent(this, ChannelActivity.class);
+		PendingIntent contentIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
+		constantNotification.icon = icon;
+		constantNotification.when = System.currentTimeMillis();
+		constantNotification.setLatestEventInfo(context, "MetroIRC", message, contentIntent);
+
+		String ns = Context.NOTIFICATION_SERVICE;
+		NotificationManager mNotificationManager = (NotificationManager) getSystemService(ns);
+		mNotificationManager.notify(CONSTANT_FOREGROUND_ID, constantNotification);
+	}
+
 	public void activeChannelMessageReceived(Channel channel, GenericMessage message) {
 		if (this.connectedEventListener == null) {
 			channel.addMessage(message);
@@ -292,23 +304,21 @@ public class IRCService extends Service implements ServiceEventListener {
 		int pos = -1;
 		for (int i = 0; i < channel.getServer().getChannels().size(); i++) {
 			Channel c = channel.getServer().getChannels().get(i);
-			if (c.getName().equals(channel.getName()))
-			{
+			if (c.getName().equals(channel.getName())) {
 				pos = i;
 				break;
 			}
 		}
 		// next channel to show
-		if (pos >0)
+		if (pos > 0)
 			pos--;
-		else if (channel.getServer().getChannels().size()>pos+1)
+		else if (channel.getServer().getChannels().size() > pos + 1)
 			pos++;
 		this.getServer(channel.getServer().getName()).removeChannel(channel.getName());
-		return pos-1;
+		return pos - 1;
 	}
-	
-	public void partChannel(Channel channel)
-	{
+
+	public void partChannel(Channel channel) {
 		channel.getServer().getClient().partChannel(channel.getChannelInfo());
 		this.channelParted(channel, channel.getServer().getClient().getNick());
 	}
@@ -324,7 +334,25 @@ public class IRCService extends Service implements ServiceEventListener {
 	public void networkQuit(Collection<Channel> commonChannels, String nickname) {
 		this.connectedEventListener.networkQuit(commonChannels, nickname);
 	}
-	
+
+	public void serverConnected(Server server) {
+		this.updateNotification(R.drawable.ic_launcher, "Connected");
+	}
+
+	public void serverDisconnected(Server server, String error) {
+		this.connectedEventListener.serverDisconnected(server, error);
+		// If all servers are disconnected (connection loss) change icon
+		boolean hasConnectedServer = false;
+		for (Server s : this.getServers()) {
+			if (s.getClient().isConnected()) {
+				hasConnectedServer = true;
+				break;
+			}
+		}
+		if (!hasConnectedServer)
+			this.updateNotification(R.drawable.ic_launcher_red, "Error: disconnected");
+	}
+
 	public void nickChanged(Collection<Channel> commonChannels, String from, String to) {
 		this.connectedEventListener.nickChanged(commonChannels, from, to);
 	}

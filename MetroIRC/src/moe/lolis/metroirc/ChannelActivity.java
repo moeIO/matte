@@ -7,9 +7,12 @@ import java.util.HashMap;
 import moe.lolis.metroirc.backend.IRCService;
 import moe.lolis.metroirc.backend.ServiceEventListener;
 import moe.lolis.metroirc.irc.Channel;
+import moe.lolis.metroirc.irc.ChannelMessage;
 import moe.lolis.metroirc.irc.CommandInterpreter;
 import moe.lolis.metroirc.irc.GenericMessage;
+import moe.lolis.metroirc.irc.MessageParser;
 import moe.lolis.metroirc.irc.Server;
+import moe.lolis.metroirc.irc.ServerMessage;
 import moe.lolis.metroirc.irc.ServerPreferences;
 import android.app.ActionBar;
 import android.app.AlertDialog;
@@ -25,6 +28,7 @@ import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.text.SpannableString;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.KeyEvent;
@@ -86,8 +90,11 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 
 	private static final int CONTEXTMENU_SERVEROPTIONS = 0;
 	private static final int CONTEXTMENU_CHANNELOPTIONS = 1;
-	private static final int SERVEROPTIONS_EDIT = 0;
-	private static final int SERVEROPTIONS_DELETE = 1;
+	private static final int SERVEROPTIONS_CONNECT = 0;
+	private static final int SERVEROPTIONS_DISCONNECT = 1;
+	private static final int SERVEROPTIONS_EDIT = 2;
+	private static final int SERVEROPTIONS_DELETE = 3;
+
 	private static final int CHANNELOPTIONS_PART = 1;
 
 	/*
@@ -414,13 +421,19 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 	@Override
 	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
 		ExpandableListContextMenuInfo info = (ExpandableListContextMenuInfo) menuInfo;
+		int groupPosition = ExpandableListView.getPackedPositionGroup(info.packedPosition);
+		Server server = moeService.getServers().get(groupPosition);
 		if (v.getId() == expandableChannelList.getId()) {
 			int selectionType = ExpandableListView.getPackedPositionType(info.packedPosition);
 			switch (selectionType) {
 			case ExpandableListView.PACKED_POSITION_TYPE_GROUP:
 				menu.setHeaderTitle("Server Options");
-				menu.add(CONTEXTMENU_SERVEROPTIONS, SERVEROPTIONS_EDIT, 0, "Edit");
-				menu.add(CONTEXTMENU_SERVEROPTIONS, SERVEROPTIONS_DELETE, 1, "Delete");
+				if (server.getClient().isConnected())
+					menu.add(CONTEXTMENU_SERVEROPTIONS, SERVEROPTIONS_DISCONNECT, 0, "Disconnect");
+				else
+					menu.add(CONTEXTMENU_SERVEROPTIONS, SERVEROPTIONS_CONNECT, 0, "Connect");
+				menu.add(CONTEXTMENU_SERVEROPTIONS, SERVEROPTIONS_EDIT, 1, "Edit");
+				menu.add(CONTEXTMENU_SERVEROPTIONS, SERVEROPTIONS_DELETE, 2, "Delete");
 				break;
 			case ExpandableListView.PACKED_POSITION_TYPE_CHILD:
 				menu.setHeaderTitle("Channel Options");
@@ -438,6 +451,12 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 		case CONTEXTMENU_SERVEROPTIONS:
 			Server server = moeService.getServers().get(groupPosition);
 			switch (item.getItemId()) {
+			case SERVEROPTIONS_DISCONNECT:
+				moeService.disconnect(server.getName());
+				break;
+			case SERVEROPTIONS_CONNECT:
+				moeService.connect(server.getClient().getServerPreferences());
+				break;
 			case SERVEROPTIONS_EDIT:
 				this.showServerEditDialog(server);
 				break;
@@ -757,11 +776,31 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 			});
 		}
 	}
-	
+
 	public void nickChanged(Collection<Channel> commonChannels, String from, String to) {
 		if (commonChannels.contains(this.currentChannel)) {
 			this.runOnUiThread(new Runnable() {
 				public void run() {
+					if (adapter != null)
+						adapter.notifyDataSetChanged();
+				}
+			});
+		}
+	}
+
+	public void serverConnected(Server server) {
+
+	}
+
+	public void serverDisconnected(Server server, String error) {
+		final Server serv = server;
+		if (server != null) {
+			final String err = error;
+			this.runOnUiThread(new Runnable() {
+				public void run() {
+					serv.addMessage(serv.createError(SpannableString.valueOf(err)));
+					for (Channel channel : serv.getChannels())
+						channel.addMessage(channel.createError(SpannableString.valueOf(err)));
 					if (adapter != null)
 						adapter.notifyDataSetChanged();
 				}

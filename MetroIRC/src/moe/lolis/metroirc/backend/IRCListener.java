@@ -31,6 +31,13 @@ public class IRCListener extends ListenerAdapter<Client> {
 			event.respond(command);
 		// No need to switch to the server tab as it was changed to during
 		// connection
+		this.service.serverConnected(server);
+	}
+
+	public void onDisconnect(DisconnectEvent<Client> event) {
+		Server server = this.service.getServer(event.getBot().getServerPreferences().getName());
+		// Disconnect seems to give us no reason, ability to send it anyway
+		this.service.serverDisconnected(server, "Error: disconnected");
 	}
 
 	public void onMotd(MotdEvent<Client> event) {
@@ -44,7 +51,7 @@ public class IRCListener extends ListenerAdapter<Client> {
 			this.service.statusMessageReceived(server, message);
 		}
 	}
-	
+
 	public void onQuit(QuitEvent<Client> event) {
 		Server server = this.service.getServer(event.getBot().getServerPreferences().getName());
 		Client client = server.getClient();
@@ -59,11 +66,12 @@ public class IRCListener extends ListenerAdapter<Client> {
 				commonChannels.add(ch);
 
 				if (message == null) {
-					String msg = "<strong>" + event.getUser().getNick() + "</strong> (" + event.getUser().getLogin() + "@" + event.getUser().getHostmask() + ") has quit";
+					String msg = "<strong>" + event.getUser().getNick() + "</strong> (" + event.getUser().getLogin() + "@"
+							+ event.getUser().getHostmask() + ") has quit";
 					if (event.getReason().length() > 0) {
 						msg += " (<em>" + event.getReason() + "</em>)";
 					}
-					
+
 					message = new ChannelMessage();
 					message.setNickname("<--");
 					message.setContent(Html.fromHtml(msg));
@@ -92,8 +100,8 @@ public class IRCListener extends ListenerAdapter<Client> {
 
 		ChannelMessage message = new ChannelMessage();
 		message.setNickname("-->");
-		message.setContent(Html.fromHtml("<strong>" + event.getUser().getNick() + "</strong> (" + event.getUser().getLogin() + "@" + event.getUser().getHostmask() + ") has joined "
-				+ event.getChannel().getName()));
+		message.setContent(Html.fromHtml("<strong>" + event.getUser().getNick() + "</strong> (" + event.getUser().getLogin() + "@"
+				+ event.getUser().getHostmask() + ") has joined " + event.getChannel().getName()));
 		message.setTime(new Date());
 		// channel.addMessage(message);
 		this.service.statusMessageReceived(channel, message);
@@ -106,8 +114,8 @@ public class IRCListener extends ListenerAdapter<Client> {
 
 		ChannelMessage message = new ChannelMessage();
 		message.setNickname("<--");
-		message.setContent(Html.fromHtml("<strong>" + event.getUser().getNick() + "</strong> (" + event.getUser().getLogin() + "@" + event.getUser().getHostmask() + ") has left "
-				+ event.getChannel().getName() + " (<em>" + event.getReason() + "</em>)"));
+		message.setContent(Html.fromHtml("<strong>" + event.getUser().getNick() + "</strong> (" + event.getUser().getLogin() + "@"
+				+ event.getUser().getHostmask() + ") has left " + event.getChannel().getName() + " (<em>" + event.getReason() + "</em>)"));
 		message.setTime(new Date());
 		// channel.addMessage(message);
 		this.service.statusMessageReceived(channel, message);
@@ -139,7 +147,7 @@ public class IRCListener extends ListenerAdapter<Client> {
 			message.isHighlighted(false);
 		}
 	}
-	
+
 	public void onNickChange(NickChangeEvent<Client> event) {
 		Server server = this.service.getServer(event.getBot().getServerPreferences().getName());
 		Client client = server.getClient();
@@ -156,30 +164,33 @@ public class IRCListener extends ListenerAdapter<Client> {
 				if (message == null) {
 					message = new ChannelMessage();
 					message.setNickname("--");
-					message.setContent(Html.fromHtml("<strong>" + event.getOldNick() + "</strong> is now known as <strong>" + event.getNewNick() + "</strong>"));
+					message.setContent(Html.fromHtml("<strong>" + event.getOldNick() + "</strong> is now known as <strong>" + event.getNewNick()
+							+ "</strong>"));
 					message.setTime(new Date());
 				}
 				// ch.addMessage(message);
 				this.service.statusMessageReceived(ch, message);
 			}
 		}
-		
+
 		this.service.nickChanged(commonChannels, event.getOldNick(), event.getNewNick());
 	}
-	
+
 	public void onTopic(TopicEvent<Client> event) {
 		Server server = this.service.getServer(event.getBot().getServerPreferences().getName());
 		Channel channel = server.getChannel(event.getChannel().getName());
-		
+
 		ChannelMessage message = new ChannelMessage();
 		message.setNickname("--");
 		message.setTime(new Date());
 		if (event.isChanged()) {
-			message.setContent(Html.fromHtml(event.getUser().getNick() + " changed the topic to: <strong>" + MessageParser.parseToHTML(event.getTopic()) + "</strong>"));
+			message.setContent(Html.fromHtml(event.getUser().getNick() + " changed the topic to: <strong>"
+					+ MessageParser.parseToHTML(event.getTopic()) + "</strong>"));
 		} else {
-			message.setContent(Html.fromHtml(event.getChannel().getName() + "'s topic is: <strong>" + MessageParser.parseToHTML(event.getTopic()) + "</strong>"));
+			message.setContent(Html.fromHtml(event.getChannel().getName() + "'s topic is: <strong>" + MessageParser.parseToHTML(event.getTopic())
+					+ "</strong>"));
 		}
-		
+
 		this.service.statusMessageReceived(channel, message);
 	}
 

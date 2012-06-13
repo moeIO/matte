@@ -7,6 +7,13 @@ public class ServerMessage implements GenericMessage {
 	private Spanned content;
 	private Date time;
 
+	public ServerMessage(){
+		
+	}
+	public ServerMessage(Spanned content) {
+		this.content = content;
+		time = new Date();
+	}
 
 	public void setContent(Spanned content) {
 		this.content = content;
