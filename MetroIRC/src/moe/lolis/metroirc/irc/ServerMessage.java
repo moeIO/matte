@@ -1,12 +1,22 @@
 package moe.lolis.metroirc.irc;
 
 import java.util.Date;
+
+import android.text.SpannableString;
 import android.text.Spanned;
 
 public class ServerMessage implements GenericMessage {
 	private Spanned content;
 	private Date time;
 
+	public ServerMessage() {
+
+	}
+
+	public ServerMessage(Spanned content) {
+		this.content = content;
+		time = new Date();
+	}
 
 	public void setContent(Spanned content) {
 		this.content = content;
@@ -48,4 +58,11 @@ public class ServerMessage implements GenericMessage {
 		return true;
 	}
 
+	public String getEmbeddedYoutube() {
+		return null;
+	}
+
+	public void setEmbeddedYoutube(String id) {
+		// Ignore
+	}
 }

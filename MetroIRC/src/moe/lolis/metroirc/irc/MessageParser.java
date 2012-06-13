@@ -12,6 +12,16 @@ public class MessageParser {
 		"#ffffff", "#000000"
 	};
 
+	public static void parseMessage(GenericMessage message) {
+		String text = message.getContent().toString();
+		if (text.contains("youtube.com/watch")) {
+			int loc = text.indexOf("v=");
+			if (text.length() > loc + 12) {
+				message.setEmbeddedYoutube(text.substring(loc+2, loc + 13));
+			}
+		}
+	}
+
 	public static String parseToHTML(String message) {
 		boolean has_colour = false, has_bold = false, has_underline = false, is_reversed = false;
 		int foreground = 1, background = 0;

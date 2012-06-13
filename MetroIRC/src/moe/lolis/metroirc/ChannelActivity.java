@@ -1,5 +1,7 @@
 package moe.lolis.metroirc;
 
+import java.io.InputStream;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -23,8 +25,13 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.graphics.drawable.Drawable;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.text.Spannable;
+import android.text.SpannableString;
+import android.text.style.ImageSpan;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.KeyEvent;
@@ -86,8 +93,11 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 
 	private static final int CONTEXTMENU_SERVEROPTIONS = 0;
 	private static final int CONTEXTMENU_CHANNELOPTIONS = 1;
-	private static final int SERVEROPTIONS_EDIT = 0;
-	private static final int SERVEROPTIONS_DELETE = 1;
+	private static final int SERVEROPTIONS_CONNECT = 0;
+	private static final int SERVEROPTIONS_DISCONNECT = 1;
+	private static final int SERVEROPTIONS_EDIT = 2;
+	private static final int SERVEROPTIONS_DELETE = 3;
+
 	private static final int CHANNELOPTIONS_PART = 1;
 
 	/*
@@ -414,13 +424,19 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 	@Override
 	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
 		ExpandableListContextMenuInfo info = (ExpandableListContextMenuInfo) menuInfo;
+		int groupPosition = ExpandableListView.getPackedPositionGroup(info.packedPosition);
+		Server server = moeService.getServers().get(groupPosition);
 		if (v.getId() == expandableChannelList.getId()) {
 			int selectionType = ExpandableListView.getPackedPositionType(info.packedPosition);
 			switch (selectionType) {
 			case ExpandableListView.PACKED_POSITION_TYPE_GROUP:
 				menu.setHeaderTitle("Server Options");
-				menu.add(CONTEXTMENU_SERVEROPTIONS, SERVEROPTIONS_EDIT, 0, "Edit");
-				menu.add(CONTEXTMENU_SERVEROPTIONS, SERVEROPTIONS_DELETE, 1, "Delete");
+				if (server.getClient().isConnected())
+					menu.add(CONTEXTMENU_SERVEROPTIONS, SERVEROPTIONS_DISCONNECT, 0, "Disconnect");
+				else
+					menu.add(CONTEXTMENU_SERVEROPTIONS, SERVEROPTIONS_CONNECT, 0, "Connect");
+				menu.add(CONTEXTMENU_SERVEROPTIONS, SERVEROPTIONS_EDIT, 1, "Edit");
+				menu.add(CONTEXTMENU_SERVEROPTIONS, SERVEROPTIONS_DELETE, 2, "Delete");
 				break;
 			case ExpandableListView.PACKED_POSITION_TYPE_CHILD:
 				menu.setHeaderTitle("Channel Options");
@@ -438,6 +454,12 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 		case CONTEXTMENU_SERVEROPTIONS:
 			Server server = moeService.getServers().get(groupPosition);
 			switch (item.getItemId()) {
+			case SERVEROPTIONS_DISCONNECT:
+				moeService.disconnect(server.getName());
+				break;
+			case SERVEROPTIONS_CONNECT:
+				moeService.connect(server.getClient().getServerPreferences());
+				break;
 			case SERVEROPTIONS_EDIT:
 				this.showServerEditDialog(server);
 				break;
@@ -502,6 +524,13 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 			else
 				content.setTextColor(activity.getResources().getColor(R.color.channelNormal));
 			content.setText(message.getContent());
+			if (message.getEmbeddedYoutube() != null) {
+				// TODO: Toggle
+				if (false) {
+					AsyncYoutubeLoad videoPreviewLoader = new AsyncYoutubeLoad();
+					videoPreviewLoader.execute(new Object[] { content, message });
+				}
+			}
 			name.setText(message.getNickname());
 			name.setTextColor(getNickColour(message.getNickname()));
 			if (message.isHighlighted())
@@ -510,6 +539,46 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 				convertView.setBackgroundColor(Color.TRANSPARENT);
 			return convertView;
 		}
+	}
+
+	private class AsyncYoutubeLoad extends AsyncTask<Object, Void, Boolean> {
+		private TextView view;
+		private GenericMessage message;
+		private SpannableString spanToSet;
+
+		@Override
+		protected Boolean doInBackground(Object... params) {
+			view = (TextView) params[0];
+			message = (GenericMessage) params[1];
+
+			spanToSet = new SpannableString(" \n" + message.getContent().toString());
+			Drawable d = null;
+			try {
+				InputStream is = (InputStream) new URL("http://img.youtube.com/vi/" + message.getEmbeddedYoutube() + "/hqdefault.jpg").getContent();
+				d = Drawable.createFromStream(is, "src name");
+			} catch (Exception e) {
+				// No-one cares
+				return false;
+			}
+			d.setBounds(0, 0, d.getIntrinsicWidth(), d.getIntrinsicHeight());
+			ImageSpan span = new ImageSpan(d, ImageSpan.ALIGN_BASELINE);
+			spanToSet.setSpan(span, 0, 1, Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
+
+			return true;
+		}
+
+		@Override
+		protected void onPostExecute(Boolean success) {
+			if (success) {
+				try {
+					if (view != null)
+						view.setText(spanToSet);
+				} catch (Exception ex) {
+					// Whatever
+				}
+			}
+		}
+
 	}
 
 	/*
@@ -757,11 +826,31 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 			});
 		}
 	}
-	
+
 	public void nickChanged(Collection<Channel> commonChannels, String from, String to) {
 		if (commonChannels.contains(this.currentChannel)) {
 			this.runOnUiThread(new Runnable() {
 				public void run() {
+					if (adapter != null)
+						adapter.notifyDataSetChanged();
+				}
+			});
+		}
+	}
+
+	public void serverConnected(Server server) {
+
+	}
+
+	public void serverDisconnected(Server server, String error) {
+		final Server serv = server;
+		if (server != null) {
+			final String err = error;
+			this.runOnUiThread(new Runnable() {
+				public void run() {
+					serv.addMessage(serv.createError(SpannableString.valueOf(err)));
+					for (Channel channel : serv.getChannels())
+						channel.addMessage(channel.createError(SpannableString.valueOf(err)));
 					if (adapter != null)
 						adapter.notifyDataSetChanged();
 				}
