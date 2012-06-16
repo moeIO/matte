@@ -4,18 +4,26 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Set;
 
-import moe.lolis.metroirc.irc.Client;
 import moe.lolis.metroirc.irc.Channel;
 import moe.lolis.metroirc.irc.ChannelMessage;
+import moe.lolis.metroirc.irc.Client;
 import moe.lolis.metroirc.irc.MessageParser;
 import moe.lolis.metroirc.irc.Server;
 import moe.lolis.metroirc.irc.ServerMessage;
 
 import org.pircbotx.hooks.ListenerAdapter;
-import org.pircbotx.hooks.events.*;
+import org.pircbotx.hooks.events.ConnectEvent;
+import org.pircbotx.hooks.events.DisconnectEvent;
+import org.pircbotx.hooks.events.JoinEvent;
+import org.pircbotx.hooks.events.MessageEvent;
+import org.pircbotx.hooks.events.MotdEvent;
+import org.pircbotx.hooks.events.NickChangeEvent;
+import org.pircbotx.hooks.events.PartEvent;
+import org.pircbotx.hooks.events.QuitEvent;
+import org.pircbotx.hooks.events.ServerResponseEvent;
+import org.pircbotx.hooks.events.TopicEvent;
 
 import android.text.Html;
-import android.text.Spanned;
 import android.text.SpannedString;
 
 public class IRCListener extends ListenerAdapter<Client> {

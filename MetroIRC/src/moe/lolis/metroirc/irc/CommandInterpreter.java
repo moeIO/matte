@@ -45,8 +45,10 @@ public class CommandInterpreter {
 
 				if (passwords != null) {
 					client.joinChannel(channels[i], passwords[i]);
+					//TODO Channels with passwords aren't stored for autoconnect
 				} else {
 					client.joinChannel(channels[i]);
+					client.getServerPreferences().addAutoChannel(channels[i]);
 				}
 			}
 		} else if (parts[0].equalsIgnoreCase("leave") || parts[0].equalsIgnoreCase("part")) {

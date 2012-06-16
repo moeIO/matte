@@ -68,28 +68,6 @@ public class IRCService extends Service implements ServiceEventListener {
 		this.clientManager = new ClientManager();
 		this.listener = new IRCListener(this);
 
-		// Load preferences from configuration.
-		ArrayList<ServerPreferences> preferences = this.loadPreferences();
-		// Guy-kun a shit - temporary test preferences until we've made an
-		// actual UI.
-		ServerPreferences prefs = new ServerPreferences();
-		prefs.setName("Rizon");
-		prefs.addNickname("Metro-sama");
-		prefs.addNickname("Metro-chan");
-		prefs.setUsername("metroirc");
-		prefs.setRealname("MetroIRC");
-		prefs.setHost("irc.lolipower.org", 6697, true, null);
-		prefs.addAutoChannel("#metroirc");
-		prefs.addAutoChannel("#metroirc2");
-		prefs.isAutoConnected(true);
-		preferences.add(prefs);
-
-		for (ServerPreferences serverPrefs : preferences) {
-			if (serverPrefs.isAutoConnected()) {
-				this.connect(serverPrefs);
-			}
-		}
-		super.onCreate();
 	}
 
 	public void connect(ServerPreferences serverPrefs) {
@@ -107,6 +85,17 @@ public class IRCService extends Service implements ServiceEventListener {
 		}
 	}
 
+	public void addDisconnectedServer(ServerPreferences prefs) {
+		Server s = new Server();
+		Client c = IRCService.this.clientManager.createClient(prefs);
+		c.getListenerManager().addListener(IRCService.this.listener);
+		s.setClient(c);
+		s.getClient().setServerPreferences(prefs);
+		s.setName(prefs.getName());
+		this.servers.add(s);
+		this.serverMap.put(s.getName(), s);
+	}
+
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
@@ -115,11 +104,21 @@ public class IRCService extends Service implements ServiceEventListener {
 	// Service started.
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startID) {
-		Log.d("IRC Service", "onStart");
+		// Load preferences from configuration.
+		ArrayList<ServerPreferences> preferences = this.loadPreferences();
+
+		for (ServerPreferences serverPrefs : preferences) {
+			if (serverPrefs.isAutoConnected()) {
+				this.connect(serverPrefs);
+			} else {
+				//XXX Serverprefs don't load properly
+				//this.addDisconnectedServer(serverPrefs);
+			}
+		}
+		super.onCreate();
 
 		// Notification for foreground sevice
-		String ns = Context.NOTIFICATION_SERVICE;
-		NotificationManager notificationManager = (NotificationManager) this.getSystemService(ns);
+		NotificationManager notificationManager = (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);
 
 		// XXX Using the deprecated API to support <3.0 (Need to switch to new
 		// API + compat package)
@@ -142,6 +141,7 @@ public class IRCService extends Service implements ServiceEventListener {
 	public void stopService() {
 		// IRC Cleanup
 		for (Server s : servers) {
+			s.getClient().getListenerManager().removeListener(listener);
 			this.disconnect(s.getName());
 		}
 		// TODO store connected channels
@@ -165,7 +165,6 @@ public class IRCService extends Service implements ServiceEventListener {
 		return preferences;
 	}
 
-	// Asynchronous connect (Can't have UI networking)
 	private class ConnectTask extends AsyncTask<ServerPreferences, Void, Boolean> {
 		private Client client;
 		ServerPreferences preferences;
@@ -338,7 +337,10 @@ public class IRCService extends Service implements ServiceEventListener {
 	}
 
 	public void serverConnected(Server server) {
-		this.updateNotification(R.drawable.ic_launcher, "Connected");
+		//Don't update for startup of non-autoconnect servers
+		if (constantNotification != null)
+			this.updateNotification(R.drawable.ic_launcher, "Connected");
+		this.connectedEventListener.serverConnected(server);
 	}
 
 	public void serverDisconnected(Server server, String error) {

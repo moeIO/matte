@@ -277,16 +277,16 @@ public class ServerPreferences {
 
 	public void deleteFromSharedPreferences(SharedPreferences sharedPreferences) {
 		SharedPreferences.Editor editor = sharedPreferences.edit();
-		
+
 		int serverCount = sharedPreferences.getInt("server_count", 0);
-		
+
 		// Move all servers back one spot.
 		for (int i = this.preferenceSpot; i < serverCount - 1; i++) {
 			this.loadFromSharedPreferences(sharedPreferences, i + 1);
 			this.preferenceSpot = i;
 			this.saveToSharedPreferences(sharedPreferences);
 		}
-		
+
 		// Delete the last server.
 		String prefix = "server_" + serverCount + "_";
 		editor.remove(prefix + "name");
@@ -299,7 +299,7 @@ public class ServerPreferences {
 		editor.remove(prefix + "host_password");
 		editor.remove(prefix + "auto_connect");
 		editor.remove(prefix + "log");
-		
+
 		int nickCount = sharedPreferences.getInt(prefix + "nick_count", 0);
 		for (int i = 0; i < nickCount; i++) {
 			editor.remove(prefix + "nick" + i);
@@ -315,7 +315,7 @@ public class ServerPreferences {
 			editor.remove(prefix + "auto_command_" + i);
 		}
 		editor.remove(prefix + "auto_command_count");
-		
+
 		// Decrement the server count.
 		editor.putInt("server_count", serverCount - 1);
 		editor.commit();

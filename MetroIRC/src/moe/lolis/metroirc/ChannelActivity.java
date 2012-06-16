@@ -703,10 +703,11 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 				// binding out-races the connection task
 				if (moeService.getServers().size() > 0)
 					activity.channelJoined(moeService.getServers().get(moeService.getServers().size() - 1), null);
+				channelAdapter.notifyDataSetChanged();
 			}
 		}
 
-		// Called when the activity disconnects from the service.
+		// Called when the activity disconnects from the service in error.
 		public void onServiceDisconnected(ComponentName className) {
 			if (moeService != null)
 				moeService.isAppActive(false);
@@ -839,7 +840,12 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 	}
 
 	public void serverConnected(Server server) {
-
+		this.runOnUiThread(new Runnable() {
+			public void run() {
+				if (channelAdapter != null)
+					channelAdapter.notifyDataSetChanged();
+			}
+		});
 	}
 
 	public void serverDisconnected(Server server, String error) {
