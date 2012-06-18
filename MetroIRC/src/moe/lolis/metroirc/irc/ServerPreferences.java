@@ -206,7 +206,7 @@ public class ServerPreferences {
 		for (int j = 0; j < nickCount; j++) {
 			this.addNickname(sharedPreferences.getString(prefix + "nick_" + j, "JohnDoe"));
 		}
-		this.setUsername(sharedPreferences.getString(prefix + "user", "johndoe"));
+		this.setUsername(sharedPreferences.getString(prefix + "username", "johndoe"));
 		this.setRealname(sharedPreferences.getString(prefix + "realname", "John Doe"));
 
 		Host host = new Host();
