@@ -71,6 +71,14 @@ public class IRCService extends Service implements ServiceEventListener {
 	}
 
 	public void connect(ServerPreferences serverPrefs) {
+		// if disconnected server of the same alias exists, remove it
+		for (int i = 0; i < this.getServers().size(); i++) {
+			Server s = this.servers.get(i);
+			if (s.getName().equals(serverPrefs.getName())) {
+				this.servers.remove(s);
+				this.serverMap.remove(s.getName());
+			}
+		}
 		ConnectTask connectionTask = new ConnectTask();
 		connectionTask.execute(new ServerPreferences[] { serverPrefs });
 	}
@@ -82,6 +90,10 @@ public class IRCService extends Service implements ServiceEventListener {
 				s.getServerInfo().getBot().disconnect();
 			this.serverMap.remove(serverName);
 			this.servers.remove(s);
+			this.addDisconnectedServer(s.getServer().getServer().getServer().getServer().getServer().getServer().getServer().getServer().getServer()
+					.getServer().getServer().getServer().getServer().getClient().getServerPreferences());
+			this.serverDisconnected(s, "Requested");
+
 		}
 	}
 
@@ -140,7 +152,8 @@ public class IRCService extends Service implements ServiceEventListener {
 	public void stopService() {
 		// IRC Cleanup
 		for (Server s : servers) {
-			s.getClient().getServerPreferences().saveToSharedPreferences(getApplicationContext().getSharedPreferences("servers", Context.MODE_PRIVATE));
+			s.getClient().getServerPreferences()
+					.saveToSharedPreferences(getApplicationContext().getSharedPreferences("servers", Context.MODE_PRIVATE));
 			s.getClient().getListenerManager().removeListener(listener);
 			this.disconnect(s.getName());
 		}
@@ -337,7 +350,7 @@ public class IRCService extends Service implements ServiceEventListener {
 	}
 
 	public void serverConnected(Server server) {
-		//Don't update for startup of non-autoconnect servers
+		// Don't update for startup of non-autoconnect servers
 		if (constantNotification != null)
 			this.updateNotification(R.drawable.ic_launcher, "Connected");
 		this.connectedEventListener.serverConnected(server);

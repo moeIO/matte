@@ -609,20 +609,22 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 		}
 
 		public View getChildView(int groupPosition, int childPosition, boolean isLastChild, View convertView, ViewGroup parent) {
-			Channel c = servers.get(groupPosition).getChannels().get(childPosition);
 			if (convertView == null) {
 				convertView = inflater.inflate(R.layout.channellist_channel, null);
 			}
-			TextView name = (TextView) convertView.findViewById(R.id.name);
-			TextView messages = (TextView) convertView.findViewById(R.id.unreadCount);
-			name.setText(c.getChannelInfo().getName());
+			Server s = servers.get(groupPosition);
+			if (s.getChannels().size() > 0) {
+				Channel c = s.getChannels().get(childPosition);
+				TextView name = (TextView) convertView.findViewById(R.id.name);
+				TextView messages = (TextView) convertView.findViewById(R.id.unreadCount);
+				name.setText(c.getChannelInfo().getName());
 
-			if (c.getUnreadMessageCount() > 0) {
-				messages.setText("(" + String.valueOf(c.getUnreadMessageCount()) + ")");
-			} else {
-				messages.setText("");
+				if (c.getUnreadMessageCount() > 0) {
+					messages.setText("(" + String.valueOf(c.getUnreadMessageCount()) + ")");
+				} else {
+					messages.setText("");
+				}
 			}
-
 			return convertView;
 		}
 
@@ -865,6 +867,8 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 						channel.addMessage(channel.createError(SpannableString.valueOf(err)));
 					if (adapter != null)
 						adapter.notifyDataSetChanged();
+					if (channelAdapter != null)
+						channelAdapter.notifyDataSetChanged();
 				}
 			});
 		}

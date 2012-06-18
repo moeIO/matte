@@ -149,8 +149,18 @@ public class ServerPreferences {
 		return this.host;
 	}
 
+	private boolean containsAutoChannel(String channel) {
+		for (String chan : this.autoChannels) {
+			if (chan.equals(channel))
+				return true;
+		}
+		return false;
+	}
+
 	public void addAutoChannel(String channel) {
-		this.autoChannels.add(channel);
+		if (!this.containsAutoChannel(channel))
+
+			this.autoChannels.add(channel);
 	}
 
 	public ArrayList<String> getAutoChannels() {
