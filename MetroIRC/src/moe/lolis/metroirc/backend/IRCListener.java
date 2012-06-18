@@ -55,7 +55,7 @@ public class IRCListener extends ListenerAdapter<Client> {
 			ServerMessage message = new ServerMessage();
 			message.setContent(SpannedString.valueOf(s));
 			message.setTime(new Date());
-			// XXX I don't like this, new runnable for each MOTD line
+			// XXX: I don't like this, new runnable for each MOTD line
 			this.service.statusMessageReceived(server, message);
 		}
 	}
@@ -211,11 +211,14 @@ public class IRCListener extends ListenerAdapter<Client> {
 
 		// Not *that* raw...
 		response = response.trim();
+		if (response.startsWith(event.getBot().getNick())) {
+			response = response.substring(event.getBot().getNick().length(), response.length()).trim();
+		}
 		if (response.startsWith("*")) {
-			response = response.substring(1, response.length() - 1).trim();
+			response = response.substring(1, response.length()).trim();
 		}
 		if (response.startsWith(":")) {
-			response = response.substring(1, response.length() - 1).trim();
+			response = response.substring(1, response.length()).trim();
 		}
 
 		ServerMessage message = new ServerMessage();

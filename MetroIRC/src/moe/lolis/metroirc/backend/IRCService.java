@@ -111,8 +111,7 @@ public class IRCService extends Service implements ServiceEventListener {
 			if (serverPrefs.isAutoConnected()) {
 				this.connect(serverPrefs);
 			} else {
-				//XXX Serverprefs don't load properly
-				//this.addDisconnectedServer(serverPrefs);
+				this.addDisconnectedServer(serverPrefs);
 			}
 		}
 		super.onCreate();
@@ -120,7 +119,7 @@ public class IRCService extends Service implements ServiceEventListener {
 		// Notification for foreground sevice
 		NotificationManager notificationManager = (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);
 
-		// XXX Using the deprecated API to support <3.0 (Need to switch to new
+		// XXX: Using the deprecated API to support <3.0 (Need to switch to new
 		// API + compat package)
 		int icon = moe.lolis.metroirc.R.drawable.ic_launcher;
 		this.constantNotification = new Notification(icon, "", 0);

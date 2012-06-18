@@ -244,7 +244,7 @@ public class ServerPreferences {
 		} else {
 			int count = sharedPreferences.getInt("server_count", 0);
 			editor.putInt("server_count", count + 1);
-			prefix += (count + 1) + "_";
+			prefix += count + "_";
 		}
 
 		editor.putString(prefix + "name", this.getName());

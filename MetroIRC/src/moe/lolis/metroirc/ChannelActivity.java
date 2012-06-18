@@ -345,8 +345,7 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 						}
 
 						host.isSSL(ssl.isChecked());
-
-						host.isSSL(verifyssl.isChecked());
+						host.verifySSL(verifyssl.isChecked());
 
 						if (nickName.getText().length() == 0) {
 							success = false;
@@ -381,7 +380,6 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 						}
 
 						prefs.isAutoConnected(autoconnect.isChecked());
-
 						prefs.isLogged(log.isChecked());
 
 						if (success) {
