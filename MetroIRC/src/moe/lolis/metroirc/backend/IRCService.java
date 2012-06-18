@@ -140,6 +140,7 @@ public class IRCService extends Service implements ServiceEventListener {
 	public void stopService() {
 		// IRC Cleanup
 		for (Server s : servers) {
+			s.getClient().getServerPreferences().saveToSharedPreferences(getApplicationContext().getSharedPreferences("servers", Context.MODE_PRIVATE));
 			s.getClient().getListenerManager().removeListener(listener);
 			this.disconnect(s.getName());
 		}
@@ -353,7 +354,7 @@ public class IRCService extends Service implements ServiceEventListener {
 			}
 		}
 		if (!hasConnectedServer)
-			this.updateNotification(R.drawable.ic_launcher_red, "Error: disconnected");
+			this.updateNotification(R.drawable.ic_launcher_red, "Disconnected");
 	}
 
 	public void nickChanged(Collection<Channel> commonChannels, String from, String to) {

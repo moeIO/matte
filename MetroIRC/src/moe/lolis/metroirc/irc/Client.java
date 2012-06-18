@@ -16,6 +16,8 @@ import org.pircbotx.exception.IrcException;
 import org.pircbotx.exception.NickAlreadyInUseException;
 import org.pircbotx.hooks.events.ConnectEvent;
 
+import android.content.Context;
+
 public class Client extends PircBotX {
 
 	public static final String VERSION = "1.0";
@@ -129,6 +131,30 @@ public class Client extends PircBotX {
 
         this.getListenerManager().dispatchEvent(new ConnectEvent(this));
     }
+	
+	@Override
+	public void joinChannel(String channel){
+		this.getServerPreferences().addAutoChannel(channel);
+		super.joinChannel(channel);
+	}
+	@Override
+	public void joinChannel(String channel,String password){
+		//TODO Channels with passwords aren't stored for autoconnect and will fail to connect
+		this.getServerPreferences().addAutoChannel(channel);
+		super.joinChannel(channel,password);
+	}
+	
+	@Override
+	public void partChannel(org.pircbotx.Channel channel){
+		this.getServerPreferences().removeAutoChannel(channel.getName());
+		super.partChannel(channel);
+	}
+	
+	@Override
+	public void partChannel(org.pircbotx.Channel channel, String reason){
+		this.getServerPreferences().removeAutoChannel(channel.getName());
+		super.partChannel(channel);
+	}
 
 	
 	@Override

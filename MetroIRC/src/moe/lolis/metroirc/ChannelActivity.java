@@ -147,6 +147,14 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 
 		this.getListView().setTranscriptMode(ListView.TRANSCRIPT_MODE_ALWAYS_SCROLL);
 
+		// Show first run if needed
+
+		new AlertDialog.Builder(this).setView(getLayoutInflater().inflate(R.layout.firstrun, null))
+				.setTitle(getResources().getString(R.string.welcome0)).setPositiveButton("Don't tell me again", new Dialog.OnClickListener() {
+					public void onClick(DialogInterface d, int which) {
+						// Do nothing here.
+					}
+				}).show();
 	}
 
 	// When our activity is paused.
