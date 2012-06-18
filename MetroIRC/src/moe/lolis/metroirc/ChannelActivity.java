@@ -31,6 +31,7 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.text.Spannable;
 import android.text.SpannableString;
+import android.text.SpannedString;
 import android.text.style.ImageSpan;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
@@ -217,19 +218,7 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 	public void onClick(View v) {
 		// Send button clicked
 		if (v.getId() == this.sendButton.getId()) {
-			if (this.commandInterpreter == null) {
-				this.commandInterpreter = new CommandInterpreter(this.moeService, this);
-			}
-
-			if (this.commandInterpreter.isCommand(this.sendText.getText().toString())) {
-				this.commandInterpreter.interpret(this.sendText.getText().toString());
-				this.sendText.setText("");
-			} else {
-				if (this.sendText.getText().toString().substring(0, 2).equals("//")) {
-					this.sendText.setText(this.sendText.getText().toString().substring(1, this.sendText.getText().length()));
-				}
-				this.sendMessage();
-			}
+			this.sendMessage();
 		} else if (v.getId() == this.settingsButton.getId()) {
 			Intent settingsIntent = new Intent(getApplicationContext(), SettingsActivity.class);
 			this.startActivity(settingsIntent);
@@ -397,7 +386,8 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 	}
 
 	public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-		if (actionId == EditorInfo.IME_ACTION_SEND) {
+		if (actionId == EditorInfo.IME_ACTION_SEND
+				|| (actionId == EditorInfo.IME_NULL && event.getAction() == KeyEvent.ACTION_DOWN && event.getKeyCode() == KeyEvent.KEYCODE_ENTER)) {
 			this.sendMessage();
 		}
 		return false;
@@ -690,15 +680,13 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 			if (!isStarted) {
 				isStarted = true;
 				// Right, we can't switch to the server tab in the server
-				// connection
-				// task since due to a race, the task beats this binding and the
-				// activity reference is null. Therefore the best we can do is
-				// switch to the latest server in the server list at the end of
-				// binding being completed
+				// connection task since due to a race, the task beats this 
+				// binding and the activity reference is null. Therefore the
+				// best we can do is switch to the latest server in the server
+				// list at the end of binding being completed
 				// ==
 				// Works reliably from what I see, and shouldn't cause any
-				// issues if
-				// binding out-races the connection task
+				// issues if binding out-races the connection task.
 				if (moeService.getServers().size() > 0)
 					activity.channelJoined(moeService.getServers().get(moeService.getServers().size() - 1), null);
 				channelAdapter.notifyDataSetChanged();
@@ -902,13 +890,30 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 	}
 
 	private void sendMessage() {
-		if (this.currentChannel != null) {
-			if (this.sendText.getText().length() > 0) {
-				this.currentChannel.sendMessage(this.sendText.getText().toString());
-				this.sendText.setText("");
-				// Update UI because sent message does not come in as an
-				// event
-				this.adapter.notifyDataSetChanged();
+		if (this.commandInterpreter == null) {
+			this.commandInterpreter = new CommandInterpreter(this.moeService, this);
+		}
+
+		String message = this.sendText.getText().toString();
+		if (this.commandInterpreter.isCommand(message)) {
+			this.commandInterpreter.interpret(message);
+			this.sendText.setText("");
+		} else {
+			if (message.length() >= 2 && message.substring(0, 2).equals("//")) {
+				message = message.substring(1, message.length());
+			}
+			if (this.currentChannel != null) {
+				if (message.length() > 0) {
+					if (this.currentChannel instanceof Server) {
+						this.currentChannel.addMessage(this.currentChannel.createError(SpannedString.valueOf("Can't send messages to a server, it will never respond. :(")));
+					} else {
+						this.currentChannel.sendMessage(message);
+					}
+					this.sendText.setText("");
+					// Update UI because sent message does not come in as an
+					// event
+					this.adapter.notifyDataSetChanged();
+				}
 			}
 		}
 	}
