@@ -68,7 +68,7 @@ public class Channel {
 	}
 
 	public void sendMessage(String message) {
-		channelInfo.getBot().sendMessage(channelInfo, message);
+		this.channelInfo.getBot().sendMessage(this.channelInfo, message);
 		ChannelMessage m = new ChannelMessage();
 		m.setTime(new Date());
 		m.setNickname(this.getChannelInfo().getBot().getNick());

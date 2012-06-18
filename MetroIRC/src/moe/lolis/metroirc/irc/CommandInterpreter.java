@@ -99,6 +99,8 @@ public class CommandInterpreter {
 	 		} else {
 	 			client.sendCTCPCommand(parts[1], parts[2]);
 	 		}
+	 	} else if ((parts[0].equalsIgnoreCase("quote") || parts[0].equalsIgnoreCase("raw")) && parts.length > 1) {
+	 		client.sendRawLine(message.substring(parts[0].length() + 1, message.length()));
 	 	}
 	}
 
