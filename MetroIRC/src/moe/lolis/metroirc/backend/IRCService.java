@@ -30,7 +30,6 @@ import android.os.AsyncTask;
 import android.os.Binder;
 import android.os.IBinder;
 import android.text.Html;
-import android.text.SpannedString;
 import android.util.Log;
 
 public class IRCService extends Service implements ServiceEventListener {
@@ -280,7 +279,7 @@ public class IRCService extends Service implements ServiceEventListener {
 	}
 
 	public void activeChannelMessageReceived(Channel channel, GenericMessage message) {
-		MessageParser.parseMessage(message);
+		MessageParser.parseSpecial(message);
 		if (this.connectedEventListener == null) {
 			channel.addMessage(message);
 		} else
