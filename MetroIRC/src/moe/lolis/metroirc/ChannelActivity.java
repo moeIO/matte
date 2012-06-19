@@ -1,7 +1,5 @@
 package moe.lolis.metroirc;
 
-import java.io.InputStream;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -27,14 +25,10 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.graphics.Color;
-import android.graphics.drawable.Drawable;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.SpannedString;
-import android.text.style.ImageSpan;
 import android.view.ActionMode;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
@@ -209,6 +203,13 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 		super.onDestroy();
 	}
 
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		MenuInflater inflater = getMenuInflater();
+		inflater.inflate(R.menu.menu_channel, menu);
+		return true;
+	}
+
 	// Action bar button pressed
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
@@ -224,6 +225,8 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 				expandAllServerGroups();
 			}
 
+			return true;
+		case R.id.usersOption:
 			return true;
 		default:
 			return super.onOptionsItemSelected(item);
@@ -252,6 +255,12 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 		if (keyCode == KeyEvent.KEYCODE_BACK) {
 			moveTaskToBack(true);
 			return true;
+		} else if (keyCode == KeyEvent.KEYCODE_MENU) {
+			if (channelList.getVisibility() == View.VISIBLE) {
+				channelList.setVisibility(View.GONE);
+			} else if (channelList.getVisibility() == View.GONE) {
+				channelList.setVisibility(View.VISIBLE);
+			}
 		}
 		return super.onKeyDown(keyCode, event);
 	}
@@ -399,13 +408,13 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 						if (success) {
 							prefs.saveToSharedPreferences(rawPreferences);
 							String newName = prefs.getName();
-							
+
 							moeService.renameServer(originalServerName, newName);
 							if (server != null && server.getServerInfo().getBot().isConnected()) {
 								moeService.disconnect(newName);
 							}
 							moeService.connect(newName);
-							
+
 							d.dismiss();
 						}
 					}
@@ -482,7 +491,7 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 
 		public boolean onCreateActionMode(ActionMode actionMode, Menu menu) {
 			MenuInflater inflater = getMenuInflater();
-			inflater.inflate(R.menu.menu, menu);
+			inflater.inflate(R.menu.menu_messagelongpress, menu);
 			return true;
 		}
 
@@ -880,20 +889,21 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 			// Hurr durr I am Java and I require final
 			final String err = error;
 			final Server serv = server;
-			
+
 			this.runOnUiThread(new Runnable() {
 				public void run() {
 					serv.addError(SpannableString.valueOf(err));
 					for (Channel channel : serv.getChannels()) {
 						channel.addError(SpannableString.valueOf(err));
 					}
-					
+
 					if (adapter != null) {
 						adapter.notifyDataSetChanged();
-					if (channelAdapter != null)
-						channelAdapter.notifyDataSetChanged();
+						if (channelAdapter != null)
+							channelAdapter.notifyDataSetChanged();
+					}
 				}
-			} });
+			});
 		}
 	}
 
