@@ -72,19 +72,40 @@ public class IRCService extends Service implements ServiceEventListener {
 
 	}
 
+<<<<<<< HEAD
 	public void connect(String name) {
+=======
+	public void connect(ServerPreferences serverPrefs) {
+		// if disconnected server of the same alias exists, remove it
+		for (int i = 0; i < this.getServers().size(); i++) {
+			Server s = this.servers.get(i);
+			if (s.getName().equals(serverPrefs.getName())) {
+				this.servers.remove(s);
+				this.serverMap.remove(s.getName());
+			}
+		}
+>>>>>>> b628d090aa2c17a3f4111eedfefbac534cfa608e
 		ConnectTask connectionTask = new ConnectTask();
 		connectionTask.execute(new String[] { name });
 	}
 
 	public void disconnect(String serverName) {
 		Server s = this.getServer(serverName);
+<<<<<<< HEAD
 		if (s != null) {
 			if (s.getServerInfo().getBot().isConnected()) {
+=======
+		if (s != null && s.getServerInfo() != null) {
+			if (s.getServerInfo().getBot().isConnected())
+>>>>>>> b628d090aa2c17a3f4111eedfefbac534cfa608e
 				s.getServerInfo().getBot().disconnect();
 			}
 			this.serverMap.remove(serverName);
 			this.servers.remove(s);
+			this.addDisconnectedServer(s.getServer().getServer().getServer().getServer().getServer().getServer().getServer().getServer().getServer()
+					.getServer().getServer().getServer().getServer().getClient().getServerPreferences());
+			this.serverDisconnected(s, "Requested");
+
 		}
 	}
 
@@ -151,6 +172,8 @@ public class IRCService extends Service implements ServiceEventListener {
 	public void stopService() {
 		// IRC Cleanup
 		for (Server s : servers) {
+			s.getClient().getServerPreferences()
+					.saveToSharedPreferences(getApplicationContext().getSharedPreferences("servers", Context.MODE_PRIVATE));
 			s.getClient().getListenerManager().removeListener(listener);
 			this.disconnect(s.getName());
 		}
@@ -342,7 +365,7 @@ public class IRCService extends Service implements ServiceEventListener {
 	}
 
 	public void serverConnected(Server server) {
-		//Don't update for startup of non-autoconnect servers
+		// Don't update for startup of non-autoconnect servers
 		if (constantNotification != null)
 			this.updateNotification(R.drawable.ic_launcher, "Connected");
 		this.connectedEventListener.serverConnected(server);
@@ -359,7 +382,7 @@ public class IRCService extends Service implements ServiceEventListener {
 			}
 		}
 		if (!hasConnectedServer)
-			this.updateNotification(R.drawable.ic_launcher_red, "Error: disconnected");
+			this.updateNotification(R.drawable.ic_launcher_red, "Disconnected");
 	}
 
 	public void nickChanged(Collection<Channel> commonChannels, String from, String to) {

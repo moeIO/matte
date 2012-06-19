@@ -18,6 +18,8 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ListActivity;
 import android.app.NotificationManager;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -33,10 +35,13 @@ import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.SpannedString;
 import android.text.style.ImageSpan;
+import android.view.ActionMode;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -44,6 +49,7 @@ import android.view.ViewGroup;
 import android.view.ViewStub;
 import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.BaseExpandableListAdapter;
 import android.widget.Button;
@@ -148,6 +154,14 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 
 		this.getListView().setTranscriptMode(ListView.TRANSCRIPT_MODE_ALWAYS_SCROLL);
 
+		// Show first run if needed
+
+		new AlertDialog.Builder(this).setView(getLayoutInflater().inflate(R.layout.firstrun, null))
+				.setTitle(getResources().getString(R.string.welcome0)).setPositiveButton("Don't tell me again", new Dialog.OnClickListener() {
+					public void onClick(DialogInterface d, int which) {
+						// Do nothing here.
+					}
+				}).show();
 	}
 
 	// When our activity is paused.
@@ -229,6 +243,16 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 			this.moeService.stopService();
 			this.finish();
 		}
+	}
+
+	@Override
+	public boolean onKeyDown(int keyCode, KeyEvent event) {
+		// Override back to prevent killing
+		if (keyCode == KeyEvent.KEYCODE_BACK) {
+			moveTaskToBack(true);
+			return true;
+		}
+		return super.onKeyDown(keyCode, event);
 	}
 
 	private void showServerEditDialog(Server existingServer) {
@@ -416,25 +440,67 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 
 	@Override
 	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
-		ExpandableListContextMenuInfo info = (ExpandableListContextMenuInfo) menuInfo;
-		int groupPosition = ExpandableListView.getPackedPositionGroup(info.packedPosition);
-		Server server = moeService.getServers().get(groupPosition);
-		if (v.getId() == expandableChannelList.getId()) {
-			int selectionType = ExpandableListView.getPackedPositionType(info.packedPosition);
-			switch (selectionType) {
-			case ExpandableListView.PACKED_POSITION_TYPE_GROUP:
-				menu.setHeaderTitle("Server Options");
-				if (server.getClient().isConnected())
-					menu.add(CONTEXTMENU_SERVEROPTIONS, SERVEROPTIONS_DISCONNECT, 0, "Disconnect");
-				else
-					menu.add(CONTEXTMENU_SERVEROPTIONS, SERVEROPTIONS_CONNECT, 0, "Connect");
-				menu.add(CONTEXTMENU_SERVEROPTIONS, SERVEROPTIONS_EDIT, 1, "Edit");
-				menu.add(CONTEXTMENU_SERVEROPTIONS, SERVEROPTIONS_DELETE, 2, "Delete");
-				break;
-			case ExpandableListView.PACKED_POSITION_TYPE_CHILD:
-				menu.setHeaderTitle("Channel Options");
-				menu.add(CONTEXTMENU_CHANNELOPTIONS, CHANNELOPTIONS_PART, 0, "Part");
+		if (v == this.expandableChannelList) {
+			ExpandableListContextMenuInfo info = (ExpandableListContextMenuInfo) menuInfo;
+			int groupPosition = ExpandableListView.getPackedPositionGroup(info.packedPosition);
+			Server server = moeService.getServers().get(groupPosition);
+			if (v.getId() == expandableChannelList.getId()) {
+				int selectionType = ExpandableListView.getPackedPositionType(info.packedPosition);
+				switch (selectionType) {
+				case ExpandableListView.PACKED_POSITION_TYPE_GROUP:
+					menu.setHeaderTitle("Server Options");
+					if (server.getClient().isConnected())
+						menu.add(CONTEXTMENU_SERVEROPTIONS, SERVEROPTIONS_DISCONNECT, 0, "Disconnect");
+					else
+						menu.add(CONTEXTMENU_SERVEROPTIONS, SERVEROPTIONS_CONNECT, 0, "Connect");
+					menu.add(CONTEXTMENU_SERVEROPTIONS, SERVEROPTIONS_EDIT, 1, "Edit");
+					menu.add(CONTEXTMENU_SERVEROPTIONS, SERVEROPTIONS_DELETE, 2, "Delete");
+					break;
+				case ExpandableListView.PACKED_POSITION_TYPE_CHILD:
+					menu.setHeaderTitle("Channel Options");
+					menu.add(CONTEXTMENU_CHANNELOPTIONS, CHANNELOPTIONS_PART, 0, "Part");
+				}
 			}
+		} else if (v == this.getListView()) {
+			AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) menuInfo;
+			this.startActionMode(new ActionModeCallback(currentChannel.getMessages().get(info.position)));
+		}
+	}
+
+	private class ActionModeCallback implements ActionMode.Callback {
+		private GenericMessage message;
+
+		public ActionModeCallback(GenericMessage m) {
+			super();
+			message = m;
+		}
+
+		public boolean onCreateActionMode(ActionMode actionMode, Menu menu) {
+			MenuInflater inflater = getMenuInflater();
+			inflater.inflate(R.menu.menu, menu);
+			return true;
+		}
+
+		public boolean onPrepareActionMode(ActionMode actionMode, Menu menu) {
+			return false;
+		}
+
+		public boolean onActionItemClicked(ActionMode actionMode, MenuItem menuItem) {
+			if (menuItem.getTitle().equals("Copy")) {
+				ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+				String s = message.getContent().toString();
+				if (message.getNickname().length() > 0)
+					s = message.getNickname() + ": " + s;
+				ClipData clip = ClipData.newPlainText("quote", s);
+				clipboard.setPrimaryClip(clip);
+				actionMode.finish();
+			}
+			return false;
+		}
+
+		public void onDestroyActionMode(ActionMode actionMode) {
+
+			// a.overviewFragment.stopEdit();
 		}
 	}
 
@@ -529,7 +595,7 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 			if (message.isHighlighted())
 				convertView.setBackgroundColor(highlightCellColour);
 			else
-				convertView.setBackgroundColor(Color.TRANSPARENT);
+				convertView.setBackgroundDrawable(null);
 			return convertView;
 		}
 	}
@@ -556,20 +622,22 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 		}
 
 		public View getChildView(int groupPosition, int childPosition, boolean isLastChild, View convertView, ViewGroup parent) {
-			Channel c = servers.get(groupPosition).getChannels().get(childPosition);
 			if (convertView == null) {
 				convertView = inflater.inflate(R.layout.channellist_channel, null);
 			}
-			TextView name = (TextView) convertView.findViewById(R.id.name);
-			TextView messages = (TextView) convertView.findViewById(R.id.unreadCount);
-			name.setText(c.getChannelInfo().getName());
+			Server s = servers.get(groupPosition);
+			if (s.getChannels().size() > 0) {
+				Channel c = s.getChannels().get(childPosition);
+				TextView name = (TextView) convertView.findViewById(R.id.name);
+				TextView messages = (TextView) convertView.findViewById(R.id.unreadCount);
+				name.setText(c.getChannelInfo().getName());
 
-			if (c.getUnreadMessageCount() > 0) {
-				messages.setText("(" + String.valueOf(c.getUnreadMessageCount()) + ")");
-			} else {
-				messages.setText("");
+				if (c.getUnreadMessageCount() > 0) {
+					messages.setText("(" + String.valueOf(c.getUnreadMessageCount()) + ")");
+				} else {
+					messages.setText("");
+				}
 			}
-
 			return convertView;
 		}
 
@@ -627,6 +695,7 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 			expandableChannelList.setOnChildClickListener(activity);
 			expandableChannelList.setOnGroupClickListener(activity);
 			activity.registerForContextMenu(expandableChannelList);
+			activity.registerForContextMenu(activity.getListView());
 			channelList = (LinearLayout) activity.findViewById(R.id.channelList);
 			// And hide it by default.
 			hideChannelList();
@@ -645,7 +714,7 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 			if (!isStarted) {
 				isStarted = true;
 				// Right, we can't switch to the server tab in the server
-				// connection task since due to a race, the task beats this 
+				// connection task since due to a race, the task beats this
 				// binding and the activity reference is null. Therefore the
 				// best we can do is switch to the latest server in the server
 				// list at the end of binding being completed
@@ -816,7 +885,8 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 					
 					if (adapter != null) {
 						adapter.notifyDataSetChanged();
-					}
+					if (channelAdapter != null)
+						channelAdapter.notifyDataSetChanged();
 				}
 			});
 		}
