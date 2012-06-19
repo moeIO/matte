@@ -94,8 +94,7 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 	private boolean gotoChannelOnServiceConnect;
 	private String onServiceConnectChannel;
 	private String onServiceConnectServer;
-	private int[] possibleNickColours = 
-		  { R.color.nickcolor0, R.color.nickcolor1, R.color.nickcolor2, R.color.nickcolor3, R.color.nickcolor4,
+	private int[] possibleNickColours = { R.color.nickcolor0, R.color.nickcolor1, R.color.nickcolor2, R.color.nickcolor3, R.color.nickcolor4,
 			R.color.nickcolor5, R.color.nickcolor6, R.color.nickcolor7, R.color.nickcolor8, R.color.nickcolor9, R.color.nickcolor10,
 			R.color.nickcolor11, R.color.nickcolor12, R.color.nickcolor13, R.color.nickcolor14, R.color.nickcolor15 };
 	private HashMap<String, Integer> nickColours;
@@ -281,6 +280,7 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 			} else if (channelList.getVisibility() == View.GONE) {
 				channelList.setVisibility(View.VISIBLE);
 			}
+			return true;
 		}
 		return super.onKeyDown(keyCode, event);
 	}

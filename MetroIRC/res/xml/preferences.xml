@@ -1,6 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
-<!-- 
+
+    <PreferenceCategory android:title="Awfully empty here" >
+    </PreferenceCategory>
+
+    <Preference
+        android:key="aboutPreference"
+        android:title="About" />
+
+    <!--
     <PreferenceCategory android:title="@string/inline_preferences" >
         <CheckBoxPreference
             android:key="checkbox_preference"
@@ -23,5 +31,6 @@
             android:summary="@string/summary_list_preference"
             android:title="@string/title_list_preference" />
     </PreferenceCategory>
--->
+    -->
+
 </PreferenceScreen>
