@@ -72,40 +72,22 @@ public class IRCService extends Service implements ServiceEventListener {
 
 	}
 
-<<<<<<< HEAD
 	public void connect(String name) {
-=======
-	public void connect(ServerPreferences serverPrefs) {
-		// if disconnected server of the same alias exists, remove it
-		for (int i = 0; i < this.getServers().size(); i++) {
-			Server s = this.servers.get(i);
-			if (s.getName().equals(serverPrefs.getName())) {
-				this.servers.remove(s);
-				this.serverMap.remove(s.getName());
-			}
-		}
->>>>>>> b628d090aa2c17a3f4111eedfefbac534cfa608e
 		ConnectTask connectionTask = new ConnectTask();
 		connectionTask.execute(new String[] { name });
 	}
 
 	public void disconnect(String serverName) {
 		Server s = this.getServer(serverName);
-<<<<<<< HEAD
-		if (s != null) {
-			if (s.getServerInfo().getBot().isConnected()) {
-=======
+
 		if (s != null && s.getServerInfo() != null) {
-			if (s.getServerInfo().getBot().isConnected())
->>>>>>> b628d090aa2c17a3f4111eedfefbac534cfa608e
+			if (s.getServerInfo().getBot().isConnected()) {
 				s.getServerInfo().getBot().disconnect();
 			}
-			this.serverMap.remove(serverName);
-			this.servers.remove(s);
-			this.addDisconnectedServer(s.getServer().getServer().getServer().getServer().getServer().getServer().getServer().getServer().getServer()
-					.getServer().getServer().getServer().getServer().getClient().getServerPreferences());
+			for (Channel c : s.getChannels()) {
+				s.removeChannel(c.getName());
+			}
 			this.serverDisconnected(s, "Requested");
-
 		}
 	}
 

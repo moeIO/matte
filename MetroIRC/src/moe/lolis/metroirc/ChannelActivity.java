@@ -888,7 +888,7 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 					if (channelAdapter != null)
 						channelAdapter.notifyDataSetChanged();
 				}
-			});
+			} });
 		}
 	}
 
