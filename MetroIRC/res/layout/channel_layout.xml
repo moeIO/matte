@@ -29,16 +29,18 @@
                 android:stackFromBottom="true" >
             </ListView>
         </TableRow>
-<View
-                android:layout_width="fill_parent"
-                android:layout_height="1px"
-                android:background="#d2d2d2" />
+
+        <View
+            android:layout_width="fill_parent"
+            android:layout_height="1px"
+            android:background="#d2d2d2" />
+
         <TableRow
             android:id="@+id/inputRow"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="bottom" 
-            android:background="#ffffff">
+            android:layout_gravity="bottom"
+            android:background="#ffffff" >
 
             <EditText
                 android:id="@+id/sendText"
@@ -49,18 +51,23 @@
                 android:layout_weight="1"
                 android:ems="10"
                 android:hint="Enter message"
-                android:textColor="#000000" 
                 android:imeOptions="actionSend"
-                android:textCursorDrawable="@null"/>
+                android:textColor="#000000"
+                android:textCursorDrawable="@null" />
 
             <ImageButton
                 android:id="@+id/sendButton"
+                style="?android:attr/buttonBarButtonStyle"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
-                android:src="@drawable/ic_menu_send"
-                style="?android:attr/buttonBarButtonStyle" />
-
+                android:src="@drawable/ic_menu_send" />
         </TableRow>
+
+        <View
+            android:id="@+id/fakeView"
+            android:layout_width="0dp"
+            android:layout_height="0dp" >
+        </View>
     </LinearLayout>
 
     <LinearLayout

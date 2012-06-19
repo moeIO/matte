@@ -3,14 +3,21 @@ package moe.lolis.metroirc;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 
 import moe.lolis.metroirc.backend.IRCService;
 import moe.lolis.metroirc.backend.ServiceEventListener;
 import moe.lolis.metroirc.irc.Channel;
+import moe.lolis.metroirc.irc.Client;
 import moe.lolis.metroirc.irc.CommandInterpreter;
 import moe.lolis.metroirc.irc.GenericMessage;
 import moe.lolis.metroirc.irc.Server;
 import moe.lolis.metroirc.irc.ServerPreferences;
+
+import org.pircbotx.PircBotX;
+import org.pircbotx.User;
+import org.pircbotx.hooks.events.ChannelInfoEvent;
+
 import android.app.ActionBar;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -94,12 +101,17 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 
 	private static final int CONTEXTMENU_SERVEROPTIONS = 0;
 	private static final int CONTEXTMENU_CHANNELOPTIONS = 1;
+	private static final int CONTEXTMENU_USERLIST = 2;
+
 	private static final int SERVEROPTIONS_CONNECT = 0;
 	private static final int SERVEROPTIONS_DISCONNECT = 1;
 	private static final int SERVEROPTIONS_EDIT = 2;
 	private static final int SERVEROPTIONS_DELETE = 3;
 
 	private static final int CHANNELOPTIONS_PART = 1;
+
+	private View fakeUserListView;
+	private ArrayList<User> contextUserList;
 
 	/*
 	 * UI callbacks.
@@ -139,6 +151,9 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 		this.quitButton = (Button) this.findViewById(R.id.quitButton);
 		this.quitButton.setOnClickListener(this);
 		this.highlightCellColour = Color.rgb(182, 232, 243);
+		this.fakeUserListView = this.findViewById(R.id.fakeView);
+		this.registerForContextMenu(this.fakeUserListView);
+		contextUserList = new ArrayList<User>();
 
 		this.nickColours = new HashMap<String, Integer>();
 		// Add predefined 'special' nicknames.
@@ -226,6 +241,7 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 
 			return true;
 		case R.id.usersOption:
+			fakeUserListView.showContextMenu();
 			return true;
 		default:
 			return super.onOptionsItemSelected(item);
@@ -252,7 +268,11 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 	public boolean onKeyDown(int keyCode, KeyEvent event) {
 		// Override back to prevent killing
 		if (keyCode == KeyEvent.KEYCODE_BACK) {
-			moveTaskToBack(true);
+			if (channelList.getVisibility() == View.VISIBLE) {
+				channelList.setVisibility(View.GONE);
+			} else {
+				moveTaskToBack(true);
+			}
 			return true;
 		} else if (keyCode == KeyEvent.KEYCODE_MENU) {
 			if (channelList.getVisibility() == View.VISIBLE) {
@@ -473,6 +493,23 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 		} else if (v == this.getListView()) {
 			AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) menuInfo;
 			this.startActionMode(new ActionModeCallback(currentChannel.getMessages().get(info.position)));
+		} else if (v == this.fakeUserListView) {
+			if (currentChannel != null) {
+				menu.setHeaderTitle("Users");
+				contextUserList.clear();
+				org.pircbotx.Channel info = currentChannel.getChannelInfo();
+				if (info != null) {
+					Iterator<User> i = info.getUsers().iterator();
+					int in = 0;
+					while (i.hasNext()) {
+						User u = i.next();
+						contextUserList.add(u);
+						menu.add(CONTEXTMENU_USERLIST, 0, in, u.getNick());
+						in++;
+					}
+					// TODO: sort nick list
+				}
+			}
 		}
 	}
 
@@ -516,10 +553,12 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 	@Override
 	public boolean onContextItemSelected(MenuItem item) {
 		ExpandableListContextMenuInfo info = (ExpandableListContextMenuInfo) item.getMenuInfo();
-		int groupPosition = ExpandableListView.getPackedPositionGroup(info.packedPosition);
-		int childPosition = ExpandableListView.getPackedPositionChild(info.packedPosition);
+		int groupPosition;
+		int childPosition;
 		switch (item.getGroupId()) {
 		case CONTEXTMENU_SERVEROPTIONS:
+			groupPosition = ExpandableListView.getPackedPositionGroup(info.packedPosition);
+			childPosition = ExpandableListView.getPackedPositionChild(info.packedPosition);
 			Server server = moeService.getServers().get(groupPosition);
 			switch (item.getItemId()) {
 			case SERVEROPTIONS_DISCONNECT:
@@ -543,13 +582,19 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 			}
 			break;
 		case CONTEXTMENU_CHANNELOPTIONS:
+			groupPosition = ExpandableListView.getPackedPositionGroup(info.packedPosition);
+			childPosition = ExpandableListView.getPackedPositionChild(info.packedPosition);
 			switch (item.getItemId()) {
 			case CHANNELOPTIONS_PART:
 				moeService.partChannel(moeService.getServers().get(groupPosition).getChannels().get(childPosition));
 				break;
 			}
 			break;
+		case CONTEXTMENU_USERLIST:
+			// Do nothing for user click for now
+			break;
 		}
+
 		return super.onContextItemSelected(item);
 	}
 

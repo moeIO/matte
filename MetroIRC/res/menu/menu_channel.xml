@@ -2,9 +2,9 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android" >
 
     <item
-        android:id="@+id/copyOption"
+        android:id="@+id/usersOption"
         android:showAsAction="withText|always"
-        android:title="Copy"
+        android:title="Users"
         android:icon="@drawable/ic_menu_cc"/>
 
 </menu>
