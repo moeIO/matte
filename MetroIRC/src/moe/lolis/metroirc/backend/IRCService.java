@@ -69,6 +69,34 @@ public class IRCService extends Service implements ServiceEventListener {
 		this.clientManager = new ClientManager();
 		this.listener = new IRCListener(this);
 
+		// Load preferences from configuration.
+		ArrayList<ServerPreferences> preferences = this.loadPreferences();
+
+		for (ServerPreferences serverPrefs : preferences) {
+			this.addServer(serverPrefs);
+			if (serverPrefs.isAutoConnected()) {
+				this.connect(serverPrefs.getName());
+			}
+		}
+
+		// Notification for foreground sevice
+		NotificationManager notificationManager = (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);
+
+		// XXX: Using the deprecated API to support <3.0 (Need to switch to new
+		// API + compat package)
+		int icon = moe.lolis.metroirc.R.drawable.ic_launcher;
+		this.constantNotification = new Notification(icon, "", 0);
+
+		Context context = getApplicationContext();
+		CharSequence contentTitle = "MetroIRC";
+		CharSequence contentText = "Running";
+		Intent notificationIntent = new Intent(this, ChannelActivity.class);
+		PendingIntent contentIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
+
+		this.constantNotification.setLatestEventInfo(context, contentTitle, contentText, contentIntent);
+		this.constantNotification.flags = Notification.FLAG_ONGOING_EVENT;
+		this.startForeground(CONSTANT_FOREGROUND_ID, constantNotification);
+
 	}
 
 	public void connect(String name) {
@@ -128,37 +156,10 @@ public class IRCService extends Service implements ServiceEventListener {
 		return Service.START_STICKY;
 	}
 
-	// The beef happens here
+	// Called if startService is called and the Service is already running. No
+	// connect code here
 	private void serviceStart() {
-		// Load preferences from configuration.
-		ArrayList<ServerPreferences> preferences = this.loadPreferences();
 
-		for (ServerPreferences serverPrefs : preferences) {
-			this.addServer(serverPrefs);
-			if (serverPrefs.isAutoConnected()) {
-				this.connect(serverPrefs.getName());
-			}
-		}
-		super.onCreate();
-
-		// Notification for foreground sevice
-		NotificationManager notificationManager = (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);
-
-		// XXX: Using the deprecated API to support <3.0 (Need to switch to new
-		// API + compat package)
-		int icon = moe.lolis.metroirc.R.drawable.ic_launcher;
-		this.constantNotification = new Notification(icon, "", 0);
-
-		Context context = getApplicationContext();
-		CharSequence contentTitle = "MetroIRC";
-		CharSequence contentText = "Running";
-		Intent notificationIntent = new Intent(this, ChannelActivity.class);
-		PendingIntent contentIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
-
-		this.constantNotification.setLatestEventInfo(context, contentTitle, contentText, contentIntent);
-		this.constantNotification.flags = Notification.FLAG_ONGOING_EVENT;
-
-		this.startForeground(CONSTANT_FOREGROUND_ID, constantNotification);
 	}
 
 	public void stopService() {
