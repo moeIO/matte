@@ -29,6 +29,8 @@ import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Binder;
 import android.os.IBinder;
+import android.text.Html;
+import android.text.SpannedString;
 import android.util.Log;
 
 public class IRCService extends Service implements ServiceEventListener {
@@ -70,30 +72,40 @@ public class IRCService extends Service implements ServiceEventListener {
 
 	}
 
-	public void connect(ServerPreferences serverPrefs) {
+	public void connect(String name) {
 		ConnectTask connectionTask = new ConnectTask();
-		connectionTask.execute(new ServerPreferences[] { serverPrefs });
+		connectionTask.execute(new String[] { name });
 	}
 
 	public void disconnect(String serverName) {
 		Server s = this.getServer(serverName);
 		if (s != null) {
-			if (s.getServerInfo().getBot().isConnected())
+			if (s.getServerInfo().getBot().isConnected()) {
 				s.getServerInfo().getBot().disconnect();
+			}
 			this.serverMap.remove(serverName);
 			this.servers.remove(s);
 		}
 	}
 
-	public void addDisconnectedServer(ServerPreferences prefs) {
-		Server s = new Server();
-		Client c = IRCService.this.clientManager.createClient(prefs);
-		c.getListenerManager().addListener(IRCService.this.listener);
-		s.setClient(c);
-		s.getClient().setServerPreferences(prefs);
-		s.setName(prefs.getName());
-		this.servers.add(s);
-		this.serverMap.put(s.getName(), s);
+	public void addServer(ServerPreferences prefs) {
+		Server server = new Server();
+		Client client = this.clientManager.createClient(prefs);
+		
+		client.getListenerManager().addListener(this.listener);
+		client.setServerPreferences(prefs);
+		server.setName(prefs.getName());
+		server.setServerInfo(client.getServerInfo());
+		server.setClient(client);
+		
+		this.servers.add(server);
+		this.serverMap.put(server.getName(), server);
+	}
+	
+	public void renameServer(String from, String to) {
+		Server server = this.serverMap.remove(from);
+		server.setName(to);
+		this.serverMap.put(to, server);
 	}
 
 	@Override
@@ -108,10 +120,9 @@ public class IRCService extends Service implements ServiceEventListener {
 		ArrayList<ServerPreferences> preferences = this.loadPreferences();
 
 		for (ServerPreferences serverPrefs : preferences) {
+			this.addServer(serverPrefs);
 			if (serverPrefs.isAutoConnected()) {
-				this.connect(serverPrefs);
-			} else {
-				this.addDisconnectedServer(serverPrefs);
+				this.connect(serverPrefs.getName());
 			}
 		}
 		super.onCreate();
@@ -164,42 +175,34 @@ public class IRCService extends Service implements ServiceEventListener {
 		return preferences;
 	}
 
-	private class ConnectTask extends AsyncTask<ServerPreferences, Void, Boolean> {
+	private class ConnectTask extends AsyncTask<String, Void, Boolean> {
+		private Server server;
 		private Client client;
-		ServerPreferences preferences;
+		private ServerPreferences preferences;
 
-		protected Boolean doInBackground(ServerPreferences... arguments) {
+		protected Boolean doInBackground(String... arguments) {
 			if (arguments.length < 1) {
 				return false;
 			}
-			this.preferences = arguments[0];
-
-			this.client = IRCService.this.clientManager.createClient(this.preferences);
-			this.client.getListenerManager().addListener(IRCService.this.listener);
+			this.server = serverMap.get(arguments[0]);
+			this.client = this.server.getClient();
+			this.preferences = this.client.getServerPreferences();
 
 			// Attempt to connect to the server.
 			boolean connected = false;
 			ServerPreferences.Host host = this.preferences.getHost();
-			Server server = new Server();
+			
 			try {
-
-				server.setName(this.preferences.getName());
-				server.setServerInfo(this.client.getServerInfo());
-				server.setClient(this.client);
-				IRCService.this.servers.add(server);
-				IRCService.this.serverMap.put(this.preferences.getName(), server);
-				// If activity is already bound, get it to switch to the new
-				// server tab, otherwise it will switch tab once it has bound on
-				// it's own
-				if (IRCService.this.connectedEventListener != null)
-					IRCService.this.channelJoined(server, null);
+				// Emit 'channel joined' event for the server tab.
+				if (connectedEventListener != null) {
+					channelJoined(server, null);
+				}
 
 				if (host.isSSL()) {
 					if (host.verifySSL()) {
 						this.client.connect(host.getHostname(), host.getPort(), host.getPassword(), SSLSocketFactory.getDefault());
 					} else {
-						this.client
-								.connect(host.getHostname(), host.getPort(), host.getPassword(), new UtilSSLSocketFactory().trustAllCertificates());
+						this.client.connect(host.getHostname(), host.getPort(), host.getPassword(), new UtilSSLSocketFactory().trustAllCertificates());
 					}
 				} else {
 					this.client.connect(host.getHostname(), host.getPort(), host.getPassword());
@@ -208,6 +211,10 @@ public class IRCService extends Service implements ServiceEventListener {
 				connected = true;
 			} catch (Exception ex) {
 				Log.e("IRC Connection failed", ex.getMessage());
+				
+			    server.addError(Html.fromHtml("Could not connect to server: <strong>" + ex.getMessage() + "</strong>"));
+			    statusMessageReceived(server, null);
+				
 				// Leave failed server in list for error-logging purposes (and
 				// since ChannelList adapter will still want it)
 				return false;
@@ -218,7 +225,6 @@ public class IRCService extends Service implements ServiceEventListener {
 
 		protected void onPostExecute(Boolean succesful) {
 			if (succesful) {
-
 				// Automatically join channels after connecting (Afterwards so
 				// that server list is ready)
 				for (String channel : this.preferences.getAutoChannels()) {

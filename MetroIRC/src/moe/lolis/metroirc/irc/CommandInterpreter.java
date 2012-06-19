@@ -25,10 +25,11 @@ public class CommandInterpreter {
 		String[] parts = message.split(" ");
 		Client client = this.activity.getCurrentChannel().getClient();
 		Server server = this.activity.getCurrentChannel().getServer();
+		String command = parts[0];
 
 		// HUGE FUCKLOAD LIST OF COMMANDS INCOMING
 		// PREPARE YOUR ANUS
-		if ((parts[0].equalsIgnoreCase("join") || parts[0].equalsIgnoreCase("j")) && parts.length > 1) {
+		if ((command.equalsIgnoreCase("join") || command.equalsIgnoreCase("j")) && parts.length > 1) {
 			String[] channels = parts[1].split(",");
 			String[] passwords = null;
 			if (parts.length > 2 && parts[2].split(",").length == channels.length) {
@@ -38,20 +39,20 @@ public class CommandInterpreter {
 			for (int i = 0; i < channels.length; i++) {
 				if (!this.looksLikeChannel(channels[i])) {
 					// Send message.
-					this.service.activeChannelMessageReceived(this.activity.getCurrentChannel(),
-							this.activity.getCurrentChannel().createError(SpannedString.valueOf("Invalid channel name: " + channels[i])));
+					this.activity.getCurrentChannel().addError(SpannedString.valueOf("Invalid channel name: " + channels[i]));
+					this.service.activeChannelMessageReceived(this.activity.getCurrentChannel(), null);
 					continue;
 				}
 
 				if (passwords != null) {
 					client.joinChannel(channels[i], passwords[i]);
-					//TODO Channels with passwords aren't stored for autoconnect
+					// TODO: Channels with passwords aren't stored for autoconnect
 				} else {
 					client.joinChannel(channels[i]);
 					client.getServerPreferences().addAutoChannel(channels[i]);
 				}
 			}
-		} else if (parts[0].equalsIgnoreCase("leave") || parts[0].equalsIgnoreCase("part")) {
+		} else if (command.equalsIgnoreCase("leave") || command.equalsIgnoreCase("part")) {
 			if (parts.length == 1) {
 				// /part
 				client.partChannel(this.activity.getCurrentChannel().getChannelInfo());
@@ -75,18 +76,18 @@ public class CommandInterpreter {
 					}
 				}
 			}
-		} else if ((parts[0].equalsIgnoreCase("nick") || parts[0].equalsIgnoreCase("nickname")) && parts.length > 1) {
+		} else if ((command.equalsIgnoreCase("nick") || command.equalsIgnoreCase("nickname")) && parts.length > 1) {
 			if (!client.userExists(parts[1])) {
 				client.changeNick(parts[1]);
 			} else {
-				this.service.activeChannelMessageReceived(this.activity.getCurrentChannel(),
-						this.activity.getCurrentChannel().createError(SpannedString.valueOf("Nickname is already in use: " + parts[1])));
+				this.activity.getCurrentChannel().addError(SpannedString.valueOf("Nickname is already in use: " + parts[1]));
+				this.service.activeChannelMessageReceived(this.activity.getCurrentChannel(), null);
 			}
-		} else if ((parts[0].equalsIgnoreCase("whois") || parts[0].equalsIgnoreCase("who")) && parts.length > 1) {
+		} else if ((command.equalsIgnoreCase("whois") || command.equalsIgnoreCase("who")) && parts.length > 1) {
 			for (int i = 1; i < parts.length; i++) {
 				client.sendRawLine("WHOIS " + parts[i]);
 			}
-	 	} else if (parts[0].equalsIgnoreCase("mode") && parts.length > 1) {
+	 	} else if (command.equalsIgnoreCase("mode") && parts.length > 1) {
 	 		Channel channel;
 	 		if (this.looksLikeChannel(parts[1])) {
 	 			channel = server.getChannel(parts[1]);
@@ -95,13 +96,13 @@ public class CommandInterpreter {
 	 		}
 	 		
 	 		client.setMode(channel.getChannelInfo(), message.substring("mode".length() + 1, message.length()));
-	 	} else if (parts[0].equalsIgnoreCase("ctcp") && parts.length > 2) {
+	 	} else if (command.equalsIgnoreCase("ctcp") && parts.length > 2) {
 	 		if (this.looksLikeChannel(parts[1])) {
 	 			client.sendCTCPCommand(server.getChannel(parts[1]).getChannelInfo(), parts[2]);
 	 		} else {
 	 			client.sendCTCPCommand(parts[1], parts[2]);
 	 		}
-	 	} else if ((parts[0].equalsIgnoreCase("quote") || parts[0].equalsIgnoreCase("raw")) && parts.length > 1) {
+	 	} else if ((command.equalsIgnoreCase("quote") || command.equalsIgnoreCase("raw")) && parts.length > 1) {
 	 		client.sendRawLine(message.substring(parts[0].length() + 1, message.length()));
 	 	}
 	}

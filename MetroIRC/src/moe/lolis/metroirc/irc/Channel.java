@@ -47,12 +47,12 @@ public class Channel {
 		// TODO: Implement
 	}
 
-	public GenericMessage createError(Spanned error) {
+	public void addError(Spanned error) {
 		ChannelMessage message = new ChannelMessage();
 		message.setNickname("!");
 		message.setContent(error);
 		message.setTime(new Date());
-		return message;
+		this.addMessage(message);
 	}
 
 	public ArrayList<GenericMessage> getMessages() {

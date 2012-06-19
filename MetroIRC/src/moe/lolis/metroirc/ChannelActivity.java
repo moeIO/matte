@@ -373,9 +373,14 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 
 						if (success) {
 							prefs.saveToSharedPreferences(rawPreferences);
-							if (server != null && server.getServerInfo().getBot().isConnected())
-								moeService.disconnect(originalServerName);
-							moeService.connect(prefs);
+							String newName = prefs.getName();
+							
+							moeService.renameServer(originalServerName, newName);
+							if (server != null && server.getServerInfo().getBot().isConnected()) {
+								moeService.disconnect(newName);
+							}
+							moeService.connect(newName);
+							
 							d.dismiss();
 						}
 					}
@@ -446,7 +451,7 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 				moeService.disconnect(server.getName());
 				break;
 			case SERVEROPTIONS_CONNECT:
-				moeService.connect(server.getClient().getServerPreferences());
+				moeService.connect(server.getName());
 				break;
 			case SERVEROPTIONS_EDIT:
 				this.showServerEditDialog(server);
@@ -527,46 +532,6 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 				convertView.setBackgroundColor(Color.TRANSPARENT);
 			return convertView;
 		}
-	}
-
-	private class AsyncYoutubeLoad extends AsyncTask<Object, Void, Boolean> {
-		private TextView view;
-		private GenericMessage message;
-		private SpannableString spanToSet;
-
-		@Override
-		protected Boolean doInBackground(Object... params) {
-			view = (TextView) params[0];
-			message = (GenericMessage) params[1];
-
-			spanToSet = new SpannableString(" \n" + message.getContent().toString());
-			Drawable d = null;
-			try {
-				InputStream is = (InputStream) new URL("http://img.youtube.com/vi/" + message.getEmbeddedYoutube() + "/hqdefault.jpg").getContent();
-				d = Drawable.createFromStream(is, "src name");
-			} catch (Exception e) {
-				// No-one cares
-				return false;
-			}
-			d.setBounds(0, 0, d.getIntrinsicWidth(), d.getIntrinsicHeight());
-			ImageSpan span = new ImageSpan(d, ImageSpan.ALIGN_BASELINE);
-			spanToSet.setSpan(span, 0, 1, Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
-
-			return true;
-		}
-
-		@Override
-		protected void onPostExecute(Boolean success) {
-			if (success) {
-				try {
-					if (view != null)
-						view.setText(spanToSet);
-				} catch (Exception ex) {
-					// Whatever
-				}
-			}
-		}
-
 	}
 
 	/*
@@ -818,8 +783,9 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 		if (commonChannels.contains(this.currentChannel)) {
 			this.runOnUiThread(new Runnable() {
 				public void run() {
-					if (adapter != null)
+					if (adapter != null) {
 						adapter.notifyDataSetChanged();
+					}
 				}
 			});
 		}
@@ -828,23 +794,29 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 	public void serverConnected(Server server) {
 		this.runOnUiThread(new Runnable() {
 			public void run() {
-				if (channelAdapter != null)
+				if (channelAdapter != null) {
 					channelAdapter.notifyDataSetChanged();
+				}
 			}
 		});
 	}
 
 	public void serverDisconnected(Server server, String error) {
-		final Server serv = server;
 		if (server != null) {
+			// Hurr durr I am Java and I require final
 			final String err = error;
+			final Server serv = server;
+			
 			this.runOnUiThread(new Runnable() {
 				public void run() {
-					serv.addMessage(serv.createError(SpannableString.valueOf(err)));
-					for (Channel channel : serv.getChannels())
-						channel.addMessage(channel.createError(SpannableString.valueOf(err)));
-					if (adapter != null)
+					serv.addError(SpannableString.valueOf(err));
+					for (Channel channel : serv.getChannels()) {
+						channel.addError(SpannableString.valueOf(err));
+					}
+					
+					if (adapter != null) {
 						adapter.notifyDataSetChanged();
+					}
 				}
 			});
 		}
@@ -905,7 +877,8 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 			if (this.currentChannel != null) {
 				if (message.length() > 0) {
 					if (this.currentChannel instanceof Server) {
-						this.currentChannel.addMessage(this.currentChannel.createError(SpannedString.valueOf("Can't send messages to a server, it will never respond. :(")));
+						SpannedString error = SpannedString.valueOf("Can't send messages to a server, it will never respond. :(");
+						this.currentChannel.addError(error);
 					} else {
 						this.currentChannel.sendMessage(message);
 					}
