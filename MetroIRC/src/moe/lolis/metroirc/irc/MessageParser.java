@@ -9,10 +9,13 @@ public class MessageParser {
 	private static final int UNDERLINE = 31;
 	
 	private static String[] colorCodesToHex = {
-		"#ffffff", "#000000"
+		"#000000", "#000085", "#208100", "#f91000",
+		"#7e413f", "#7900ff", "#818100", "#ffff00",
+		"#49ff00", "#2e8080", "#41ffff", "#0000ff",
+		"#f700ff", "#808080", "#c0c0c0", "#ffffff"
 	};
 
-	public static void parseMessage(GenericMessage message) {
+	public static void parseSpecial(GenericMessage message) {
 		String text = message.getContent().toString();
 		if (text.contains("youtube.com/watch")) {
 			int loc = text.indexOf("v=");
@@ -21,10 +24,36 @@ public class MessageParser {
 			}
 		}
 	}
+	
+	// Do not ask questions; we won't either.
+	public static int parseIRCColour(String message, int offset) {
+		int j = offset, k = 1, n = 0, ch = 0;
+		
+		do {
+			ch = message.codePointAt(j);
+			
+			// IRC colours go up to 16, check if the value is between 0 and 9 in the ASCII-table.
+			if (ch >= 0x30 && ch <= 0x39) {
+				n *= k;
+				n += (ch - 0x30);
+				
+				if (n > 16) {
+					break;
+				}
+			} else {
+				break;
+			}
+			
+			k *= 10;
+			j += Character.charCount(ch);
+		} while (true);
+		
+		return n;
+	}
 
 	public static String parseToHTML(String message) {
 		boolean has_colour = false, has_bold = false, has_underline = false, is_reversed = false;
-		int foreground = 1, background = 0;
+		int foreground = 1;
 		String html = "";
 		
 		int ch;
@@ -38,7 +67,20 @@ public class MessageParser {
 			}
 			// Colour
 			else if (ch == COLOUR) {
-				// TODO: Grab colour values.
+				// Grab foreground colour.
+				i += Character.charCount(ch);
+				foreground = parseIRCColour(message, i);
+				// Increment i by the number of characters in that digit in base-10.
+				i += Math.floor(Math.log10(foreground));
+				// Convert foreground to an array index.
+				foreground = Math.max(foreground - 1, 0);
+				
+				// If the next character is a comma (e.g. ^3,9) , parse but ignore it -- we can't do background colours.
+				if (message.codePointAt(i + 1) == 0x2C) {
+					i += 2;
+					i += Math.floor(Math.log10(parseIRCColour(message, i)));
+				} 
+				
 				html += "<font color='" + colorCodesToHex[foreground] + "'>";
 				has_colour = true;
 			}
@@ -55,9 +97,7 @@ public class MessageParser {
 				}
 				
 				// Leet colour swapping algorithms
-				foreground += background;
-				background = foreground - background;
-				foreground = foreground - background;
+				foreground = colorCodesToHex.length - foreground;
 				
 				html += "<font color='" + colorCodesToHex[foreground] + "'>";
 				is_reversed = true;
@@ -65,10 +105,9 @@ public class MessageParser {
 			// Reset
 			else if (ch == PLAIN) {
 				if (has_colour) {
-					html += "</span>";
+					html += "</font>";
 					has_colour = false;
 					foreground = 1;
-					background = 0;
 				}
 				if (has_underline) {
 					html += "</u>";
@@ -79,7 +118,7 @@ public class MessageParser {
 					has_bold = false;
 				}
 				if (is_reversed) {
-					html += "</span>";
+					html += "</font>";
 					is_reversed = false; 
 				}
 			}
@@ -90,13 +129,12 @@ public class MessageParser {
 		}
 		
 		if (has_colour) {
-			html += "</span>";
+			html += "</font>";
 			has_colour = false;
 			foreground = 1;
-			background = 0;
 		}
 		if (has_underline) {
-			html += "</span>";
+			html += "</u>";
 			has_underline = false;
 		}
 		if (has_bold) {
@@ -104,7 +142,7 @@ public class MessageParser {
 			has_bold = false;
 		}
 		if (is_reversed) {
-			html += "</span>";
+			html += "</font>";
 			is_reversed = false; 
 		}
 		

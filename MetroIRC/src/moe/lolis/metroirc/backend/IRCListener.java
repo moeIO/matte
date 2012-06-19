@@ -18,6 +18,7 @@ import org.pircbotx.hooks.events.JoinEvent;
 import org.pircbotx.hooks.events.MessageEvent;
 import org.pircbotx.hooks.events.MotdEvent;
 import org.pircbotx.hooks.events.NickChangeEvent;
+import org.pircbotx.hooks.events.NoticeEvent;
 import org.pircbotx.hooks.events.PartEvent;
 import org.pircbotx.hooks.events.QuitEvent;
 import org.pircbotx.hooks.events.ServerResponseEvent;
@@ -130,7 +131,7 @@ public class IRCListener extends ListenerAdapter<Client> {
 		this.service.channelParted(channel, event.getUser().getNick());
 	}
 
-	public void onMessage(MessageEvent<Client> event) throws Exception {
+	public void onMessage(MessageEvent<Client> event) {
 		Server server = this.service.getServer(event.getBot().getServerPreferences().getName());
 		Channel channel = server.getChannel(event.getChannel().getName());
 
@@ -154,6 +155,10 @@ public class IRCListener extends ListenerAdapter<Client> {
 		} else {
 			message.isHighlighted(false);
 		}
+	}
+	
+	public void onNotice(NoticeEvent<Client> event) {
+		
 	}
 
 	public void onNickChange(NickChangeEvent<Client> event) {
