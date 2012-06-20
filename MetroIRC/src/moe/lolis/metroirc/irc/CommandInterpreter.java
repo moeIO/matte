@@ -39,8 +39,8 @@ public class CommandInterpreter {
 			for (int i = 0; i < channels.length; i++) {
 				if (!this.looksLikeChannel(channels[i])) {
 					// Send message.
-					this.activity.getCurrentChannel().addError(SpannedString.valueOf("Invalid channel name: " + channels[i]));
-					this.service.activeChannelMessageReceived(this.activity.getCurrentChannel(), null);
+					this.service.activeChannelMessageReceived(this.activity.getCurrentChannel(),
+							Channel.createError(SpannedString.valueOf("Invalid channel name: " + channels[i])));
 					continue;
 				}
 
@@ -78,31 +78,31 @@ public class CommandInterpreter {
 			if (!client.userExists(parts[1])) {
 				client.changeNick(parts[1]);
 			} else {
-				this.activity.getCurrentChannel().addError(SpannedString.valueOf("Nickname is already in use: " + parts[1]));
-				this.service.activeChannelMessageReceived(this.activity.getCurrentChannel(), null);
+				this.service.activeChannelMessageReceived(this.activity.getCurrentChannel(),
+						Channel.createError(SpannedString.valueOf("Nickname is already in use: " + parts[1])));
 			}
 		} else if ((command.equalsIgnoreCase("whois") || command.equalsIgnoreCase("who")) && parts.length > 1) {
 			for (int i = 1; i < parts.length; i++) {
 				client.sendRawLine("WHOIS " + parts[i]);
 			}
-	 	} else if (command.equalsIgnoreCase("mode") && parts.length > 1) {
-	 		Channel channel;
-	 		if (this.looksLikeChannel(parts[1])) {
-	 			channel = server.getChannel(parts[1]);
-	 		} else {
-	 			channel = this.activity.getCurrentChannel();
-	 		}
-	 		
-	 		client.setMode(channel.getChannelInfo(), message.substring("mode".length() + 1, message.length()));
-	 	} else if (command.equalsIgnoreCase("ctcp") && parts.length > 2) {
-	 		if (this.looksLikeChannel(parts[1])) {
-	 			client.sendCTCPCommand(server.getChannel(parts[1]).getChannelInfo(), parts[2]);
-	 		} else {
-	 			client.sendCTCPCommand(parts[1], parts[2]);
-	 		}
-	 	} else if ((command.equalsIgnoreCase("quote") || command.equalsIgnoreCase("raw")) && parts.length > 1) {
-	 		client.sendRawLine(message.substring(parts[0].length() + 1, message.length()));
-	 	}
+		} else if (command.equalsIgnoreCase("mode") && parts.length > 1) {
+			Channel channel;
+			if (this.looksLikeChannel(parts[1])) {
+				channel = server.getChannel(parts[1]);
+			} else {
+				channel = this.activity.getCurrentChannel();
+			}
+
+			client.setMode(channel.getChannelInfo(), message.substring("mode".length() + 1, message.length()));
+		} else if (command.equalsIgnoreCase("ctcp") && parts.length > 2) {
+			if (this.looksLikeChannel(parts[1])) {
+				client.sendCTCPCommand(server.getChannel(parts[1]).getChannelInfo(), parts[2]);
+			} else {
+				client.sendCTCPCommand(parts[1], parts[2]);
+			}
+		} else if ((command.equalsIgnoreCase("quote") || command.equalsIgnoreCase("raw")) && parts.length > 1) {
+			client.sendRawLine(message.substring(parts[0].length() + 1, message.length()));
+		}
 	}
 
 	private boolean looksLikeChannel(String subject) {

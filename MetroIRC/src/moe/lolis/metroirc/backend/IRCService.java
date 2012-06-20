@@ -227,11 +227,8 @@ public class IRCService extends Service implements ServiceEventListener {
 
 				connected = true;
 			} catch (Exception ex) {
-				Log.e("IRC Connection failed", ex.getMessage());
-
-				server.addError(Html.fromHtml("Could not connect to server: <strong>" + ex.getMessage() + "</strong>"));
-				statusMessageReceived(server, null);
-
+				statusMessageReceived(server,
+						Server.createError(Html.fromHtml("Could not connect to server: <strong>" + ex.getMessage() + "</strong>")));
 				// Leave failed server in list for error-logging purposes (and
 				// since ChannelList adapter will still want it)
 				return false;

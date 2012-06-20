@@ -279,6 +279,7 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 				channelList.setVisibility(View.GONE);
 			} else if (channelList.getVisibility() == View.GONE) {
 				channelList.setVisibility(View.VISIBLE);
+				expandAllServerGroups();
 			}
 			return true;
 		}
@@ -937,9 +938,9 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 
 			this.runOnUiThread(new Runnable() {
 				public void run() {
-					serv.addError(SpannableString.valueOf(err));
+					serv.addMessage(Server.createError(SpannableString.valueOf(err)));
 					for (Channel channel : serv.getChannels()) {
-						channel.addError(SpannableString.valueOf(err));
+						channel.addMessage(Channel.createError(SpannableString.valueOf(err)));
 					}
 
 					if (adapter != null) {
@@ -1007,8 +1008,8 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 			if (this.currentChannel != null) {
 				if (message.length() > 0) {
 					if (this.currentChannel instanceof Server) {
-						SpannedString error = SpannedString.valueOf("Can't send messages to a server, it will never respond. :(");
-						this.currentChannel.addError(error);
+						this.currentChannel.addMessage(Channel.createError(SpannedString
+								.valueOf("Can't send messages to a server, it will never respond. :(")));
 					} else {
 						this.currentChannel.sendMessage(message);
 					}

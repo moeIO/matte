@@ -47,12 +47,12 @@ public class Channel {
 		// TODO: Implement
 	}
 
-	public void addError(Spanned error) {
+	public static GenericMessage createError(Spanned error) {
 		ChannelMessage message = new ChannelMessage();
 		message.setNickname("!");
 		message.setContent(error);
 		message.setTime(new Date());
-		this.addMessage(message);
+		return message;
 	}
 
 	public ArrayList<GenericMessage> getMessages() {
@@ -98,9 +98,8 @@ public class Channel {
 	public String getName() {
 		return getChannelInfo().getName();
 	}
-	
-	public Client getClient()
-	{
+
+	public Client getClient() {
 		return this.getServer().getClient();
 	}
 }
