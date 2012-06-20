@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Set;
 
+import moe.lolis.metroirc.R;
 import moe.lolis.metroirc.irc.Channel;
 import moe.lolis.metroirc.irc.ChannelMessage;
 import moe.lolis.metroirc.irc.Client;
@@ -46,7 +47,7 @@ public class IRCListener extends ListenerAdapter<Client> {
 	public void onDisconnect(DisconnectEvent<Client> event) {
 		Server server = this.service.getServer(event.getBot().getServerPreferences().getName());
 		// Disconnect seems to give us no reason, ability to send it anyway
-		this.service.serverDisconnected(server, "Error: disconnected");
+		this.service.serverDisconnected(server, this.service.getString(R.string.disconnectederror));
 	}
 
 	public void onMotd(MotdEvent<Client> event) {
@@ -76,7 +77,7 @@ public class IRCListener extends ListenerAdapter<Client> {
 
 				if (message == null) {
 					String msg = "<strong>" + event.getUser().getNick() + "</strong> (" + event.getUser().getLogin() + "@"
-							+ event.getUser().getHostmask() + ") has quit";
+							+ event.getUser().getHostmask() + ") " + this.service.getString(R.string.hasquit);
 					if (event.getReason().length() > 0) {
 						msg += " (<em>" + event.getReason() + "</em>)";
 					}
@@ -110,7 +111,7 @@ public class IRCListener extends ListenerAdapter<Client> {
 		ChannelMessage message = new ChannelMessage();
 		message.setNickname("-->");
 		message.setContent(Html.fromHtml("<strong>" + event.getUser().getNick() + "</strong> (" + event.getUser().getLogin() + "@"
-				+ event.getUser().getHostmask() + ") has joined " + event.getChannel().getName()));
+				+ event.getUser().getHostmask() + ") " + this.service.getString(R.string.hasjoined) + " " + event.getChannel().getName()));
 		message.setTime(new Date());
 		// channel.addMessage(message);
 		this.service.statusMessageReceived(channel, message);
@@ -124,7 +125,8 @@ public class IRCListener extends ListenerAdapter<Client> {
 		ChannelMessage message = new ChannelMessage();
 		message.setNickname("<--");
 		message.setContent(Html.fromHtml("<strong>" + event.getUser().getNick() + "</strong> (" + event.getUser().getLogin() + "@"
-				+ event.getUser().getHostmask() + ") has left " + event.getChannel().getName() + " (<em>" + event.getReason() + "</em>)"));
+				+ event.getUser().getHostmask() + ") " + this.service.getString(R.string.hasleft) + " " + event.getChannel().getName() + " (<em>"
+				+ event.getReason() + "</em>)"));
 		message.setTime(new Date());
 		// channel.addMessage(message);
 		this.service.statusMessageReceived(channel, message);
@@ -156,9 +158,9 @@ public class IRCListener extends ListenerAdapter<Client> {
 			message.isHighlighted(false);
 		}
 	}
-	
+
 	public void onNotice(NoticeEvent<Client> event) {
-		
+
 	}
 
 	public void onNickChange(NickChangeEvent<Client> event) {
@@ -177,8 +179,8 @@ public class IRCListener extends ListenerAdapter<Client> {
 				if (message == null) {
 					message = new ChannelMessage();
 					message.setNickname("--");
-					message.setContent(Html.fromHtml("<strong>" + event.getOldNick() + "</strong> is now known as <strong>" + event.getNewNick()
-							+ "</strong>"));
+					message.setContent(Html.fromHtml("<strong>" + event.getOldNick() + "</strong> " + this.service.getString(R.string.nowknownas)
+							+ " <strong>" + event.getNewNick() + "</strong>"));
 					message.setTime(new Date());
 				}
 				// ch.addMessage(message);
@@ -197,11 +199,11 @@ public class IRCListener extends ListenerAdapter<Client> {
 		message.setNickname("--");
 		message.setTime(new Date());
 		if (event.isChanged()) {
-			message.setContent(Html.fromHtml(event.getUser().getNick() + " changed the topic to: <strong>"
+			message.setContent(Html.fromHtml(event.getUser().getNick() + " " + this.service.getString(R.string.changedtopic) + ": <strong>"
 					+ MessageParser.parseToHTML(event.getTopic()) + "</strong>"));
 		} else {
-			message.setContent(Html.fromHtml(event.getChannel().getName() + "'s topic is: <strong>" + MessageParser.parseToHTML(event.getTopic())
-					+ "</strong>"));
+			message.setContent(Html.fromHtml(event.getChannel().getName() + this.service.getString(R.string.stopicis) + ": <strong>"
+					+ MessageParser.parseToHTML(event.getTopic()) + "</strong>"));
 		}
 
 		this.service.statusMessageReceived(channel, message);

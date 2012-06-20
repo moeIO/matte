@@ -45,5 +45,23 @@
     <string name="users">Users</string>
     <string name="copy">Copy</string>
     <string name="cantmessageserver">Can\'t send messages to a server, it will never respond. :(</string>
-
+    <string name="about">About</string>
+    <string name="disconnectederror">Error: Disconnected</string>
+    <string name="hasquit">has quit</string>
+    <string name="hasjoined">has joined</string>
+    <string name="hasleft">has left</string>
+    <string name="nowknownas">is now known as</string>
+    <string name="changedtopic">changed the topic to</string>
+    <string name="stopicis">\'s topic is</string>
+    <string name="running">Running</string>
+    <string name="requested">Requested</string>
+    <string name="couldnotconnectserver">Could not connect to server</string>
+    <string name="connected">Connected</string>
+    <string name="disconnected">Disconnected</string>
+    <string name="clientalreadyconnected">The client is already connected to an IRC server.  Disconnect first.</string>
+    <string name="couldnotlogin">Could not log into the IRC server</string>
+    <string name="invalidchannel">Invalid channel name</string>
+    <string name="nickinuse">Nickname is already in use</string>
+    <string name="cool">Cool</string>
+    
 </resources>

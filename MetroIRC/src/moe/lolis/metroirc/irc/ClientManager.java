@@ -3,15 +3,19 @@ package moe.lolis.metroirc.irc;
 import java.nio.charset.Charset;
 import java.util.HashMap;
 
+import android.content.Context;
+
 public class ClientManager {
 	protected HashMap<String, Client> clients;
+	private Context context;
 
-	public ClientManager() {
+	public ClientManager(Context context) {
+		this.context = context;
 		this.clients = new HashMap<String, Client>();
 	}
 
 	public Client createClient(ServerPreferences preferences) {
-		Client client = new Client();
+		Client client = new Client(context);
 		client.loadFromPreferences(preferences);
 		client.setAutoNickChange(true);
 		client.setAutoSplitMessage(true);

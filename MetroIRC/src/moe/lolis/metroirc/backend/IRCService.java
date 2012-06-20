@@ -66,7 +66,7 @@ public class IRCService extends Service implements ServiceEventListener {
 	public void onCreate() {
 		this.servers = new ArrayList<Server>();
 		this.serverMap = new HashMap<String, Server>();
-		this.clientManager = new ClientManager();
+		this.clientManager = new ClientManager(this.getApplicationContext());
 		this.listener = new IRCListener(this);
 
 		// Load preferences from configuration.
@@ -85,8 +85,8 @@ public class IRCService extends Service implements ServiceEventListener {
 		this.notificationBuilder = new Notification.Builder(getApplicationContext());
 		this.notificationBuilder.setSmallIcon(R.drawable.ic_launcher);
 		this.notificationBuilder.setAutoCancel(false);
-		this.notificationBuilder.setContentTitle("MetroIRC");
-		this.notificationBuilder.setContentText("Running");
+		this.notificationBuilder.setContentTitle(getResources().getString(R.string.app_name));
+		this.notificationBuilder.setContentText(getResources().getString(R.string.running));
 		this.notificationBuilder.setWhen(0);
 		this.notificationBuilder.setContentIntent(contentIntent);
 
@@ -109,7 +109,7 @@ public class IRCService extends Service implements ServiceEventListener {
 			for (Channel c : s.getChannels()) {
 				s.removeChannel(c.getName());
 			}
-			this.serverDisconnected(s, "Requested");
+			this.serverDisconnected(s, getResources().getString(R.string.requested));
 		}
 	}
 
@@ -160,8 +160,6 @@ public class IRCService extends Service implements ServiceEventListener {
 	public void stopService() {
 		// IRC Cleanup
 		for (Server s : servers) {
-			s.getClient().getServerPreferences()
-					.saveToSharedPreferences(getApplicationContext().getSharedPreferences("servers", Context.MODE_PRIVATE));
 			s.getClient().getListenerManager().removeListener(listener);
 			this.disconnect(s.getName());
 		}
@@ -221,8 +219,10 @@ public class IRCService extends Service implements ServiceEventListener {
 
 				connected = true;
 			} catch (Exception ex) {
-				statusMessageReceived(server,
-						Server.createError(Html.fromHtml("Could not connect to server: <strong>" + ex.getMessage() + "</strong>")));
+				statusMessageReceived(
+						server,
+						Server.createError(Html.fromHtml(getResources().getString(R.string.couldnotconnectserver) + " <strong>" + ex.getMessage()
+								+ "</strong>")));
 				// Leave failed server in list for error-logging purposes (and
 				// since ChannelList adapter will still want it)
 				return false;
@@ -252,7 +252,7 @@ public class IRCService extends Service implements ServiceEventListener {
 		this.notificationBuilder = new Notification.Builder(getApplicationContext());
 		this.notificationBuilder.setSmallIcon(R.drawable.notification);
 		this.notificationBuilder.setAutoCancel(true);
-		this.notificationBuilder.setContentTitle("MetroIRC");
+		this.notificationBuilder.setContentTitle(getResources().getString(R.string.app_name));
 		this.notificationBuilder.setContentText(message.getContent());
 		this.notificationBuilder.setWhen(System.currentTimeMillis());
 		this.notificationBuilder.setContentIntent(contentIntent);
@@ -270,7 +270,7 @@ public class IRCService extends Service implements ServiceEventListener {
 		this.notificationBuilder = new Notification.Builder(getApplicationContext());
 		this.notificationBuilder.setSmallIcon(icon);
 		this.notificationBuilder.setAutoCancel(false);
-		this.notificationBuilder.setContentTitle("MetroIRC");
+		this.notificationBuilder.setContentTitle(getResources().getString(R.string.app_name));
 		this.notificationBuilder.setContentText(message);
 		this.notificationBuilder.setWhen(0);
 		this.notificationBuilder.setContentIntent(contentIntent);
@@ -350,7 +350,7 @@ public class IRCService extends Service implements ServiceEventListener {
 		// Don't update for startup of non-autoconnect servers
 		// if (constantNotification != null)
 		// XXX this is no longer done?
-		this.updateNotification(R.drawable.ic_launcher, "Connected");
+		this.updateNotification(R.drawable.ic_launcher, getResources().getString(R.string.connected));
 		this.connectedEventListener.serverConnected(server);
 	}
 
@@ -365,7 +365,7 @@ public class IRCService extends Service implements ServiceEventListener {
 			}
 		}
 		if (!hasConnectedServer)
-			this.updateNotification(R.drawable.ic_launcher_red, "Disconnected");
+			this.updateNotification(R.drawable.ic_launcher_red, getResources().getString(R.string.disconnected));
 	}
 
 	public void nickChanged(Collection<Channel> commonChannels, String from, String to) {

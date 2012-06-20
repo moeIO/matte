@@ -1,8 +1,9 @@
 package moe.lolis.metroirc.irc;
 
-import android.text.SpannedString;
 import moe.lolis.metroirc.ChannelActivity;
+import moe.lolis.metroirc.R;
 import moe.lolis.metroirc.backend.IRCService;
+import android.text.SpannedString;
 
 public class CommandInterpreter {
 	private IRCService service;
@@ -39,8 +40,8 @@ public class CommandInterpreter {
 			for (int i = 0; i < channels.length; i++) {
 				if (!this.looksLikeChannel(channels[i])) {
 					// Send message.
-					this.service.activeChannelMessageReceived(this.activity.getCurrentChannel(),
-							Channel.createError(SpannedString.valueOf("Invalid channel name: " + channels[i])));
+					this.service.activeChannelMessageReceived(this.activity.getCurrentChannel(), Channel.createError(SpannedString.valueOf(service
+							.getResources().getString(R.string.invalidchannel) + ": " + channels[i])));
 					continue;
 				}
 
@@ -79,7 +80,7 @@ public class CommandInterpreter {
 				client.changeNick(parts[1]);
 			} else {
 				this.service.activeChannelMessageReceived(this.activity.getCurrentChannel(),
-						Channel.createError(SpannedString.valueOf("Nickname is already in use: " + parts[1])));
+						Channel.createError(SpannedString.valueOf(service.getResources().getString(R.string.nickinuse) + ": " + parts[1])));
 			}
 		} else if ((command.equalsIgnoreCase("whois") || command.equalsIgnoreCase("who")) && parts.length > 1) {
 			for (int i = 1; i < parts.length; i++) {

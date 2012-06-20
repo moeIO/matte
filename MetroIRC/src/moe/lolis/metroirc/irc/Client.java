@@ -11,10 +11,14 @@ import java.util.Arrays;
 
 import javax.net.SocketFactory;
 
+import moe.lolis.metroirc.R;
+
 import org.pircbotx.PircBotX;
 import org.pircbotx.exception.IrcException;
 import org.pircbotx.exception.NickAlreadyInUseException;
 import org.pircbotx.hooks.events.ConnectEvent;
+
+import android.content.Context;
 
 public class Client extends PircBotX {
 
@@ -22,9 +26,11 @@ public class Client extends PircBotX {
 	protected ArrayList<String> availableNicks;
 	protected String realname = "John Doe";
 	protected ServerPreferences serverPreferences;
+	private Context context;
 
-	public Client() {
+	public Client(Context context) {
 		super();
+		this.context = context;
 		this.setName("JohnDoe");
 		this.setLogin("johndoe");
 		this.setVersion("MetroIRC v" + VERSION);
@@ -40,7 +46,7 @@ public class Client extends PircBotX {
 		this.socketFactory = socketFactory;
 
 		if (isConnected()) {
-			throw new IrcException("The client is already connected to an IRC server.  Disconnect first.");
+			throw new IrcException(context.getResources().getString(R.string.clientalreadyconnected));
 		}
 
 		// Clear everything we may have know about channels.
@@ -118,7 +124,7 @@ public class Client extends PircBotX {
 				} else if (code.startsWith("5") || code.startsWith("4")) {
 					this.socket.close();
 					this.inputThread = null;
-					throw new IrcException("Could not log into the IRC server: " + line);
+					throw new IrcException(context.getResources().getString(R.string.couldnotlogin) + ": " + line);
 				}
 			}
 			this.nick = tempNick;
@@ -139,6 +145,7 @@ public class Client extends PircBotX {
 	@Override
 	public void joinChannel(String channel) {
 		this.getServerPreferences().addAutoChannel(channel);
+		this.getServerPreferences().saveToSharedPreferences(context.getSharedPreferences("servers", Context.MODE_PRIVATE));
 		super.joinChannel(channel);
 	}
 
@@ -147,18 +154,21 @@ public class Client extends PircBotX {
 		// TODO Channels with passwords aren't stored for autoconnect and will
 		// fail to connect
 		this.getServerPreferences().addAutoChannel(channel);
+		this.getServerPreferences().saveToSharedPreferences(context.getSharedPreferences("servers", Context.MODE_PRIVATE));
 		super.joinChannel(channel, password);
 	}
 
 	@Override
 	public void partChannel(org.pircbotx.Channel channel) {
 		this.getServerPreferences().removeAutoChannel(channel.getName());
+		this.getServerPreferences().saveToSharedPreferences(context.getSharedPreferences("servers", Context.MODE_PRIVATE));
 		super.partChannel(channel);
 	}
 
 	@Override
 	public void partChannel(org.pircbotx.Channel channel, String reason) {
 		this.getServerPreferences().removeAutoChannel(channel.getName());
+		this.getServerPreferences().saveToSharedPreferences(context.getSharedPreferences("servers", Context.MODE_PRIVATE));
 		super.partChannel(channel);
 	}
 

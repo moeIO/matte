@@ -134,7 +134,7 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 		// Request action bar.
 		ActionBar bar = this.getActionBar();
 		bar.setDisplayHomeAsUpEnabled(true);
-		this.setTitle("MetroIRC");
+		this.setTitle(getResources().getString(R.string.app_name));
 
 		// Set up sidebar.
 		ViewStub channelListContainer = (ViewStub) this.activity.findViewById(R.id.channelListStub);
@@ -169,7 +169,8 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 			editor.putBoolean("firstRun", false);
 			editor.apply();
 			new AlertDialog.Builder(this).setView(getLayoutInflater().inflate(R.layout.firstrun, null))
-					.setTitle(getResources().getString(R.string.welcome0)).setPositiveButton("Cool", new Dialog.OnClickListener() {
+					.setTitle(getResources().getString(R.string.welcome0))
+					.setPositiveButton(getResources().getString(R.string.cool), new Dialog.OnClickListener() {
 						public void onClick(DialogInterface d, int which) {
 							// Do nothing here.
 						}

@@ -31,7 +31,7 @@ public class SettingsActivity extends Activity {
 				public boolean onPreferenceClick(Preference pref) {
 					// About screen
 					final View dialogView = fragment.getActivity().getLayoutInflater().inflate(R.layout.about_dialog, null);
-					new AlertDialog.Builder(fragment.getActivity()).setView(dialogView).setTitle("About")
+					new AlertDialog.Builder(fragment.getActivity()).setView(dialogView).setTitle(getResources().getString(R.string.about))
 							.setPositiveButton(android.R.string.ok, null).show();
 					return false;
 				}
