@@ -29,6 +29,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -49,7 +50,6 @@ import android.view.ViewStub;
 import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
 import android.widget.AdapterView;
-import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.ArrayAdapter;
 import android.widget.BaseExpandableListAdapter;
 import android.widget.Button;
@@ -163,13 +163,18 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 		this.getListView().setTranscriptMode(ListView.TRANSCRIPT_MODE_ALWAYS_SCROLL);
 
 		// Show first run if needed
-
-		new AlertDialog.Builder(this).setView(getLayoutInflater().inflate(R.layout.firstrun, null))
-				.setTitle(getResources().getString(R.string.welcome0)).setPositiveButton("Don't tell me again", new Dialog.OnClickListener() {
-					public void onClick(DialogInterface d, int which) {
-						// Do nothing here.
-					}
-				}).show();
+		SharedPreferences rawPreferences = activity.getSharedPreferences("servers", Context.MODE_PRIVATE);
+		if (rawPreferences.getBoolean("firstRun", true)) {
+			Editor editor = rawPreferences.edit();
+			editor.putBoolean("firstRun", false);
+			editor.apply();
+			new AlertDialog.Builder(this).setView(getLayoutInflater().inflate(R.layout.firstrun, null))
+					.setTitle(getResources().getString(R.string.welcome0)).setPositiveButton("Cool", new Dialog.OnClickListener() {
+						public void onClick(DialogInterface d, int which) {
+							// Do nothing here.
+						}
+					}).show();
+		}
 	}
 
 	// When our activity is paused.
