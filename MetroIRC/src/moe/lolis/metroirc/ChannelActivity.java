@@ -293,7 +293,7 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 	private void showServerEditDialog(Server existingServer) {
 		final Server server = existingServer;
 		final View dialogView = getLayoutInflater().inflate(R.layout.addserver_dialog, null);
-		final AlertDialog d = new AlertDialog.Builder(this).setView(dialogView).setTitle("Add Server")
+		final AlertDialog d = new AlertDialog.Builder(this).setView(dialogView).setTitle(getResources().getString(R.string.addServer))
 				.setPositiveButton(android.R.string.ok, new Dialog.OnClickListener() {
 					public void onClick(DialogInterface d, int which) {
 						// Do nothing here.
@@ -359,16 +359,16 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 						if (nameView.getText().length() == 0) {
 							success = false;
 							AlertDialog.Builder b = new AlertDialog.Builder(activity);
-							b.setMessage("You need to enter a server name");
-							b.setPositiveButton("OK", null);
+							b.setMessage(getResources().getString(R.string.enteraserver));
+							b.setPositiveButton(getResources().getString(android.R.string.ok), null);
 							b.show();
 						} else {
 							if (!nameView.getText().toString().equals(originalServerName)
 									&& ServerPreferences.serverNameExists(rawPreferences, nameView.getText().toString())) {
 								success = false;
 								AlertDialog.Builder b = new AlertDialog.Builder(activity);
-								b.setMessage("A server with this name already exists");
-								b.setPositiveButton("OK", null);
+								b.setMessage(getResources().getString(R.string.serverexists));
+								b.setPositiveButton(getResources().getString(android.R.string.ok), null);
 								b.show();
 							} else
 								prefs.setName(nameView.getText().toString());
@@ -398,8 +398,8 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 						if (nickName.getText().length() == 0) {
 							success = false;
 							AlertDialog.Builder b = new AlertDialog.Builder(activity);
-							b.setMessage("You need a nickname silly :(");
-							b.setPositiveButton("OK", null);
+							b.setMessage(getResources().getString(R.string.enteranick));
+							b.setPositiveButton(getResources().getString(android.R.string.ok), null);
 							b.show();
 						} else {
 							ArrayList<String> nicks = new ArrayList<String>();
@@ -489,15 +489,15 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 				case ExpandableListView.PACKED_POSITION_TYPE_GROUP:
 					menu.setHeaderTitle("Server Options");
 					if (server.getClient().isConnected())
-						menu.add(CONTEXTMENU_SERVEROPTIONS, SERVEROPTIONS_DISCONNECT, 0, "Disconnect");
+						menu.add(CONTEXTMENU_SERVEROPTIONS, SERVEROPTIONS_DISCONNECT, 0, getResources().getString(R.string.disconnect));
 					else
-						menu.add(CONTEXTMENU_SERVEROPTIONS, SERVEROPTIONS_CONNECT, 0, "Connect");
-					menu.add(CONTEXTMENU_SERVEROPTIONS, SERVEROPTIONS_EDIT, 1, "Edit");
-					menu.add(CONTEXTMENU_SERVEROPTIONS, SERVEROPTIONS_DELETE, 2, "Delete");
+						menu.add(CONTEXTMENU_SERVEROPTIONS, SERVEROPTIONS_CONNECT, 0, getResources().getString(R.string.connect));
+					menu.add(CONTEXTMENU_SERVEROPTIONS, SERVEROPTIONS_EDIT, 1, getResources().getString(R.string.edit));
+					menu.add(CONTEXTMENU_SERVEROPTIONS, SERVEROPTIONS_DELETE, 2, getResources().getString(R.string.delete));
 					break;
 				case ExpandableListView.PACKED_POSITION_TYPE_CHILD:
 					menu.setHeaderTitle("Channel Options");
-					menu.add(CONTEXTMENU_CHANNELOPTIONS, CHANNELOPTIONS_PART, 0, "Part");
+					menu.add(CONTEXTMENU_CHANNELOPTIONS, CHANNELOPTIONS_PART, 0, getResources().getString(R.string.part));
 				}
 			}
 		} else if (v == this.getListView()) {
@@ -505,7 +505,7 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 			this.startActionMode(new ActionModeCallback(currentChannel.getMessages().get(info.position)));
 		} else if (v == this.fakeUserListView) {
 			if (currentChannel != null) {
-				menu.setHeaderTitle("Users");
+				menu.setHeaderTitle(getResources().getString(R.string.users));
 				contextUserList.clear();
 				org.pircbotx.Channel info = currentChannel.getChannelInfo();
 				if (info != null) {
@@ -543,7 +543,7 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 		}
 
 		public boolean onActionItemClicked(ActionMode actionMode, MenuItem menuItem) {
-			if (menuItem.getTitle().equals("Copy")) {
+			if (menuItem.getTitle().equals(getResources().getString(R.string.copy))) {
 				ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
 				String s = message.getContent().toString();
 				if (message.getNickname().length() > 0)
@@ -556,7 +556,6 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 		}
 
 		public void onDestroyActionMode(ActionMode actionMode) {
-
 			// a.overviewFragment.stopEdit();
 		}
 	}
@@ -1013,7 +1012,7 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 				if (message.length() > 0) {
 					if (this.currentChannel instanceof Server) {
 						this.currentChannel.addMessage(Channel.createError(SpannedString
-								.valueOf("Can't send messages to a server, it will never respond. :(")));
+								.valueOf(getResources().getString(R.string.cantmessageserver))));
 					} else {
 						this.currentChannel.sendMessage(message);
 					}

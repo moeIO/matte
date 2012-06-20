@@ -2,11 +2,14 @@
 <resources>
 
     <string name="app_name">MetroIRC</string>
+    <string name="entermessage">Enter Message</string>
+    <string name="send">Send</string>
     <string name="settings">Settings</string>
     <string name="addServer">Add Server</string>
     <string name="name">Name</string>
     <string name="hostname">Hostname</string>
     <string name="port">Port</string>
+    <string name="defaultport">6667</string>
     <string name="ssl">SSL</string>
     <string name="verifyssl">Verify SSL</string>
     <string name="password">Password</string>
@@ -29,6 +32,18 @@
     <string name="likeapp">If you like the app, want to send us images of your member or have some things you want added\n\n-Join #MetroIRC @ irc.rizon.net\n-Fork us on www.github.com/metroirc\n(we\'re open source!)\n-Drop us an email on </string>
     <string name="code">Code</string>
     <string name="ui">UI</string>
-    
-    
+    <string name="aureax">auREAX</string>
+    <string name="guykun">Guy-kun</string>
+    <string name="enteraserver">You need to enter a server name</string>
+    <string name="enteranick">You need a nickname silly :(</string>
+    <string name="serverexists">A server with this name already exists</string>
+    <string name="disconnect">Disconnect</string>
+    <string name="connect">Connect</string>
+    <string name="edit">Edit</string>
+    <string name="delete">Delete</string>
+    <string name="part">Part</string>
+    <string name="users">Users</string>
+    <string name="copy">Copy</string>
+    <string name="cantmessageserver">Can\'t send messages to a server, it will never respond. :(</string>
+
 </resources>

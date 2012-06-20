@@ -11,11 +11,9 @@
         android:layout_marginBottom="5dp"
         android:layout_marginLeft="10dp"
         android:layout_marginTop="5dp"
-        android:text="Medium Text"
+        android:text="@string/hostname"
         android:textAppearance="?android:attr/textAppearanceMedium"
         android:textColor="#9f9f9f"
         android:textStyle="bold" />
-
-
 
 </LinearLayout>

@@ -3,8 +3,8 @@
 
     <item
         android:id="@+id/copyOption"
+        android:icon="@drawable/ic_menu_copy_holo_dark"
         android:showAsAction="withText|always"
-        android:title="Copy"
-        android:icon="@drawable/ic_menu_copy_holo_dark"/>
+        android:title="@string/copy"/>
 
 </menu>

@@ -4,7 +4,7 @@
     <item
         android:id="@+id/usersOption"
         android:showAsAction="withText|always"
-        android:title="Users"
+        android:title="@string/users"
         android:icon="@drawable/ic_menu_cc"/>
 
 </menu>

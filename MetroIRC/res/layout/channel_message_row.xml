@@ -19,7 +19,7 @@
             android:ellipsize="end"
             android:gravity="right"
             android:singleLine="true"
-            android:text="Name"
+            android:text="@string/name"
             android:textAppearance="?android:attr/textAppearanceSmall"
             android:textColor="#2f8699"
             android:textSize="16dp"
@@ -38,7 +38,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:autoLink="web"
-            android:text="Message content"
+            android:text=""
             android:textAppearance="?android:attr/textAppearanceSmall"
             android:textColor="#343434"
             android:textSize="16dp" />
