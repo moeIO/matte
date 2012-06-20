@@ -2,6 +2,7 @@ package moe.lolis.metroirc;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 
@@ -48,6 +49,7 @@ import android.view.ViewStub;
 import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
 import android.widget.AdapterView;
+import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.ArrayAdapter;
 import android.widget.BaseExpandableListAdapter;
 import android.widget.Button;
@@ -503,14 +505,15 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 				org.pircbotx.Channel info = currentChannel.getChannelInfo();
 				if (info != null) {
 					Iterator<User> i = info.getUsers().iterator();
-					int in = 0;
 					while (i.hasNext()) {
 						User u = i.next();
 						contextUserList.add(u);
-						menu.add(CONTEXTMENU_USERLIST, 0, in, u.getNick());
-						in++;
 					}
-					// TODO: sort nick list
+					Collections.sort(contextUserList, new UserComparator(currentChannel));
+					for (int j = 0; j < contextUserList.size(); j++) {
+						// TODO: add username prefixes
+						menu.add(CONTEXTMENU_USERLIST, j, j, contextUserList.get(j).getNick());
+					}
 				}
 			}
 		}
@@ -594,7 +597,8 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 			}
 			break;
 		case CONTEXTMENU_USERLIST:
-			// Do nothing for user click for now
+			User user = contextUserList.get(item.getItemId());
+			this.sendText.append(user.getNick() + ": ");
 			break;
 		}
 
