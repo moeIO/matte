@@ -26,11 +26,11 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Binder;
 import android.os.IBinder;
 import android.text.Html;
-import android.util.Log;
 
 public class IRCService extends Service implements ServiceEventListener {
 	// Whether the activity is bound or not
@@ -49,8 +49,8 @@ public class IRCService extends Service implements ServiceEventListener {
 	private HashMap<String, Server> serverMap;
 	private ArrayList<Server> servers;
 
-	private Notification constantNotification;
-	private static final int CONSTANT_FOREGROUND_ID = 2;
+	private Notification.Builder notificationBuilder;
+	private static final int NOTIFICATION_ID = 1337;
 
 	@Override
 	public IBinder onBind(Intent intent) {
@@ -79,23 +79,18 @@ public class IRCService extends Service implements ServiceEventListener {
 			}
 		}
 
-		// Notification for foreground sevice
-		NotificationManager notificationManager = (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);
-
-		// XXX: Using the deprecated API to support <3.0 (Need to switch to new
-		// API + compat package)
-		int icon = moe.lolis.metroirc.R.drawable.ic_launcher;
-		this.constantNotification = new Notification(icon, "", 0);
-
-		Context context = getApplicationContext();
-		CharSequence contentTitle = "MetroIRC";
-		CharSequence contentText = "Running";
 		Intent notificationIntent = new Intent(this, ChannelActivity.class);
 		PendingIntent contentIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
 
-		this.constantNotification.setLatestEventInfo(context, contentTitle, contentText, contentIntent);
-		this.constantNotification.flags = Notification.FLAG_ONGOING_EVENT;
-		this.startForeground(CONSTANT_FOREGROUND_ID, constantNotification);
+		this.notificationBuilder = new Notification.Builder(getApplicationContext());
+		this.notificationBuilder.setSmallIcon(R.drawable.ic_launcher);
+		this.notificationBuilder.setAutoCancel(false);
+		this.notificationBuilder.setContentTitle("MetroIRC");
+		this.notificationBuilder.setContentText("Running");
+		this.notificationBuilder.setWhen(0);
+		this.notificationBuilder.setContentIntent(contentIntent);
+
+		this.startForeground(NOTIFICATION_ID, this.notificationBuilder.getNotification());
 
 	}
 
@@ -170,7 +165,6 @@ public class IRCService extends Service implements ServiceEventListener {
 			s.getClient().getListenerManager().removeListener(listener);
 			this.disconnect(s.getName());
 		}
-		// TODO store connected channels
 		this.stopForeground(true);
 		this.stopSelf();
 	}
@@ -250,42 +244,39 @@ public class IRCService extends Service implements ServiceEventListener {
 
 	// Requires server name because lolsubclassing
 	public void showMentionNotification(ChannelMessage message, Channel channel, String serverName) {
-		String ns = Context.NOTIFICATION_SERVICE;
-		NotificationManager mNotificationManager = (NotificationManager) getSystemService(ns);
-		int icon = R.drawable.notification;
-		CharSequence tickerText = message.getContent();
-		long when = System.currentTimeMillis();
-		Notification notification = new Notification(icon, tickerText, when);
-
-		Context context = getApplicationContext();
-		CharSequence contentTitle = "Mention by " + message.getNickname();
-		CharSequence contentText = message.getContent();
 		Intent notificationIntent = new Intent(this, ChannelActivity.class);
 		notificationIntent.putExtra("server", serverName);
 		notificationIntent.putExtra("channel", channel.getChannelInfo().getName());
 		PendingIntent contentIntent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-		notification.setLatestEventInfo(context, contentTitle, contentText, contentIntent);
 
-		notification.defaults |= Notification.DEFAULT_VIBRATE;
-		notification.defaults |= Notification.DEFAULT_LIGHTS;
-		notification.defaults |= Notification.DEFAULT_SOUND;
-		notification.flags |= Notification.FLAG_AUTO_CANCEL;
+		this.notificationBuilder = new Notification.Builder(getApplicationContext());
+		this.notificationBuilder.setSmallIcon(R.drawable.notification);
+		this.notificationBuilder.setAutoCancel(true);
+		this.notificationBuilder.setContentTitle("MetroIRC");
+		this.notificationBuilder.setContentText(message.getContent());
+		this.notificationBuilder.setWhen(System.currentTimeMillis());
+		this.notificationBuilder.setContentIntent(contentIntent);
+		this.notificationBuilder.setLights(Color.argb(200, 255, 150, 50), 300, 6000);
+		this.notificationBuilder.setDefaults(Notification.DEFAULT_SOUND | Notification.DEFAULT_VIBRATE);
 
-		final int NOTIFICATION_ID = 1;
-		mNotificationManager.notify(NOTIFICATION_ID, notification);
+		NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+		mNotificationManager.notify(123, this.notificationBuilder.getNotification());
 	}
 
 	public void updateNotification(int icon, String message) {
-		Context context = getApplicationContext();
 		Intent notificationIntent = new Intent(this, ChannelActivity.class);
 		PendingIntent contentIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
-		constantNotification.icon = icon;
-		constantNotification.when = System.currentTimeMillis();
-		constantNotification.setLatestEventInfo(context, "MetroIRC", message, contentIntent);
 
-		String ns = Context.NOTIFICATION_SERVICE;
-		NotificationManager mNotificationManager = (NotificationManager) getSystemService(ns);
-		mNotificationManager.notify(CONSTANT_FOREGROUND_ID, constantNotification);
+		this.notificationBuilder = new Notification.Builder(getApplicationContext());
+		this.notificationBuilder.setSmallIcon(icon);
+		this.notificationBuilder.setAutoCancel(false);
+		this.notificationBuilder.setContentTitle("MetroIRC");
+		this.notificationBuilder.setContentText(message);
+		this.notificationBuilder.setWhen(0);
+		this.notificationBuilder.setContentIntent(contentIntent);
+
+		NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+		mNotificationManager.notify(NOTIFICATION_ID, this.notificationBuilder.getNotification());
 	}
 
 	public void activeChannelMessageReceived(Channel channel, GenericMessage message) {
@@ -357,8 +348,9 @@ public class IRCService extends Service implements ServiceEventListener {
 
 	public void serverConnected(Server server) {
 		// Don't update for startup of non-autoconnect servers
-		if (constantNotification != null)
-			this.updateNotification(R.drawable.ic_launcher, "Connected");
+		// if (constantNotification != null)
+		// XXX this is no longer done?
+		this.updateNotification(R.drawable.ic_launcher, "Connected");
 		this.connectedEventListener.serverConnected(server);
 	}
 

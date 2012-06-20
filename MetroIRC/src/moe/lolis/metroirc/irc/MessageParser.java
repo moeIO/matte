@@ -150,6 +150,7 @@ public class MessageParser {
 	}
 		
 	public static int getInt(String str) {
+		@SuppressWarnings("unused")
 		int i = 0, val = 0;
 		
 		return val;

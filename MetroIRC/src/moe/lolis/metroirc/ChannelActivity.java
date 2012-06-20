@@ -8,15 +8,12 @@ import java.util.Iterator;
 import moe.lolis.metroirc.backend.IRCService;
 import moe.lolis.metroirc.backend.ServiceEventListener;
 import moe.lolis.metroirc.irc.Channel;
-import moe.lolis.metroirc.irc.Client;
 import moe.lolis.metroirc.irc.CommandInterpreter;
 import moe.lolis.metroirc.irc.GenericMessage;
 import moe.lolis.metroirc.irc.Server;
 import moe.lolis.metroirc.irc.ServerPreferences;
 
-import org.pircbotx.PircBotX;
 import org.pircbotx.User;
-import org.pircbotx.hooks.events.ChannelInfoEvent;
 
 import android.app.ActionBar;
 import android.app.AlertDialog;
@@ -643,13 +640,12 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 			else
 				content.setTextColor(activity.getResources().getColor(R.color.channelNormal));
 			content.setText(message.getContent());
-			if (message.getEmbeddedYoutube() != null) {
-				// TODO: Toggle
-				if (false) {
-					AsyncYoutubeLoad videoPreviewLoader = new AsyncYoutubeLoad();
-					videoPreviewLoader.execute(new Object[] { content, message });
-				}
-			}
+			/*
+			 * if (message.getEmbeddedYoutube() != null) { if (false) {
+			 * AsyncYoutubeLoad videoPreviewLoader = new AsyncYoutubeLoad();
+			 * videoPreviewLoader.execute(new Object[] { content, message }); }
+			 * }
+			 */
 			name.setText(message.getNickname());
 			name.setTextColor(getNickColour(message.getNickname()));
 			if (message.isHighlighted())
@@ -891,7 +887,6 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 						activity.setCurrentChannelView(chan.getServer().getChannels().get(nextPos));
 					else
 						activity.setCurrentChannelView(chan.getServer());
-					// TODO remove channel from auto list
 				}
 			});
 		}

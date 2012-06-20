@@ -2,7 +2,6 @@ package moe.lolis.metroirc.irc;
 
 import java.util.Date;
 
-import android.text.SpannableString;
 import android.text.Spanned;
 
 public class ChannelMessage implements GenericMessage {
