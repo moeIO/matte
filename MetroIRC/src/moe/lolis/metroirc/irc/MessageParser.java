@@ -61,9 +61,13 @@ public class MessageParser {
 			ch = message.codePointAt(i);
 
 			// Bold
-			if (ch == BOLD && !has_bold) {
-				html += "<strong>";
-				has_bold = true;
+			if (ch == BOLD) {
+				if (!has_bold) {
+					html += "<strong>";
+				} else {
+					html += "</strong>";
+				}
+				has_bold = !has_bold;
 			}
 			// Colour
 			else if (ch == COLOUR) {
@@ -85,9 +89,13 @@ public class MessageParser {
 				has_colour = true;
 			}
 			// Underline
-			else if (ch == UNDERLINE && !has_underline) {
-				html += "<u>";
-				has_underline = true;
+			else if (ch == UNDERLINE) {
+				if (!has_underline) {
+					html += "<u>";
+				} else {
+					html += "</u>";
+				}
+				has_underline = !has_underline;
 			}
 			// Text reverse
 			else if (ch == REVERSE) {
@@ -97,7 +105,7 @@ public class MessageParser {
 				}
 				
 				// Leet colour swapping algorithms
-				foreground = colorCodesToHex.length - foreground;
+				foreground = (colorCodesToHex.length - 1) - foreground;
 				
 				html += "<font color='" + colorCodesToHex[foreground] + "'>";
 				is_reversed = true;
