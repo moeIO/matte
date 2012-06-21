@@ -13,6 +13,7 @@ import moe.lolis.metroirc.irc.CommandInterpreter;
 import moe.lolis.metroirc.irc.GenericMessage;
 import moe.lolis.metroirc.irc.Server;
 import moe.lolis.metroirc.irc.ServerPreferences;
+import moe.lolis.metroirc.irc.UserComparator;
 
 import org.pircbotx.User;
 
