@@ -25,6 +25,10 @@ public class MessageParser {
 		}
 	}
 	
+	public static int countDigits(int n) {
+		return n == 0 ? 1 : (int) Math.floor(Math.log10(Math.abs(n))) + (n < 0 ? 1 : 0);
+	}
+	
 	// Do not ask questions; we won't either.
 	public static int parseIRCColour(String message, int offset) {
 		int j = offset, k = 1, n = 0, ch = 0;
@@ -75,14 +79,14 @@ public class MessageParser {
 				i += Character.charCount(ch);
 				foreground = parseIRCColour(message, i);
 				// Increment i by the number of characters in that digit in base-10.
-				i += Math.floor(Math.log10(foreground));
+				i += countDigits(foreground);
 				// Convert foreground to an array index.
 				foreground = Math.max(foreground - 1, 0);
 				
 				// If the next character is a comma (e.g. ^3,9) , parse but ignore it -- we can't do background colours.
 				if (message.codePointAt(i + 1) == 0x2C) {
 					i += 2;
-					i += Math.floor(Math.log10(parseIRCColour(message, i)));
+					i += countDigits(parseIRCColour(message, i));
 				} 
 				
 				html += "<font color='" + colorCodesToHex[foreground] + "'>";
