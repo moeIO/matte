@@ -1,21 +1,10 @@
-package moe.lolis.metroirc.backend;
+package com.moeio.matte.backend;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 
 import javax.net.ssl.SSLSocketFactory;
-
-import moe.lolis.metroirc.ChannelActivity;
-import moe.lolis.metroirc.R;
-import moe.lolis.metroirc.irc.Channel;
-import moe.lolis.metroirc.irc.ChannelMessage;
-import moe.lolis.metroirc.irc.Client;
-import moe.lolis.metroirc.irc.ClientManager;
-import moe.lolis.metroirc.irc.GenericMessage;
-import moe.lolis.metroirc.irc.MessageParser;
-import moe.lolis.metroirc.irc.Server;
-import moe.lolis.metroirc.irc.ServerPreferences;
 
 import org.pircbotx.UtilSSLSocketFactory;
 
@@ -31,6 +20,17 @@ import android.os.AsyncTask;
 import android.os.Binder;
 import android.os.IBinder;
 import android.text.Html;
+
+import com.moeio.matte.ChannelActivity;
+import com.moeio.matte.R;
+import com.moeio.matte.irc.Channel;
+import com.moeio.matte.irc.ChannelMessage;
+import com.moeio.matte.irc.Client;
+import com.moeio.matte.irc.ClientManager;
+import com.moeio.matte.irc.GenericMessage;
+import com.moeio.matte.irc.MessageParser;
+import com.moeio.matte.irc.Server;
+import com.moeio.matte.irc.ServerPreferences;
 
 public class IRCService extends Service implements ServiceEventListener {
 	// Whether the activity is bound or not
@@ -380,7 +380,7 @@ public class IRCService extends Service implements ServiceEventListener {
 	public boolean isAppActive() {
 		return this.appActive;
 	}
-	
+
 	public boolean serverNameExists(String name) {
 		return this.serverMap.containsKey(name);
 	}

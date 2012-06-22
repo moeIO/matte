@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="moe.lolis.metroirc"
+    package="com.moeio.matte"
     android:versionCode="1"
     android:versionName="1.0" >
 
@@ -24,7 +24,8 @@
             </intent-filter>
         </activity>
 
-        <service android:name=".backend.IRCService" />
+        <service android:name=".backend.IRCService" >
+        </service>
 
         <activity
             android:name=".SettingsActivity"

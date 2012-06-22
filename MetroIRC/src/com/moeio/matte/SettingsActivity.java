@@ -1,4 +1,4 @@
-package moe.lolis.metroirc;
+package com.moeio.matte;
 
 import android.app.ActionBar;
 import android.app.Activity;

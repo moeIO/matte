@@ -1,4 +1,4 @@
-package moe.lolis.metroirc.irc;
+package com.moeio.matte.irc;
 
 public class MessageParser {
 	

@@ -1,4 +1,4 @@
-package moe.lolis.metroirc.irc;
+package com.moeio.matte.irc;
 
 import java.util.Comparator;
 import org.pircbotx.Channel;
@@ -7,7 +7,7 @@ import org.pircbotx.User;
 public class UserComparator implements Comparator<User> {
 	private Channel channel;
 
-	public UserComparator(moe.lolis.metroirc.irc.Channel channel) {
+	public UserComparator(com.moeio.matte.irc.Channel channel) {
 		this.channel = channel.getChannelInfo();
 	}
 

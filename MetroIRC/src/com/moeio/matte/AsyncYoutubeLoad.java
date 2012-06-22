@@ -1,9 +1,10 @@
-package moe.lolis.metroirc;
+package com.moeio.matte;
 
 import java.io.InputStream;
 import java.net.URL;
 
-import moe.lolis.metroirc.irc.GenericMessage;
+import com.moeio.matte.irc.GenericMessage;
+
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.text.Spannable;

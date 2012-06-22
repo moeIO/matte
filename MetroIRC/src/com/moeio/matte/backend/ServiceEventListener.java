@@ -1,9 +1,10 @@
-package moe.lolis.metroirc.backend;
+package com.moeio.matte.backend;
 
 import java.util.Collection;
-import moe.lolis.metroirc.irc.Channel;
-import moe.lolis.metroirc.irc.GenericMessage;
-import moe.lolis.metroirc.irc.Server;
+
+import com.moeio.matte.irc.Channel;
+import com.moeio.matte.irc.GenericMessage;
+import com.moeio.matte.irc.Server;
 
 /*
  * Represents an object that receives events from the MoeService

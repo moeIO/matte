@@ -1,16 +1,8 @@
-package moe.lolis.metroirc.backend;
+package com.moeio.matte.backend;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Set;
-
-import moe.lolis.metroirc.R;
-import moe.lolis.metroirc.irc.Channel;
-import moe.lolis.metroirc.irc.ChannelMessage;
-import moe.lolis.metroirc.irc.Client;
-import moe.lolis.metroirc.irc.MessageParser;
-import moe.lolis.metroirc.irc.Server;
-import moe.lolis.metroirc.irc.ServerMessage;
 
 import org.pircbotx.hooks.ListenerAdapter;
 import org.pircbotx.hooks.events.ConnectEvent;
@@ -27,6 +19,14 @@ import org.pircbotx.hooks.events.TopicEvent;
 
 import android.text.Html;
 import android.text.SpannedString;
+
+import com.moeio.matte.R;
+import com.moeio.matte.irc.Channel;
+import com.moeio.matte.irc.ChannelMessage;
+import com.moeio.matte.irc.Client;
+import com.moeio.matte.irc.MessageParser;
+import com.moeio.matte.irc.Server;
+import com.moeio.matte.irc.ServerMessage;
 
 public class IRCListener extends ListenerAdapter<Client> {
 	private IRCService service;

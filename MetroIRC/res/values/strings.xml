@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">MetroIRC</string>
+    <string name="app_name">Matte</string>
     <string name="entermessage">Enter Message</string>
     <string name="send">Send</string>
     <string name="settings">Settings</string>
@@ -27,9 +27,9 @@
     <string name="channel_hint">Enter Message</string>
     <string name="server_hint">Type \"/join #channelname\"</string>
     <string name="welcome0">Hey There</string>
-    <string name="welcome1">Welcome to MetroIRC. \n\nMetroIRC is basically what we see as a simple, sweet-looking and intuitive IRC client.</string>
+    <string name="welcome1">Welcome to Matte. \n\nMatte is basically what we see as a simple, sweet-looking and intuitive IRC client.</string>
     <string name="welcome2">To do most of the things you\'re familiar with in IRC, simply use commands such as /join /nick and long-press channels in the channel list.</string>
-    <string name="likeapp">If you like the app, want to send us images of your member or have some things you want added\n\n-Join #MetroIRC @ irc.rizon.net\n-Fork us on www.github.com/metroirc\n(we\'re open source!)\n-Drop us an email on </string>
+    <string name="likeapp">If you like the app, want to send us images of your member or have some things you want added\n\n-Join #moeIO @ irc.rizon.net\n-Fork us on www.github.com/moeIO/matte\n(we\'re open source!)\n-Drop us an email on moeIOdevs@gmail.com</string>
     <string name="code">Code</string>
     <string name="ui">UI</string>
     <string name="aureax">auREAX</string>

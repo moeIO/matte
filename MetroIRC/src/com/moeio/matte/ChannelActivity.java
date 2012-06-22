@@ -1,19 +1,10 @@
-package moe.lolis.metroirc;
+package com.moeio.matte;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
-
-import moe.lolis.metroirc.backend.IRCService;
-import moe.lolis.metroirc.backend.ServiceEventListener;
-import moe.lolis.metroirc.irc.Channel;
-import moe.lolis.metroirc.irc.CommandInterpreter;
-import moe.lolis.metroirc.irc.GenericMessage;
-import moe.lolis.metroirc.irc.Server;
-import moe.lolis.metroirc.irc.ServerPreferences;
-import moe.lolis.metroirc.irc.UserComparator;
 
 import org.pircbotx.User;
 
@@ -65,6 +56,15 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.TextView.OnEditorActionListener;
+
+import com.moeio.matte.backend.IRCService;
+import com.moeio.matte.backend.ServiceEventListener;
+import com.moeio.matte.irc.Channel;
+import com.moeio.matte.irc.CommandInterpreter;
+import com.moeio.matte.irc.GenericMessage;
+import com.moeio.matte.irc.Server;
+import com.moeio.matte.irc.ServerPreferences;
+import com.moeio.matte.irc.UserComparator;
 
 public class ChannelActivity extends ListActivity implements ServiceEventListener, OnClickListener, OnEditorActionListener, OnChildClickListener,
 		OnGroupClickListener {

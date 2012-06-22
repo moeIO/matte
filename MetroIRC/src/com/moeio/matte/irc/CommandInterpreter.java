@@ -1,9 +1,10 @@
-package moe.lolis.metroirc.irc;
+package com.moeio.matte.irc;
 
-import moe.lolis.metroirc.ChannelActivity;
-import moe.lolis.metroirc.R;
-import moe.lolis.metroirc.backend.IRCService;
 import android.text.SpannedString;
+
+import com.moeio.matte.ChannelActivity;
+import com.moeio.matte.R;
+import com.moeio.matte.backend.IRCService;
 
 public class CommandInterpreter {
 	private IRCService service;

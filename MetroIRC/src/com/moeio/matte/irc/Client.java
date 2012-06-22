@@ -1,4 +1,4 @@
-package moe.lolis.metroirc.irc;
+package com.moeio.matte.irc;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -11,14 +11,14 @@ import java.util.Arrays;
 
 import javax.net.SocketFactory;
 
-import moe.lolis.metroirc.R;
-
 import org.pircbotx.PircBotX;
 import org.pircbotx.exception.IrcException;
 import org.pircbotx.exception.NickAlreadyInUseException;
 import org.pircbotx.hooks.events.ConnectEvent;
 
 import android.content.Context;
+
+import com.moeio.matte.R;
 
 public class Client extends PircBotX {
 
