@@ -444,11 +444,18 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 							prefs.saveToSharedPreferences(rawPreferences);
 							String newName = prefs.getName();
 
-							moeService.renameServer(originalServerName, newName);
-							if (server != null && server.getServerInfo().getBot().isConnected()) {
-								moeService.disconnect(newName);
+							if (server != null) {
+								moeService.renameServer(originalServerName, newName);
+								if (server != null && server.getServerInfo().getBot().isConnected()) {
+									moeService.disconnect(newName);
+								}
+							} else {
+								moeService.addServer(prefs);
 							}
-							moeService.connect(newName);
+							
+							if (prefs.isAutoConnected()) {
+								moeService.connect(newName);
+							}
 
 							d.dismiss();
 						}
