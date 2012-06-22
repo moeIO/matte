@@ -225,7 +225,8 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 	@Override
 	public void onDestroy() {
 		// Make current channel inactive.
-		this.currentChannel.isActive(false);
+		if (currentChannel != null)
+			this.currentChannel.isActive(false);
 		super.onDestroy();
 	}
 
