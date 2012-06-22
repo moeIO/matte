@@ -52,6 +52,7 @@
                 android:ems="10"
                 android:hint="@string/entermessage"
                 android:imeOptions="actionSend"
+                android:inputType="textCapSentences"
                 android:textColor="#000000"
                 android:textCursorDrawable="@null" />
 

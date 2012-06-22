@@ -129,7 +129,8 @@ public class IRCService extends Service implements ServiceEventListener {
 
 	public void renameServer(String from, String to) {
 		Server server = this.serverMap.remove(from);
-		server.setName(to);
+		if (server != null)
+			server.setName(to);
 		this.serverMap.put(to, server);
 	}
 
