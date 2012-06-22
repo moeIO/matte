@@ -417,7 +417,7 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 						}
 
 						if (realnameView.getText().length() == 0) {
-							prefs.setRealname("MatteCUser");
+							prefs.setRealname("MatteUser");
 						} else {
 							prefs.setRealname(realnameView.getText().toString());
 						}
