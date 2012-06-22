@@ -25,6 +25,7 @@ import android.content.SharedPreferences.Editor;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.os.Vibrator;
 import android.text.SpannableString;
 import android.text.SpannedString;
 import android.view.ActionMode;
@@ -113,6 +114,9 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 	private View fakeUserListView;
 	private ArrayList<User> contextUserList;
 
+	// //// Stop thinking d-dirty things b-baka!
+	private Vibrator vibrator;
+
 	/*
 	 * UI callbacks.
 	 */
@@ -124,6 +128,8 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 		this.setContentView(R.layout.channel_layout);
 		this.activity = this;
 		this.inflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+		vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+
 		// Prevent keyboard showing at startup
 		this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
 
@@ -316,7 +322,8 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 				final TextView realnameView = (TextView) dialogView.findViewById(R.id.addServer_realname);
 				final TextView autoconnectCommands = (TextView) dialogView.findViewById(R.id.addServer_autoconnectcommands);
 				final CheckBox autoconnect = (CheckBox) dialogView.findViewById(R.id.addServer_connectatstartup);
-				final CheckBox log = (CheckBox) dialogView.findViewById(R.id.addServer_log);
+				// final CheckBox log = (CheckBox)
+				// dialogView.findViewById(R.id.addServer_log);
 
 				String n = null;
 				if (server != null)
@@ -347,7 +354,7 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 					}
 					autoconnectCommands.setText(commands);
 					autoconnect.setChecked(prefs.isAutoConnected());
-					log.setChecked(prefs.isLogged());
+					// log.setChecked(prefs.isLogged());
 				}
 				b.setOnClickListener(new View.OnClickListener() {
 
@@ -430,7 +437,7 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 						}
 
 						prefs.isAutoConnected(autoconnect.isChecked());
-						prefs.isLogged(log.isChecked());
+						// prefs.isLogged(log.isChecked());
 
 						if (success) {
 							prefs.saveToSharedPreferences(rawPreferences);
@@ -504,6 +511,7 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 			}
 		} else if (v == this.getListView()) {
 			AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) menuInfo;
+			this.vibrator.vibrate(150);
 			this.startActionMode(new ActionModeCallback(currentChannel.getMessages().get(info.position)));
 		} else if (v == this.fakeUserListView) {
 			if (currentChannel != null) {
