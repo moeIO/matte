@@ -225,7 +225,7 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 	@Override
 	public void onDestroy() {
 		// Make current channel inactive.
-		if (currentChannel != null)
+		if (this.currentChannel != null)
 			this.currentChannel.isActive(false);
 		super.onDestroy();
 	}
@@ -534,8 +534,8 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 					}
 					Collections.sort(contextUserList, new UserComparator(currentChannel));
 					for (int j = 0; j < contextUserList.size(); j++) {
-						// TODO: add username prefixes
-						menu.add(CONTEXTMENU_USERLIST, j, j, contextUserList.get(j).getNick());
+						User user = contextUserList.get(j);
+						menu.add(CONTEXTMENU_USERLIST, j, j, UserComparator.getPrefix(user, currentChannel) + user.getNick());
 					}
 				}
 			}
@@ -984,7 +984,6 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 	}
 
 	private void setCurrentChannelView(Channel channel) {
-
 		if (this.currentChannel != null)
 			this.currentChannel.isActive(false);
 		channel.isActive(true);

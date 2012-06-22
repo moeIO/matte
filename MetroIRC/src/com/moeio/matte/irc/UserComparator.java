@@ -1,14 +1,31 @@
 package com.moeio.matte.irc;
 
 import java.util.Comparator;
-import org.pircbotx.Channel;
 import org.pircbotx.User;
 
 public class UserComparator implements Comparator<User> {
-	private Channel channel;
+	private org.pircbotx.Channel channel;
 
 	public UserComparator(com.moeio.matte.irc.Channel channel) {
 		this.channel = channel.getChannelInfo();
+	}
+	
+	public static String getPrefix(User user, Channel chan) {
+		org.pircbotx.Channel channel = chan.getChannelInfo();
+		if (user.isIrcop()) {
+			return "!";
+		} else if (channel.isOwner(user)) {
+			return "~";
+		} else if (channel.isSuperOp(user)) {
+			return "&";
+		} else if (channel.isOp(user)) {
+			return "@";
+		} else if (channel.isHalfOp(user)) {
+			return "%";
+		} else if (channel.hasVoice(user)) {
+			return "+";
+		}
+		return "";
 	}
 
 	public int compare(User u1, User u2) {
