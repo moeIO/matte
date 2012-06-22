@@ -365,7 +365,8 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 							b.setPositiveButton(getResources().getString(android.R.string.ok), null);
 							b.show();
 						} else {
-							if (!nameView.getText().toString().equals(originalServerName) && moeService.serverNameExists(nameView.getText().toString())) {
+							if (!nameView.getText().toString().equals(originalServerName)
+									&& moeService.serverNameExists(nameView.getText().toString())) {
 								success = false;
 								AlertDialog.Builder b = new AlertDialog.Builder(activity);
 								b.setMessage(getResources().getString(R.string.serverexists));
@@ -410,13 +411,13 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 						}
 
 						if (usernameView.getText().length() == 0) {
-							prefs.setUsername("MetroIRCUser");
+							prefs.setUsername("MatteUser");
 						} else {
 							prefs.setUsername(usernameView.getText().toString());
 						}
 
 						if (realnameView.getText().length() == 0) {
-							prefs.setRealname("MetroIRCUser");
+							prefs.setRealname("MatteCUser");
 						} else {
 							prefs.setRealname(realnameView.getText().toString());
 						}

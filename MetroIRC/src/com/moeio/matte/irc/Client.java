@@ -33,7 +33,7 @@ public class Client extends PircBotX {
 		this.context = context;
 		this.setName("JohnDoe");
 		this.setLogin("johndoe");
-		this.setVersion("MetroIRC v" + VERSION);
+		this.setVersion("Matte v" + VERSION);
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
