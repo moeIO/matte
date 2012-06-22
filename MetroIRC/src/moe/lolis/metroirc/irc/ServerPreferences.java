@@ -330,9 +330,5 @@ public class ServerPreferences {
 		editor.putInt("server_count", serverCount - 1);
 		editor.commit();
 	}
-
-	public static boolean serverNameExists(SharedPreferences sharedPreferences, String name) {
-		// TODO Implement
-		return false;
-	}
+	
 }

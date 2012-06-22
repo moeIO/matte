@@ -13,6 +13,7 @@ import moe.lolis.metroirc.irc.CommandInterpreter;
 import moe.lolis.metroirc.irc.GenericMessage;
 import moe.lolis.metroirc.irc.Server;
 import moe.lolis.metroirc.irc.ServerPreferences;
+import moe.lolis.metroirc.irc.UserComparator;
 
 import org.pircbotx.User;
 
@@ -364,8 +365,7 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 							b.setPositiveButton(getResources().getString(android.R.string.ok), null);
 							b.show();
 						} else {
-							if (!nameView.getText().toString().equals(originalServerName)
-									&& ServerPreferences.serverNameExists(rawPreferences, nameView.getText().toString())) {
+							if (!nameView.getText().toString().equals(originalServerName) && moeService.serverNameExists(nameView.getText().toString())) {
 								success = false;
 								AlertDialog.Builder b = new AlertDialog.Builder(activity);
 								b.setMessage(getResources().getString(R.string.serverexists));

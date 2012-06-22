@@ -380,5 +380,9 @@ public class IRCService extends Service implements ServiceEventListener {
 	public boolean isAppActive() {
 		return this.appActive;
 	}
+	
+	public boolean serverNameExists(String name) {
+		return this.serverMap.containsKey(name);
+	}
 
 }
