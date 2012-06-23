@@ -445,6 +445,7 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 							String newName = prefs.getName();
 
 							if (server != null) {
+								server.getClient().loadFromPreferences(prefs);
 								moeService.renameServer(originalServerName, newName);
 								if (server != null && server.getServerInfo().getBot().isConnected()) {
 									moeService.disconnect(newName);
@@ -599,11 +600,13 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 				this.showServerEditDialog(server);
 				break;
 			case SERVEROPTIONS_DELETE:
-				if (currentChannel.getServer().getName().equals(server.getName())) {
-					activity.adapter.setMessages(new ArrayList<GenericMessage>());
-					activity.setTitle("");
+				if (this.currentChannel != null && this.currentChannel.getServer().getName().equals(server.getName())) {
+					this.activity.adapter.setMessages(new ArrayList<GenericMessage>());
+					this.activity.setTitle("");
 				}
-				moeService.disconnect(server.getName());
+				if (server.getClient().isConnected()) {
+					this.moeService.disconnect(server.getName());
+				}
 				server.getClient().getServerPreferences().deleteFromSharedPreferences(activity.getSharedPreferences("servers", Context.MODE_PRIVATE));
 				activity.channelAdapter.notifyDataSetChanged();
 				break;
@@ -959,9 +962,10 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 
 			this.runOnUiThread(new Runnable() {
 				public void run() {
-					serv.addMessage(Server.createError(SpannableString.valueOf(err)));
+					GenericMessage e = Server.createError(SpannableString.valueOf(err));
+					serv.addMessage(e);
 					for (Channel channel : serv.getChannels()) {
-						channel.addMessage(Channel.createError(SpannableString.valueOf(err)));
+						channel.addMessage(e);
 					}
 
 					if (adapter != null) {

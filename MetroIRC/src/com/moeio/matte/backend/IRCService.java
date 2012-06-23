@@ -103,8 +103,8 @@ public class IRCService extends Service implements ServiceEventListener {
 		Server s = this.getServer(serverName);
 
 		if (s != null && s.getServerInfo() != null) {
-			if (s.getServerInfo().getBot().isConnected()) {
-				s.getServerInfo().getBot().disconnect();
+			if (s.getClient().isConnected()) {
+				s.getClient().disconnect();
 			}
 			for (Channel c : s.getChannels()) {
 				s.removeChannel(c.getName());
