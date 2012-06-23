@@ -75,7 +75,7 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 	private MessageAdapter adapter;
 	private ChannelListAdapter channelAdapter;
 
-	private static boolean isStarted;
+	private boolean isStarted;
 	// IRC backend.
 	private IRCService moeService;
 	private CommandInterpreter commandInterpreter;
@@ -452,7 +452,7 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 							} else {
 								moeService.addServer(prefs);
 							}
-							
+
 							if (prefs.isAutoConnected()) {
 								moeService.connect(newName);
 							}
@@ -599,7 +599,7 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 				this.showServerEditDialog(server);
 				break;
 			case SERVEROPTIONS_DELETE:
-				if (currentChannel.getServer().getName().equals(server.getName())) {
+				if (currentChannel != null && currentChannel.getServer().getName().equals(server.getName())) {
 					activity.adapter.setMessages(new ArrayList<GenericMessage>());
 					activity.setTitle("");
 				}
