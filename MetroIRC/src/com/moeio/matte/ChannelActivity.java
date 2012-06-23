@@ -604,11 +604,9 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 					this.activity.adapter.setMessages(new ArrayList<GenericMessage>());
 					this.activity.setTitle("");
 				}
-				if (server.getClient().isConnected()) {
-					this.moeService.disconnect(server.getName());
-				}
-				server.getClient().getServerPreferences().deleteFromSharedPreferences(activity.getSharedPreferences("servers", Context.MODE_PRIVATE));
-				activity.channelAdapter.notifyDataSetChanged();
+				server.getClient().getServerPreferences().deleteFromSharedPreferences(this.activity.getSharedPreferences("servers", Context.MODE_PRIVATE));
+				this.moeService.deleteServer(server.getName());
+				this.activity.channelAdapter.notifyDataSetChanged();
 				break;
 			}
 			break;

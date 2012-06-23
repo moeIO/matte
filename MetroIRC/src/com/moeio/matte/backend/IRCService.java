@@ -133,6 +133,15 @@ public class IRCService extends Service implements ServiceEventListener {
 			server.setName(to);
 		this.serverMap.put(to, server);
 	}
+	
+	public void deleteServer(String name) {
+		Server server = this.serverMap.get(name);
+		if (server.getClient().isConnected()) {
+			this.disconnect(name);
+		}
+		this.serverMap.remove(name);
+		this.servers.remove(this.servers.indexOf(server));
+	}
 
 	@Override
 	public void onDestroy() {
