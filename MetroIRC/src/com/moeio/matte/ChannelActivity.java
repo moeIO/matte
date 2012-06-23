@@ -75,7 +75,7 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 	private MessageAdapter adapter;
 	private ChannelListAdapter channelAdapter;
 
-	private static boolean isStarted;
+	private boolean isStarted;
 	// IRC backend.
 	private IRCService moeService;
 	private CommandInterpreter commandInterpreter;
@@ -453,7 +453,7 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 							} else {
 								moeService.addServer(prefs);
 							}
-							
+
 							if (prefs.isAutoConnected()) {
 								moeService.connect(newName);
 							}

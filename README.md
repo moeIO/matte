@@ -1,11 +1,11 @@
-metroirc
+Matte
 ========
 
 Android IRC client with an interface that doesn't want to make you stab your eyes out.
 
 License
 -------
-    MetroIRC - an Android IRC client
+    Matte - an Android IRC client
     Copyright (C) 2012 auREAX, Guy-kun
 
     This program is free software: you can redistribute it and/or modify
