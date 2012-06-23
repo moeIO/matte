@@ -250,12 +250,13 @@ public class ServerPreferences {
 		String prefix = "server_";
 		SharedPreferences.Editor editor = sharedPreferences.edit();
 		if (this.preferenceSpot >= 0) {
-			prefix += this.preferenceSpot + "_";
+			
 		} else {
 			int count = sharedPreferences.getInt("server_count", 0);
 			editor.putInt("server_count", count + 1);
-			prefix += count + "_";
+			this.preferenceSpot = count;
 		}
+		prefix += this.preferenceSpot + "_";
 
 		editor.putString(prefix + "name", this.getName());
 		editor.putInt(prefix + "nick_count", this.nicknames.size());

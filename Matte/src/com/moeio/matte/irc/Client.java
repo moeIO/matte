@@ -145,7 +145,7 @@ public class Client extends PircBotX {
 	@Override
 	public void joinChannel(String channel) {
 		this.getServerPreferences().addAutoChannel(channel);
-		this.getServerPreferences().saveToSharedPreferences(context.getSharedPreferences("servers", Context.MODE_PRIVATE));
+		this.getServerPreferences().saveToSharedPreferences(this.context.getSharedPreferences("servers", Context.MODE_PRIVATE));
 		super.joinChannel(channel);
 	}
 
@@ -154,21 +154,21 @@ public class Client extends PircBotX {
 		// TODO Channels with passwords aren't stored for autoconnect and will
 		// fail to connect
 		this.getServerPreferences().addAutoChannel(channel);
-		this.getServerPreferences().saveToSharedPreferences(context.getSharedPreferences("servers", Context.MODE_PRIVATE));
+		this.getServerPreferences().saveToSharedPreferences(this.context.getSharedPreferences("servers", Context.MODE_PRIVATE));
 		super.joinChannel(channel, password);
 	}
 
 	@Override
 	public void partChannel(org.pircbotx.Channel channel) {
 		this.getServerPreferences().removeAutoChannel(channel.getName());
-		this.getServerPreferences().saveToSharedPreferences(context.getSharedPreferences("servers", Context.MODE_PRIVATE));
+		this.getServerPreferences().saveToSharedPreferences(this.context.getSharedPreferences("servers", Context.MODE_PRIVATE));
 		super.partChannel(channel);
 	}
 
 	@Override
 	public void partChannel(org.pircbotx.Channel channel, String reason) {
 		this.getServerPreferences().removeAutoChannel(channel.getName());
-		this.getServerPreferences().saveToSharedPreferences(context.getSharedPreferences("servers", Context.MODE_PRIVATE));
+		this.getServerPreferences().saveToSharedPreferences(this.context.getSharedPreferences("servers", Context.MODE_PRIVATE));
 		super.partChannel(channel);
 	}
 

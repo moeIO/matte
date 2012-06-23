@@ -9,8 +9,8 @@
 *.class
 
 # generated files
-bin/
-gen/
+Matte/bin/
+Matte/gen/
 
 # Local configuration file (sdk path, etc)
-local.properties
+Matte/local.properties
