@@ -63,5 +63,7 @@
     <string name="invalidchannel">Invalid channel name</string>
     <string name="nickinuse">Nickname is already in use</string>
     <string name="cool">Cool</string>
+    <string name="notinchannel">Not currently in channel</string>
+    <string name="nosuchuser">User does not exist</string>
     
 </resources>

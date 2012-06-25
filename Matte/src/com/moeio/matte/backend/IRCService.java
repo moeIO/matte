@@ -29,6 +29,7 @@ import com.moeio.matte.irc.Client;
 import com.moeio.matte.irc.ClientManager;
 import com.moeio.matte.irc.GenericMessage;
 import com.moeio.matte.irc.MessageParser;
+import com.moeio.matte.irc.Query;
 import com.moeio.matte.irc.Server;
 import com.moeio.matte.irc.ServerPreferences;
 
@@ -289,19 +290,12 @@ public class IRCService extends Service implements ServiceEventListener {
 		mNotificationManager.notify(NOTIFICATION_ID, this.notificationBuilder.getNotification());
 	}
 
-	public void activeChannelMessageReceived(Channel channel, GenericMessage message) {
+	public void channelMessageReceived(Channel channel, GenericMessage message, boolean active) {
 		MessageParser.parseSpecial(message);
 		if (this.connectedEventListener == null) {
 			channel.addMessage(message);
 		} else
-			this.connectedEventListener.activeChannelMessageReceived(channel, message);
-	}
-
-	public void inactiveChannelMessageReceived(Channel channel, GenericMessage message) {
-		if (this.connectedEventListener == null) {
-			channel.addMessage(message);
-		} else
-			this.connectedEventListener.inactiveChannelMessageReceived(channel, message);
+			this.connectedEventListener.channelMessageReceived(channel, message, active);
 	}
 
 	public void statusMessageReceived(Channel channel, GenericMessage message) {
@@ -310,6 +304,15 @@ public class IRCService extends Service implements ServiceEventListener {
 			channel.addMessage(message);
 		} else
 			this.connectedEventListener.statusMessageReceived(channel, message);
+	}
+	
+	public void queryMessageReceived(Query query, GenericMessage message, boolean active) {
+		MessageParser.parseSpecial(message);
+		
+		if (this.connectedEventListener == null) {
+			query.addMessage(message);
+		} else
+			this.connectedEventListener.queryMessageReceived(query, message, active);
 	}
 
 	public Server getServer(String name) {

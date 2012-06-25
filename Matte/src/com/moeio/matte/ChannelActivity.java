@@ -27,7 +27,6 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Vibrator;
 import android.text.SpannableString;
-import android.text.SpannedString;
 import android.view.ActionMode;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
@@ -63,6 +62,7 @@ import com.moeio.matte.backend.ServiceEventListener;
 import com.moeio.matte.irc.Channel;
 import com.moeio.matte.irc.CommandInterpreter;
 import com.moeio.matte.irc.GenericMessage;
+import com.moeio.matte.irc.Query;
 import com.moeio.matte.irc.Server;
 import com.moeio.matte.irc.ServerPreferences;
 import com.moeio.matte.irc.UserComparator;
@@ -826,28 +826,20 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 	 * IRC service callbacks.
 	 */
 
-	public void activeChannelMessageReceived(Channel channel, GenericMessage message) {
+	public void channelMessageReceived(Channel channel, GenericMessage message, boolean active) {
 		final Channel chan = channel;
 		final GenericMessage mess = message;
+		final boolean act = active;
 		// Update the message list
 		this.runOnUiThread(new Runnable() {
 			public void run() {
 				chan.addMessage(mess);
-				if (adapter != null)
+				
+				if (act && adapter != null) {
 					adapter.notifyDataSetChanged();
-			}
-		});
-	}
-
-	public void inactiveChannelMessageReceived(Channel channel, GenericMessage message) {
-		final Channel chan = channel;
-		final GenericMessage mess = message;
-		// Update the channel list for unread counts
-		this.runOnUiThread(new Runnable() {
-			public void run() {
-				chan.addMessage(mess);
-				if (channelAdapter != null)
+				} else if (!act && channelAdapter != null) {
 					channelAdapter.notifyDataSetChanged();
+				}
 			}
 		});
 	}
@@ -862,6 +854,25 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 				chan.addMessage(mess);
 				if (adapter != null)
 					adapter.notifyDataSetChanged();
+			}
+		});
+	}
+	
+	public void queryMessageReceived(Query query, GenericMessage message, boolean active) {
+		final Query q = query;
+		final GenericMessage m = message;
+		final boolean a = active;
+		
+		// Update the message list
+		this.runOnUiThread(new Runnable() {
+			public void run() {
+				q.addMessage(m);
+				
+				if (a && adapter != null) {
+					adapter.notifyDataSetChanged();
+				} else if (!a && channelAdapter != null) {
+					channelAdapter.notifyDataSetChanged();
+				}
 			}
 		});
 	}
@@ -979,6 +990,10 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 	/*
 	 * UI helpers.
 	 */
+	public void createQueryWindow(User user) {
+		// TODO: Implement.
+	}
+	
 	private void expandAllServerGroups() {
 		int count = this.channelAdapter.getGroupCount();
 		for (int i = 0; i < count; i++)
@@ -1020,28 +1035,17 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 		}
 
 		String message = this.sendText.getText().toString();
-		if (this.commandInterpreter.isCommand(message)) {
-			this.commandInterpreter.interpret(message);
-			this.sendText.setText("");
-		} else {
+		if (!this.commandInterpreter.isCommand(message)) {
 			if (message.length() >= 2 && message.substring(0, 2).equals("//")) {
 				message = message.substring(1, message.length());
 			}
-			if (this.currentChannel != null) {
-				if (message.length() > 0) {
-					if (this.currentChannel instanceof Server) {
-						this.currentChannel.addMessage(Channel.createError(SpannedString
-								.valueOf(getResources().getString(R.string.cantmessageserver))));
-					} else {
-						this.currentChannel.sendMessage(message);
-					}
-					this.sendText.setText("");
-					// Update UI because sent message does not come in as an
-					// event
-					this.adapter.notifyDataSetChanged();
-				}
-			}
+			message = "/msg " + message;
 		}
+		this.commandInterpreter.interpret(message);
+		// Update UI because sent message does not come in as an
+		// event
+		this.adapter.notifyDataSetChanged();
+		this.sendText.setText("");
 	}
 
 	/*

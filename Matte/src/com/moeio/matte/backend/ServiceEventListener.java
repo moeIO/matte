@@ -4,6 +4,7 @@ import java.util.Collection;
 
 import com.moeio.matte.irc.Channel;
 import com.moeio.matte.irc.GenericMessage;
+import com.moeio.matte.irc.Query;
 import com.moeio.matte.irc.Server;
 
 /*
@@ -13,15 +14,15 @@ public interface ServiceEventListener {
 
 	/*
 	 * Called when an IRC message is received by the service. Passes the channel
-	 * the message belonged to
+	 * the message belonged to.
 	 */
-	public void activeChannelMessageReceived(Channel channel, GenericMessage message);
-
+	public void channelMessageReceived(Channel channel, GenericMessage message, boolean active);
+	
 	/*
-	 * Called when an IRC message is received by the service on an inactive
-	 * channel
+	 * Called when a private message is received by the service. Passes the query
+	 * the message belongs to.
 	 */
-	public void inactiveChannelMessageReceived(Channel channel, GenericMessage message);
+	public void queryMessageReceived(Query query, GenericMessage message, boolean active);
 
 	/*
 	 * Called when a server message is received. Passes the server the message

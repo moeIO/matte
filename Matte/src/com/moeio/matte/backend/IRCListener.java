@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Set;
 
+import org.pircbotx.User;
 import org.pircbotx.hooks.ListenerAdapter;
 import org.pircbotx.hooks.events.ConnectEvent;
 import org.pircbotx.hooks.events.DisconnectEvent;
@@ -13,6 +14,7 @@ import org.pircbotx.hooks.events.MotdEvent;
 import org.pircbotx.hooks.events.NickChangeEvent;
 import org.pircbotx.hooks.events.NoticeEvent;
 import org.pircbotx.hooks.events.PartEvent;
+import org.pircbotx.hooks.events.PrivateMessageEvent;
 import org.pircbotx.hooks.events.QuitEvent;
 import org.pircbotx.hooks.events.ServerResponseEvent;
 import org.pircbotx.hooks.events.TopicEvent;
@@ -25,6 +27,7 @@ import com.moeio.matte.irc.Channel;
 import com.moeio.matte.irc.ChannelMessage;
 import com.moeio.matte.irc.Client;
 import com.moeio.matte.irc.MessageParser;
+import com.moeio.matte.irc.Query;
 import com.moeio.matte.irc.Server;
 import com.moeio.matte.irc.ServerMessage;
 
@@ -143,10 +146,10 @@ public class IRCListener extends ListenerAdapter<Client> {
 		message.setTime(new Date());
 
 		if (channel.isActive()) {
-			this.service.activeChannelMessageReceived(channel, message);
+			this.service.channelMessageReceived(channel, message, true);
 		} else {
 			channel.incrementUnreadMessages();
-			this.service.inactiveChannelMessageReceived(channel, message);
+			this.service.channelMessageReceived(channel, message, false);
 		}
 		if (message.getContent().toString().toLowerCase().contains(event.getBot().getNick().toLowerCase())) {
 			message.isHighlighted(true);
@@ -155,6 +158,34 @@ public class IRCListener extends ListenerAdapter<Client> {
 			}
 		} else {
 			message.isHighlighted(false);
+		}
+	}
+	
+	public void onPrivateMessage(PrivateMessageEvent<Client> event) {
+		Server server = this.service.getServer(event.getBot().getServerPreferences().getName());
+		User user = event.getUser();
+		Query query = (Query) server.getChannel(user.getNick());
+		
+		ChannelMessage message = new ChannelMessage();
+		message.setNickname(user.getNick());
+		message.setContent(Html.fromHtml(MessageParser.parseToHTML(event.getMessage())));
+		message.setTime(new Date());
+		
+		if (query == null) {
+			query = new Query();
+			query.setServer(server);
+			query.setChannelInfo(event.getBot().getChannel(user.getNick()));
+		}
+		
+		if (query.isActive()) {
+			this.service.queryMessageReceived(query, message, true);
+		} else {
+			query.incrementUnreadMessages();
+			this.service.queryMessageReceived(query, message, false);
+		}
+		
+		if (!this.service.isAppActive() || !query.isActive()) {
+			this.service.showMentionNotification(message, query, event.getBot().getServerPreferences().getName());
 		}
 	}
 
@@ -168,10 +199,10 @@ public class IRCListener extends ListenerAdapter<Client> {
 		message.setTime(new Date());
 
 		if (channel.isActive()) {
-			this.service.activeChannelMessageReceived(channel, message);
+			this.service.channelMessageReceived(channel, message, true);
 		} else {
 			channel.incrementUnreadMessages();
-			this.service.inactiveChannelMessageReceived(channel, message);
+			this.service.channelMessageReceived(channel, message, false);
 		}
 		if (message.getContent().toString().toLowerCase().contains(event.getBot().getNick().toLowerCase())) {
 			message.isHighlighted(true);

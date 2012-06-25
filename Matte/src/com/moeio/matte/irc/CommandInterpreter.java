@@ -41,8 +41,8 @@ public class CommandInterpreter {
 			for (int i = 0; i < channels.length; i++) {
 				if (!this.looksLikeChannel(channels[i])) {
 					// Send message.
-					this.service.activeChannelMessageReceived(this.activity.getCurrentChannel(), Channel.createError(SpannedString.valueOf(service
-							.getResources().getString(R.string.invalidchannel) + ": " + channels[i])));
+					this.service.channelMessageReceived(this.activity.getCurrentChannel(), Channel.createError(SpannedString.valueOf(service
+							.getResources().getString(R.string.invalidchannel) + ": " + channels[i])), true);
 					continue;
 				}
 
@@ -76,12 +76,33 @@ public class CommandInterpreter {
 					}
 				}
 			}
+		} else if ((command.equalsIgnoreCase("msg") || command.equalsIgnoreCase("message") || command.equalsIgnoreCase("privmsg")) && parts.length > 1) { 
+			if (parts.length > 2 && this.looksLikeChannel(parts[1]) && !client.getChannelsNames().contains(parts[1])) {
+				this.service.channelMessageReceived(this.activity.getCurrentChannel(),
+						Channel.createError(SpannedString.valueOf(service.getResources().getString(R.string.notinchannel) + ": " + parts[1])), true);
+				return;
+			} else if (parts.length > 2 && !client.userExists(parts[1])) {
+				this.service.channelMessageReceived(this.activity.getCurrentChannel(),
+						Channel.createError(SpannedString.valueOf(service.getResources().getString(R.string.nosuchuser) + ": " + parts[1])), true);
+				return;
+			}
+			
+			if (parts.length > 2) {			
+				client.sendMessage(parts[1], message.substring(parts[0].length() + parts[1].length() + 2, message.length()));
+			} else if (this.activity.getCurrentChannel() != null) {
+				Channel currentChannel = this.activity.getCurrentChannel();
+				if (currentChannel instanceof Server) {
+					currentChannel.addMessage(Channel.createError(SpannedString.valueOf(this.service.getResources().getString(R.string.cantmessageserver))));
+				} else {
+					client.sendMessage(currentChannel.getChannelInfo(), message.substring(parts[0].length() + 1, message.length()));
+				}
+			}
 		} else if ((command.equalsIgnoreCase("nick") || command.equalsIgnoreCase("nickname")) && parts.length > 1) {
 			if (!client.userExists(parts[1])) {
 				client.changeNick(parts[1]);
 			} else {
-				this.service.activeChannelMessageReceived(this.activity.getCurrentChannel(),
-						Channel.createError(SpannedString.valueOf(service.getResources().getString(R.string.nickinuse) + ": " + parts[1])));
+				this.service.channelMessageReceived(this.activity.getCurrentChannel(),
+						Channel.createError(SpannedString.valueOf(service.getResources().getString(R.string.nickinuse) + ": " + parts[1])), true);
 			}
 		} else if ((command.equalsIgnoreCase("whois") || command.equalsIgnoreCase("who")) && parts.length > 1) {
 			for (int i = 1; i < parts.length; i++) {
