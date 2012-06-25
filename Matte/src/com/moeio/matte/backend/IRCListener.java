@@ -172,9 +172,7 @@ public class IRCListener extends ListenerAdapter<Client> {
 		message.setTime(new Date());
 		
 		if (query == null) {
-			query = new Query();
-			query.setServer(server);
-			query.setChannelInfo(event.getBot().getChannel(user.getNick()));
+			query = this.service.createQuery(event.getBot(), user.getNick());
 		}
 		
 		if (query.isActive()) {

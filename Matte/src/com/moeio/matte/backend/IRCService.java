@@ -289,6 +289,18 @@ public class IRCService extends Service implements ServiceEventListener {
 		NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 		mNotificationManager.notify(NOTIFICATION_ID, this.notificationBuilder.getNotification());
 	}
+	
+	public Query createQuery(Client client, String peer) {
+		Server server = this.getServer(client.getServerPreferences().getName());
+		
+		Query query = new Query();
+		query.setServer(server);
+		query.setChannelInfo(client.getChannel(peer));
+		server.addChannel(query);
+		
+		this.channelJoined(query, client.getNick());
+		return query;
+	}
 
 	public void channelMessageReceived(Channel channel, GenericMessage message, boolean active) {
 		MessageParser.parseSpecial(message);
