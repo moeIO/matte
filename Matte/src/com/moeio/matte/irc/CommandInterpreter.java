@@ -1,5 +1,8 @@
 package com.moeio.matte.irc;
 
+import java.util.Date;
+
+import android.text.Html;
 import android.text.SpannedString;
 
 import com.moeio.matte.ChannelActivity;
@@ -43,20 +46,30 @@ public class CommandInterpreter {
 				return;
 			}
 			
+			ChannelMessage msg = new ChannelMessage();
+			msg.setNickname(client.getNick());
+			msg.setContent(Html.fromHtml(MessageParser.parseToHTML(message)));
+			msg.setTime(new Date());
+			
+			Channel target = null;
 			if (parts.length > 2) {
 				// If it's a query and no window for it has been created, do that now.
 				if (!this.looksLikeChannel(parts[1]) && server.getChannel(parts[1]) == null) {
-					this.service.createQuery(client, parts[1]);
+					target = this.service.createQuery(client, parts[1]);
+				} else {
+					target = server.getChannel(parts[1]);
 				}
 				
 				client.sendMessage(parts[1], message.substring(parts[0].length() + parts[1].length() + 2, message.length()));
-				} else if (this.activity.getCurrentChannel() != null) {
-				Channel currentChannel = this.activity.getCurrentChannel();
-				if (currentChannel instanceof Server) {
-					currentChannel.addMessage(Channel.createError(SpannedString.valueOf(this.service.getResources().getString(R.string.cantmessageserver))));
-				} else {
-					client.sendMessage(currentChannel.getChannelInfo(), message.substring(parts[0].length() + 1, message.length()));
+				this.service.queryMessageReceived((Query) target, msg, true);
+			} else if (this.activity.getCurrentChannel() != null) {
+				target = this.activity.getCurrentChannel();
+				if (target instanceof Server) {
+					target.addMessage(Channel.createError(SpannedString.valueOf(this.service.getResources().getString(R.string.cantmessageserver))));
+					return;
 				}
+				client.sendMessage(target.getChannelInfo(), message.substring(parts[0].length() + 1, message.length()));
+				this.service.channelMessageReceived(target, msg, true);
 			}
 		} else if ((command.equalsIgnoreCase("join") || command.equalsIgnoreCase("j")) && parts.length > 1) {
 			String[] channels = parts[1].split(",");
