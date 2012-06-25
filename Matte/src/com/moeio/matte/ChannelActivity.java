@@ -103,16 +103,25 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 	private static final int CONTEXTMENU_SERVEROPTIONS = 0;
 	private static final int CONTEXTMENU_CHANNELOPTIONS = 1;
 	private static final int CONTEXTMENU_USERLIST = 2;
+	private static final int CONTEXTMENU_USEROPTIONS = 3;
 
 	private static final int SERVEROPTIONS_CONNECT = 0;
 	private static final int SERVEROPTIONS_DISCONNECT = 1;
 	private static final int SERVEROPTIONS_EDIT = 2;
 	private static final int SERVEROPTIONS_DELETE = 3;
 
+	private static final int USEROPTIONS_QUERY = 0;
+	private static final int USEROPTIONS_MENTION = 1;
+	private static final int USEROPTIONS_WHOIS = 2;
+	private static final int USEROPTIONS_KICK = 3;
+	private static final int USEROPTIONS_KICKBAN = 4;
+
 	private static final int CHANNELOPTIONS_PART = 1;
 
 	private View fakeUserListView;
 	private ArrayList<User> contextUserList;
+	private View fakeUserOptionsView;
+	private User userOptionsSelectedFor;
 
 	// //// Stop thinking d-dirty things b-baka!
 	private Vibrator vibrator;
@@ -159,7 +168,9 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 		this.highlightCellColour = Color.rgb(182, 232, 243);
 		this.fakeUserListView = this.findViewById(R.id.fakeView);
 		this.registerForContextMenu(this.fakeUserListView);
-		contextUserList = new ArrayList<User>();
+		this.contextUserList = new ArrayList<User>();
+		this.fakeUserOptionsView = new View(this);
+		this.registerForContextMenu(fakeUserOptionsView);
 
 		this.nickColours = new HashMap<String, Integer>();
 		// Add predefined 'special' nicknames.
@@ -168,7 +179,6 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 		this.nickColours.put("-->", this.activity.getResources().getColor(R.color.nickcolor5));
 
 		this.getListView().setTranscriptMode(ListView.TRANSCRIPT_MODE_ALWAYS_SCROLL);
-
 		// Show first run if needed
 		SharedPreferences rawPreferences = activity.getSharedPreferences("servers", Context.MODE_PRIVATE);
 		if (rawPreferences.getBoolean("firstRun", true)) {
@@ -540,6 +550,17 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 					}
 				}
 			}
+		} else if (v == this.fakeUserOptionsView) {
+			menu.setHeaderTitle(this.userOptionsSelectedFor.getNick());
+			menu.add(CONTEXTMENU_USEROPTIONS, USEROPTIONS_QUERY, 0, getResources().getString(R.string.query));
+			menu.add(CONTEXTMENU_USEROPTIONS, USEROPTIONS_MENTION, 1, getResources().getString(R.string.mention));
+			menu.add(CONTEXTMENU_USEROPTIONS, USEROPTIONS_WHOIS, 2, getResources().getString(R.string.whois));
+			User self = this.currentChannel.getClient().getUser(this.currentChannel.getClient().getNick());
+			if (this.currentChannel.getChannelInfo().isOp(self) || this.currentChannel.getChannelInfo().isSuperOp(self)
+					|| this.currentChannel.getChannelInfo().isHalfOp(self) || this.currentChannel.getChannelInfo().isOwner(self)) {
+				menu.add(CONTEXTMENU_USEROPTIONS, USEROPTIONS_KICK, 3, getResources().getString(R.string.kick));
+				menu.add(CONTEXTMENU_USEROPTIONS, USEROPTIONS_KICKBAN, 4, getResources().getString(R.string.kickban));
+			}
 		}
 	}
 
@@ -604,7 +625,8 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 					this.activity.adapter.setMessages(new ArrayList<GenericMessage>());
 					this.activity.setTitle("");
 				}
-				server.getClient().getServerPreferences().deleteFromSharedPreferences(this.activity.getSharedPreferences("servers", Context.MODE_PRIVATE));
+				server.getClient().getServerPreferences()
+						.deleteFromSharedPreferences(this.activity.getSharedPreferences("servers", Context.MODE_PRIVATE));
 				this.moeService.deleteServer(server.getName());
 				this.activity.channelAdapter.notifyDataSetChanged();
 				break;
@@ -620,11 +642,25 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 			}
 			break;
 		case CONTEXTMENU_USERLIST:
-			User user = contextUserList.get(item.getItemId());
-			this.sendText.append(user.getNick() + ": ");
+			userOptionsSelectedFor = contextUserList.get(item.getItemId());
+			fakeUserOptionsView.showContextMenu();
+			break;
+		case CONTEXTMENU_USEROPTIONS:
+			switch (item.getItemId()) {
+			case USEROPTIONS_QUERY:
+				break;
+			case USEROPTIONS_MENTION:
+				this.sendText.append(userOptionsSelectedFor.getNick() + ": ");
+				break;
+			case USEROPTIONS_WHOIS:
+				break;
+			case USEROPTIONS_KICK:
+				break;
+			case USEROPTIONS_KICKBAN:
+				break;
+			}
 			break;
 		}
-
 		return super.onContextItemSelected(item);
 	}
 
@@ -834,7 +870,7 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 		this.runOnUiThread(new Runnable() {
 			public void run() {
 				chan.addMessage(mess);
-				
+
 				if (act && adapter != null) {
 					adapter.notifyDataSetChanged();
 				} else if (!act && channelAdapter != null) {
@@ -857,17 +893,17 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 			}
 		});
 	}
-	
+
 	public void queryMessageReceived(Query query, GenericMessage message, boolean active) {
 		final Query q = query;
 		final GenericMessage m = message;
 		final boolean a = active;
-		
+
 		// Update the message list
 		this.runOnUiThread(new Runnable() {
 			public void run() {
 				q.addMessage(m);
-				
+
 				if (a && adapter != null) {
 					adapter.notifyDataSetChanged();
 				} else if (!a && channelAdapter != null) {
@@ -993,7 +1029,7 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 	public void createQueryWindow(User user) {
 		// TODO: Implement.
 	}
-	
+
 	private void expandAllServerGroups() {
 		int count = this.channelAdapter.getGroupCount();
 		for (int i = 0; i < count; i++)

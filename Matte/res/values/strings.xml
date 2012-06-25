@@ -65,5 +65,10 @@
     <string name="cool">Cool</string>
     <string name="notinchannel">Not currently in channel</string>
     <string name="nosuchuser">User does not exist</string>
-    
+    <string name="query">Query</string>
+    <string name="mention">Mention</string>
+    <string name="whois">Whois</string>
+    <string name="kick">Kick</string>
+    <string name="kickban">Kickban</string>
+
 </resources>
