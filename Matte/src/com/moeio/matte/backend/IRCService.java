@@ -10,6 +10,7 @@ import org.pircbotx.UtilSSLSocketFactory;
 
 import android.annotation.SuppressLint;
 import android.app.Notification;
+import android.app.Notification.InboxStyle;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -22,6 +23,7 @@ import android.os.Binder;
 import android.os.Build;
 import android.os.IBinder;
 import android.text.Html;
+import android.util.Log;
 
 import com.moeio.matte.ChannelActivity;
 import com.moeio.matte.R;
@@ -82,24 +84,9 @@ public class IRCService extends Service implements ServiceEventListener {
 			}
 		}
 
-		Intent notificationIntent = new Intent(this, ChannelActivity.class);
-		PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
-				notificationIntent, 0);
-
-		this.notificationBuilder = new Notification.Builder(
-				getApplicationContext());
-		this.notificationBuilder.setSmallIcon(R.drawable.ic_launcher);
-		this.notificationBuilder.setAutoCancel(false);
-		this.notificationBuilder.setContentTitle(getResources().getString(
-				R.string.app_name));
-		this.notificationBuilder.setContentText(getResources().getString(
-				R.string.running));
-		this.notificationBuilder.setWhen(0);
-		this.notificationBuilder.setContentIntent(contentIntent);
-
-		// TODO: update to new API/use updatenotification
-		this.startForeground(NOTIFICATION_ID,
-				this.notificationBuilder.getNotification());
+		this.startForeground(NOTIFICATION_ID, this.updateNotification(
+				R.drawable.ic_launcher,
+				getResources().getString(R.string.running)));
 
 	}
 
@@ -305,15 +292,30 @@ public class IRCService extends Service implements ServiceEventListener {
 			Notification n = new Notification.BigTextStyle(
 					this.notificationBuilder).bigText(message.getContent())
 					.build();
-			mNotificationManager.notify(123, n);
+			mNotificationManager.notify((int) Math.random(), n);
 		} else {
-			mNotificationManager.notify(123,
+			mNotificationManager.notify((int) Math.random(),
 					this.notificationBuilder.getNotification());
 		}
 	}
 
+	public void updateNotificationWithNoNew() {
+		try {
+			this.updateNotification(currentNotificationIcon,
+					currentNotificationString);
+		} catch (Exception ex) {
+			Log.e("UGUU~!", "Failed to update main notification");
+		}
+	}
+
+	private int currentNotificationIcon;
+	private String currentNotificationString;
+
+	@SuppressLint("NewApi")
 	@SuppressWarnings("deprecation")
-	public void updateNotification(int icon, String message) {
+	public Notification updateNotification(int icon, String message) {
+		this.currentNotificationIcon = icon;
+		this.currentNotificationString = message;
 		Intent notificationIntent = new Intent(this, ChannelActivity.class);
 		PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
 				notificationIntent, 0);
@@ -328,11 +330,33 @@ public class IRCService extends Service implements ServiceEventListener {
 		this.notificationBuilder.setWhen(0);
 		this.notificationBuilder.setContentIntent(contentIntent);
 
-		// TODO: possibly show connected servers/channels in the constant
-		// notification?
+		Notification n = null;
+		if (Build.VERSION.SDK_INT >= 16) {
+			InboxStyle i = new Notification.InboxStyle(this.notificationBuilder);
+			int chancount = 0;
+			for (Server s : this.servers) {
+				chancount += s.getChannels().size();
+				i.addLine("-" + s.getName());
+				for (Channel c : s.getChannels()) {
+					String chanString;
+					if (c.getUnreadMessageCount() > 0)
+						chanString = " " + c.getName() + " ("
+								+ c.getUnreadMessageCount() + ")";
+					else
+						chanString = " " + c.getName();
+					i.addLine(chanString);
+				}
+			}
+			i.setSummaryText(chancount + " "
+					+ getResources().getString(R.string.channels));
+			n = i.build();
+
+		} else
+			n = this.notificationBuilder.getNotification();
+
 		NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-		mNotificationManager.notify(NOTIFICATION_ID,
-				this.notificationBuilder.getNotification());
+		mNotificationManager.notify(NOTIFICATION_ID, n);
+		return n;
 	}
 
 	public Query createQuery(Client client, String peer) {
@@ -355,6 +379,7 @@ public class IRCService extends Service implements ServiceEventListener {
 		} else
 			this.connectedEventListener.channelMessageReceived(channel,
 					message, active);
+		this.updateNotificationWithNoNew();
 	}
 
 	public void statusMessageReceived(Channel channel, GenericMessage message) {
@@ -411,10 +436,12 @@ public class IRCService extends Service implements ServiceEventListener {
 
 	public void channelJoined(Channel channel, String nickname) {
 		this.connectedEventListener.channelJoined(channel, nickname);
+		this.updateNotificationWithNoNew();
 	}
 
 	public void channelParted(Channel channel, String nickname) {
 		this.connectedEventListener.channelParted(channel, nickname);
+		this.updateNotificationWithNoNew();
 	}
 
 	public void networkQuit(Collection<Channel> commonChannels, String nickname) {

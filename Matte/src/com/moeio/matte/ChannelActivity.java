@@ -23,6 +23,7 @@ import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Vibrator;
@@ -1195,6 +1196,11 @@ public class ChannelActivity extends ListActivity implements
 			activity.sendText.setHint(R.string.channel_hint);
 		// this.activity.setListAdapter(this.activity.adapter);
 		// this.activity.adapter.notifyDataSetChanged();
+
+		// To update notification unread count for JellyBean
+		if (Build.VERSION.SDK_INT >= 16) {
+			moeService.updateNotificationWithNoNew();
+		}
 	}
 
 	private void hideChannelList() {

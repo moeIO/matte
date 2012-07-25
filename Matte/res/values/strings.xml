@@ -71,5 +71,6 @@
     <string name="whois">Whois</string>
     <string name="kick">Kick</string>
     <string name="kickban">Kickban</string>
+    <string name="channels">Channels</string>
 
 </resources>
