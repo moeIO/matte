@@ -282,6 +282,7 @@ public class IRCService extends Service implements ServiceEventListener {
 
 		NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 		if (Build.VERSION.SDK_INT >= 16) {
+			this.notificationBuilder.setPriority(Notification.PRIORITY_HIGH);
 			this.notificationBuilder
 					.setContentText(getResources()
 							.getString(R.string.mentionby)
@@ -332,10 +333,15 @@ public class IRCService extends Service implements ServiceEventListener {
 
 		Notification n = null;
 		if (Build.VERSION.SDK_INT >= 16) {
-			InboxStyle i = new Notification.InboxStyle(this.notificationBuilder);
+			this.notificationBuilder.setPriority(Notification.PRIORITY_LOW);
 			int chancount = 0;
 			for (Server s : this.servers) {
 				chancount += s.getChannels().size();
+			}
+			this.notificationBuilder.setContentText(message + " (" + chancount
+					+ " " + getResources().getString(R.string.channels) + ")");
+			InboxStyle i = new Notification.InboxStyle(this.notificationBuilder);
+			for (Server s : this.servers) {
 				i.addLine("-" + s.getName());
 				for (Channel c : s.getChannels()) {
 					String chanString;
