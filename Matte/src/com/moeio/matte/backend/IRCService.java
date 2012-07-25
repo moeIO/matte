@@ -8,6 +8,7 @@ import javax.net.ssl.SSLSocketFactory;
 
 import org.pircbotx.UtilSSLSocketFactory;
 
+import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -18,6 +19,7 @@ import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Binder;
+import android.os.Build;
 import android.os.IBinder;
 import android.text.Html;
 
@@ -81,17 +83,23 @@ public class IRCService extends Service implements ServiceEventListener {
 		}
 
 		Intent notificationIntent = new Intent(this, ChannelActivity.class);
-		PendingIntent contentIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
+		PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
+				notificationIntent, 0);
 
-		this.notificationBuilder = new Notification.Builder(getApplicationContext());
+		this.notificationBuilder = new Notification.Builder(
+				getApplicationContext());
 		this.notificationBuilder.setSmallIcon(R.drawable.ic_launcher);
 		this.notificationBuilder.setAutoCancel(false);
-		this.notificationBuilder.setContentTitle(getResources().getString(R.string.app_name));
-		this.notificationBuilder.setContentText(getResources().getString(R.string.running));
+		this.notificationBuilder.setContentTitle(getResources().getString(
+				R.string.app_name));
+		this.notificationBuilder.setContentText(getResources().getString(
+				R.string.running));
 		this.notificationBuilder.setWhen(0);
 		this.notificationBuilder.setContentIntent(contentIntent);
 
-		this.startForeground(NOTIFICATION_ID, this.notificationBuilder.getNotification());
+		// TODO: update to new API/use updatenotification
+		this.startForeground(NOTIFICATION_ID,
+				this.notificationBuilder.getNotification());
 
 	}
 
@@ -110,7 +118,8 @@ public class IRCService extends Service implements ServiceEventListener {
 			for (Channel c : s.getChannels()) {
 				s.removeChannel(c.getName());
 			}
-			this.serverDisconnected(s, getResources().getString(R.string.requested));
+			this.serverDisconnected(s,
+					getResources().getString(R.string.requested));
 		}
 	}
 
@@ -134,7 +143,7 @@ public class IRCService extends Service implements ServiceEventListener {
 			server.setName(to);
 		this.serverMap.put(to, server);
 	}
-	
+
 	public void deleteServer(String name) {
 		Server server = this.serverMap.get(name);
 		if (server.getClient().isConnected()) {
@@ -181,7 +190,8 @@ public class IRCService extends Service implements ServiceEventListener {
 	// Load preferences.
 	public ArrayList<ServerPreferences> loadPreferences() {
 		ArrayList<ServerPreferences> preferences = new ArrayList<ServerPreferences>();
-		SharedPreferences rawPreferences = this.getSharedPreferences("servers", Context.MODE_PRIVATE);
+		SharedPreferences rawPreferences = this.getSharedPreferences("servers",
+				Context.MODE_PRIVATE);
 
 		// decent arrays r 4 scrubs, id rather smoke weed
 		int serverCount = rawPreferences.getInt("server_count", 0);
@@ -219,21 +229,25 @@ public class IRCService extends Service implements ServiceEventListener {
 
 				if (host.isSSL()) {
 					if (host.verifySSL()) {
-						this.client.connect(host.getHostname(), host.getPort(), host.getPassword(), SSLSocketFactory.getDefault());
+						this.client.connect(host.getHostname(), host.getPort(),
+								host.getPassword(),
+								SSLSocketFactory.getDefault());
 					} else {
-						this.client
-								.connect(host.getHostname(), host.getPort(), host.getPassword(), new UtilSSLSocketFactory().trustAllCertificates());
+						this.client.connect(host.getHostname(), host.getPort(),
+								host.getPassword(), new UtilSSLSocketFactory()
+										.trustAllCertificates());
 					}
 				} else {
-					this.client.connect(host.getHostname(), host.getPort(), host.getPassword());
+					this.client.connect(host.getHostname(), host.getPort(),
+							host.getPassword());
 				}
 
 				connected = true;
 			} catch (Exception ex) {
-				statusMessageReceived(
-						server,
-						Server.createError(Html.fromHtml(getResources().getString(R.string.couldnotconnectserver) + " <strong>" + ex.getMessage()
-								+ "</strong>")));
+				statusMessageReceived(server, Server.createError(Html
+						.fromHtml(getResources().getString(
+								R.string.couldnotconnectserver)
+								+ " <strong>" + ex.getMessage() + "</strong>")));
 				// Leave failed server in list for error-logging purposes (and
 				// since ChannelList adapter will still want it)
 				return false;
@@ -254,60 +268,93 @@ public class IRCService extends Service implements ServiceEventListener {
 	}
 
 	// Requires server name because lolsubclassing
-	public void showMentionNotification(ChannelMessage message, Channel channel, String serverName) {
+	@SuppressWarnings({ "deprecation" })
+	@SuppressLint("NewApi")
+	public void showMentionNotification(ChannelMessage message,
+			Channel channel, String serverName) {
 		Intent notificationIntent = new Intent(this, ChannelActivity.class);
 		notificationIntent.putExtra("server", serverName);
-		notificationIntent.putExtra("channel", channel.getChannelInfo().getName());
-		PendingIntent contentIntent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+		notificationIntent.putExtra("channel", channel.getChannelInfo()
+				.getName());
+		PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
+				notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
-		this.notificationBuilder = new Notification.Builder(getApplicationContext());
+		this.notificationBuilder = new Notification.Builder(
+				getApplicationContext());
 		this.notificationBuilder.setSmallIcon(R.drawable.notification);
 		this.notificationBuilder.setAutoCancel(true);
-		this.notificationBuilder.setContentTitle(getResources().getString(R.string.app_name));
+		this.notificationBuilder.setContentTitle(getResources().getString(
+				R.string.app_name));
 		this.notificationBuilder.setContentText(message.getContent());
 		this.notificationBuilder.setWhen(System.currentTimeMillis());
 		this.notificationBuilder.setContentIntent(contentIntent);
-		this.notificationBuilder.setLights(Color.argb(200, 255, 150, 50), 300, 6000);
-		this.notificationBuilder.setDefaults(Notification.DEFAULT_SOUND | Notification.DEFAULT_VIBRATE);
+		this.notificationBuilder.setLights(Color.argb(200, 255, 150, 50), 300,
+				6000);
+		this.notificationBuilder.setDefaults(Notification.DEFAULT_SOUND
+				| Notification.DEFAULT_VIBRATE);
 
 		NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-		mNotificationManager.notify(123, this.notificationBuilder.getNotification());
+		if (Build.VERSION.SDK_INT >= 16) {
+			this.notificationBuilder
+					.setContentText(getResources()
+							.getString(R.string.mentionby)
+							+ " "
+							+ message.getNickname()
+							+ ": "
+							+ message.getContent());
+			Notification n = new Notification.BigTextStyle(
+					this.notificationBuilder).bigText(message.getContent())
+					.build();
+			mNotificationManager.notify(123, n);
+		} else {
+			mNotificationManager.notify(123,
+					this.notificationBuilder.getNotification());
+		}
 	}
 
+	@SuppressWarnings("deprecation")
 	public void updateNotification(int icon, String message) {
 		Intent notificationIntent = new Intent(this, ChannelActivity.class);
-		PendingIntent contentIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
+		PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
+				notificationIntent, 0);
 
-		this.notificationBuilder = new Notification.Builder(getApplicationContext());
+		this.notificationBuilder = new Notification.Builder(
+				getApplicationContext());
 		this.notificationBuilder.setSmallIcon(icon);
 		this.notificationBuilder.setAutoCancel(false);
-		this.notificationBuilder.setContentTitle(getResources().getString(R.string.app_name));
+		this.notificationBuilder.setContentTitle(getResources().getString(
+				R.string.app_name));
 		this.notificationBuilder.setContentText(message);
 		this.notificationBuilder.setWhen(0);
 		this.notificationBuilder.setContentIntent(contentIntent);
 
+		// TODO: possibly show connected servers/channels in the constant
+		// notification?
 		NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-		mNotificationManager.notify(NOTIFICATION_ID, this.notificationBuilder.getNotification());
+		mNotificationManager.notify(NOTIFICATION_ID,
+				this.notificationBuilder.getNotification());
 	}
-	
+
 	public Query createQuery(Client client, String peer) {
 		Server server = this.getServer(client.getServerPreferences().getName());
-		
+
 		Query query = new Query();
 		query.setServer(server);
 		query.setChannelInfo(client.getChannel(peer));
 		server.addChannel(query);
-		
+
 		this.channelJoined(query, client.getNick());
 		return query;
 	}
 
-	public void channelMessageReceived(Channel channel, GenericMessage message, boolean active) {
+	public void channelMessageReceived(Channel channel, GenericMessage message,
+			boolean active) {
 		MessageParser.parseSpecial(message);
 		if (this.connectedEventListener == null) {
 			channel.addMessage(message);
 		} else
-			this.connectedEventListener.channelMessageReceived(channel, message, active);
+			this.connectedEventListener.channelMessageReceived(channel,
+					message, active);
 	}
 
 	public void statusMessageReceived(Channel channel, GenericMessage message) {
@@ -317,14 +364,16 @@ public class IRCService extends Service implements ServiceEventListener {
 		} else
 			this.connectedEventListener.statusMessageReceived(channel, message);
 	}
-	
-	public void queryMessageReceived(Query query, GenericMessage message, boolean active) {
+
+	public void queryMessageReceived(Query query, GenericMessage message,
+			boolean active) {
 		MessageParser.parseSpecial(message);
-		
+
 		if (this.connectedEventListener == null) {
 			query.addMessage(message);
 		} else
-			this.connectedEventListener.queryMessageReceived(query, message, active);
+			this.connectedEventListener.queryMessageReceived(query, message,
+					active);
 	}
 
 	public Server getServer(String name) {
@@ -350,7 +399,8 @@ public class IRCService extends Service implements ServiceEventListener {
 			pos--;
 		else if (channel.getServer().getChannels().size() > pos + 1)
 			pos++;
-		this.getServer(channel.getServer().getName()).removeChannel(channel.getName());
+		this.getServer(channel.getServer().getName()).removeChannel(
+				channel.getName());
 		return pos - 1;
 	}
 
@@ -375,7 +425,8 @@ public class IRCService extends Service implements ServiceEventListener {
 		// Don't update for startup of non-autoconnect servers
 		// if (constantNotification != null)
 		// XXX this is no longer done?
-		this.updateNotification(R.drawable.ic_launcher, getResources().getString(R.string.connected));
+		this.updateNotification(R.drawable.ic_launcher, getResources()
+				.getString(R.string.connected));
 		this.connectedEventListener.serverConnected(server);
 	}
 
@@ -390,10 +441,12 @@ public class IRCService extends Service implements ServiceEventListener {
 			}
 		}
 		if (!hasConnectedServer)
-			this.updateNotification(R.drawable.ic_launcher_red, getResources().getString(R.string.disconnected));
+			this.updateNotification(R.drawable.ic_launcher_red, getResources()
+					.getString(R.string.disconnected));
 	}
 
-	public void nickChanged(Collection<Channel> commonChannels, String from, String to) {
+	public void nickChanged(Collection<Channel> commonChannels, String from,
+			String to) {
 		this.connectedEventListener.nickChanged(commonChannels, from, to);
 	}
 

@@ -62,13 +62,15 @@ import com.moeio.matte.backend.ServiceEventListener;
 import com.moeio.matte.irc.Channel;
 import com.moeio.matte.irc.CommandInterpreter;
 import com.moeio.matte.irc.GenericMessage;
+import com.moeio.matte.irc.MessageParser;
 import com.moeio.matte.irc.Query;
 import com.moeio.matte.irc.Server;
 import com.moeio.matte.irc.ServerPreferences;
 import com.moeio.matte.irc.UserComparator;
 
-public class ChannelActivity extends ListActivity implements ServiceEventListener, OnClickListener, OnEditorActionListener, OnChildClickListener,
-		OnGroupClickListener {
+public class ChannelActivity extends ListActivity implements
+		ServiceEventListener, OnClickListener, OnEditorActionListener,
+		OnChildClickListener, OnGroupClickListener {
 	// Layout stuff.
 	private ChannelActivity activity;
 	private LayoutInflater inflater;
@@ -95,9 +97,12 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 	private boolean gotoChannelOnServiceConnect;
 	private String onServiceConnectChannel;
 	private String onServiceConnectServer;
-	private int[] possibleNickColours = { R.color.nickcolor0, R.color.nickcolor1, R.color.nickcolor2, R.color.nickcolor3, R.color.nickcolor4,
-			R.color.nickcolor5, R.color.nickcolor6, R.color.nickcolor7, R.color.nickcolor8, R.color.nickcolor9, R.color.nickcolor10,
-			R.color.nickcolor11, R.color.nickcolor12, R.color.nickcolor13, R.color.nickcolor14, R.color.nickcolor15 };
+	private int[] possibleNickColours = { R.color.nickcolor0,
+			R.color.nickcolor1, R.color.nickcolor2, R.color.nickcolor3,
+			R.color.nickcolor4, R.color.nickcolor5, R.color.nickcolor6,
+			R.color.nickcolor7, R.color.nickcolor8, R.color.nickcolor9,
+			R.color.nickcolor10, R.color.nickcolor11, R.color.nickcolor12,
+			R.color.nickcolor13, R.color.nickcolor14, R.color.nickcolor15 };
 	private HashMap<String, Integer> nickColours;
 
 	private static final int CONTEXTMENU_SERVEROPTIONS = 0;
@@ -136,11 +141,13 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 		super.onCreate(savedInstanceState);
 		this.setContentView(R.layout.channel_layout);
 		this.activity = this;
-		this.inflater = (LayoutInflater) this.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+		this.inflater = (LayoutInflater) this
+				.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 		vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 
 		// Prevent keyboard showing at startup
-		this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
+		this.getWindow().setSoftInputMode(
+				WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
 
 		// Fire up the service. First service bind will be done in onResume()
 		// which is called at the start.
@@ -153,7 +160,8 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 		this.setTitle(getResources().getString(R.string.app_name));
 
 		// Set up sidebar.
-		ViewStub channelListContainer = (ViewStub) this.activity.findViewById(R.id.channelListStub);
+		ViewStub channelListContainer = (ViewStub) this.activity
+				.findViewById(R.id.channelListStub);
 		channelListContainer.inflate();
 
 		// Set up main UI.
@@ -174,24 +182,33 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 
 		this.nickColours = new HashMap<String, Integer>();
 		// Add predefined 'special' nicknames.
-		this.nickColours.put("!", this.activity.getResources().getColor(R.color.nickcolor4));
-		this.nickColours.put("<--", this.activity.getResources().getColor(R.color.nickcolor5));
-		this.nickColours.put("-->", this.activity.getResources().getColor(R.color.nickcolor5));
+		this.nickColours.put("!",
+				this.activity.getResources().getColor(R.color.nickcolor4));
+		this.nickColours.put("<--",
+				this.activity.getResources().getColor(R.color.nickcolor5));
+		this.nickColours.put("-->",
+				this.activity.getResources().getColor(R.color.nickcolor5));
 
-		this.getListView().setTranscriptMode(ListView.TRANSCRIPT_MODE_ALWAYS_SCROLL);
+		this.getListView().setTranscriptMode(
+				ListView.TRANSCRIPT_MODE_ALWAYS_SCROLL);
 		// Show first run if needed
-		SharedPreferences rawPreferences = activity.getSharedPreferences("servers", Context.MODE_PRIVATE);
+		SharedPreferences rawPreferences = activity.getSharedPreferences(
+				"servers", Context.MODE_PRIVATE);
 		if (rawPreferences.getBoolean("firstRun", true)) {
 			Editor editor = rawPreferences.edit();
 			editor.putBoolean("firstRun", false);
 			editor.apply();
-			new AlertDialog.Builder(this).setView(getLayoutInflater().inflate(R.layout.firstrun, null))
+			new AlertDialog.Builder(this)
+					.setView(
+							getLayoutInflater()
+									.inflate(R.layout.firstrun, null))
 					.setTitle(getResources().getString(R.string.welcome0))
-					.setPositiveButton(getResources().getString(R.string.cool), new Dialog.OnClickListener() {
-						public void onClick(DialogInterface d, int which) {
-							// Do nothing here.
-						}
-					}).show();
+					.setPositiveButton(getResources().getString(R.string.cool),
+							new Dialog.OnClickListener() {
+								public void onClick(DialogInterface d, int which) {
+									// Do nothing here.
+								}
+							}).show();
 		}
 	}
 
@@ -210,8 +227,10 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 		NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 		mNotificationManager.cancelAll();
 		// Bind the service.
-		Intent servIntent = new Intent(this.getApplicationContext(), IRCService.class);
-		this.bindService(servIntent, this.serviceConnection, Context.BIND_AUTO_CREATE);
+		Intent servIntent = new Intent(this.getApplicationContext(),
+				IRCService.class);
+		this.bindService(servIntent, this.serviceConnection,
+				Context.BIND_AUTO_CREATE);
 		super.onResume();
 	}
 
@@ -276,7 +295,8 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 		if (v.getId() == this.sendButton.getId()) {
 			this.sendMessage();
 		} else if (v.getId() == this.settingsButton.getId()) {
-			Intent settingsIntent = new Intent(getApplicationContext(), SettingsActivity.class);
+			Intent settingsIntent = new Intent(getApplicationContext(),
+					SettingsActivity.class);
 			this.startActivity(settingsIntent);
 		} else if (v.getId() == this.addServerButton.getId()) {
 			// Show add server dialog
@@ -311,28 +331,44 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 
 	private void showServerEditDialog(Server existingServer) {
 		final Server server = existingServer;
-		final View dialogView = getLayoutInflater().inflate(R.layout.addserver_dialog, null);
-		final AlertDialog d = new AlertDialog.Builder(this).setView(dialogView).setTitle(getResources().getString(R.string.addServer))
-				.setPositiveButton(android.R.string.ok, new Dialog.OnClickListener() {
-					public void onClick(DialogInterface d, int which) {
-						// Do nothing here.
-					}
-				}).setNegativeButton(android.R.string.cancel, null).create();
+		final View dialogView = getLayoutInflater().inflate(
+				R.layout.addserver_dialog, null);
+		final AlertDialog d = new AlertDialog.Builder(this)
+				.setView(dialogView)
+				.setTitle(getResources().getString(R.string.addServer))
+				.setPositiveButton(android.R.string.ok,
+						new Dialog.OnClickListener() {
+							public void onClick(DialogInterface d, int which) {
+								// Do nothing here.
+							}
+						}).setNegativeButton(android.R.string.cancel, null)
+				.create();
 		d.setOnShowListener(new DialogInterface.OnShowListener() {
 			public void onShow(DialogInterface dialog) {
 
 				Button b = d.getButton(AlertDialog.BUTTON_POSITIVE);
-				final TextView nameView = (TextView) dialogView.findViewById(R.id.addServer_name);
-				final TextView hostView = (TextView) dialogView.findViewById(R.id.addServer_host);
-				final TextView portView = (TextView) dialogView.findViewById(R.id.addServer_port);
-				final TextView passwordView = (TextView) dialogView.findViewById(R.id.addServer_password);
-				final CheckBox ssl = (CheckBox) dialogView.findViewById(R.id.addServer_ssl);
-				final CheckBox verifyssl = (CheckBox) dialogView.findViewById(R.id.addServer_verifyssl);
-				final TextView nickName = (TextView) dialogView.findViewById(R.id.addServer_nicknames);
-				final TextView usernameView = (TextView) dialogView.findViewById(R.id.addServer_username);
-				final TextView realnameView = (TextView) dialogView.findViewById(R.id.addServer_realname);
-				final TextView autoconnectCommands = (TextView) dialogView.findViewById(R.id.addServer_autoconnectcommands);
-				final CheckBox autoconnect = (CheckBox) dialogView.findViewById(R.id.addServer_connectatstartup);
+				final TextView nameView = (TextView) dialogView
+						.findViewById(R.id.addServer_name);
+				final TextView hostView = (TextView) dialogView
+						.findViewById(R.id.addServer_host);
+				final TextView portView = (TextView) dialogView
+						.findViewById(R.id.addServer_port);
+				final TextView passwordView = (TextView) dialogView
+						.findViewById(R.id.addServer_password);
+				final CheckBox ssl = (CheckBox) dialogView
+						.findViewById(R.id.addServer_ssl);
+				final CheckBox verifyssl = (CheckBox) dialogView
+						.findViewById(R.id.addServer_verifyssl);
+				final TextView nickName = (TextView) dialogView
+						.findViewById(R.id.addServer_nicknames);
+				final TextView usernameView = (TextView) dialogView
+						.findViewById(R.id.addServer_username);
+				final TextView realnameView = (TextView) dialogView
+						.findViewById(R.id.addServer_realname);
+				final TextView autoconnectCommands = (TextView) dialogView
+						.findViewById(R.id.addServer_autoconnectcommands);
+				final CheckBox autoconnect = (CheckBox) dialogView
+						.findViewById(R.id.addServer_connectatstartup);
 				// final CheckBox log = (CheckBox)
 				// dialogView.findViewById(R.id.addServer_log);
 
@@ -341,7 +377,8 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 					n = server.getClient().getServerPreferences().getName();
 				final String originalServerName = n;
 				if (server != null) {
-					ServerPreferences prefs = server.getClient().getServerPreferences();
+					ServerPreferences prefs = server.getClient()
+							.getServerPreferences();
 					nameView.setText(prefs.getName());
 					hostView.setText(prefs.getHost().getHostname());
 					portView.setText(String.valueOf(prefs.getHost().getPort()));
@@ -370,7 +407,9 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 				b.setOnClickListener(new View.OnClickListener() {
 
 					public void onClick(View view) {
-						SharedPreferences rawPreferences = activity.getSharedPreferences("servers", Context.MODE_PRIVATE);
+						SharedPreferences rawPreferences = activity
+								.getSharedPreferences("servers",
+										Context.MODE_PRIVATE);
 						ServerPreferences prefs = new ServerPreferences();
 						ServerPreferences.Host host = prefs.new Host();
 						prefs.setHost(host);
@@ -378,17 +417,27 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 						boolean success = true;
 						if (nameView.getText().length() == 0) {
 							success = false;
-							AlertDialog.Builder b = new AlertDialog.Builder(activity);
-							b.setMessage(getResources().getString(R.string.enteraserver));
-							b.setPositiveButton(getResources().getString(android.R.string.ok), null);
+							AlertDialog.Builder b = new AlertDialog.Builder(
+									activity);
+							b.setMessage(getResources().getString(
+									R.string.enteraserver));
+							b.setPositiveButton(
+									getResources().getString(
+											android.R.string.ok), null);
 							b.show();
 						} else {
-							if (!nameView.getText().toString().equals(originalServerName)
-									&& moeService.serverNameExists(nameView.getText().toString())) {
+							if (!nameView.getText().toString()
+									.equals(originalServerName)
+									&& moeService.serverNameExists(nameView
+											.getText().toString())) {
 								success = false;
-								AlertDialog.Builder b = new AlertDialog.Builder(activity);
-								b.setMessage(getResources().getString(R.string.serverexists));
-								b.setPositiveButton(getResources().getString(android.R.string.ok), null);
+								AlertDialog.Builder b = new AlertDialog.Builder(
+										activity);
+								b.setMessage(getResources().getString(
+										R.string.serverexists));
+								b.setPositiveButton(
+										getResources().getString(
+												android.R.string.ok), null);
 								b.show();
 							} else
 								prefs.setName(nameView.getText().toString());
@@ -403,7 +452,8 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 						if (portView.getText().length() == 0) {
 							host.setPort(6667);
 						} else {
-							host.setPort(Integer.parseInt(portView.getText().toString()));
+							host.setPort(Integer.parseInt(portView.getText()
+									.toString()));
 						}
 
 						if (passwordView.getText().length() == 0) {
@@ -417,13 +467,18 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 
 						if (nickName.getText().length() == 0) {
 							success = false;
-							AlertDialog.Builder b = new AlertDialog.Builder(activity);
-							b.setMessage(getResources().getString(R.string.enteranick));
-							b.setPositiveButton(getResources().getString(android.R.string.ok), null);
+							AlertDialog.Builder b = new AlertDialog.Builder(
+									activity);
+							b.setMessage(getResources().getString(
+									R.string.enteranick));
+							b.setPositiveButton(
+									getResources().getString(
+											android.R.string.ok), null);
 							b.show();
 						} else {
 							ArrayList<String> nicks = new ArrayList<String>();
-							for (String s : nickName.getText().toString().split(","))
+							for (String s : nickName.getText().toString()
+									.split(","))
 								nicks.add(s);
 							prefs.setNicknames(nicks);
 						}
@@ -442,7 +497,8 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 
 						if (autoconnectCommands.getText().length() > 0) {
 							ArrayList<String> commands = new ArrayList<String>();
-							for (String c : autoconnectCommands.getText().toString().split("\n"))
+							for (String c : autoconnectCommands.getText()
+									.toString().split("\n"))
 								commands.add(c);
 							prefs.setAutoCommands(commands);
 						}
@@ -456,8 +512,11 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 
 							if (server != null) {
 								server.getClient().loadFromPreferences(prefs);
-								moeService.renameServer(originalServerName, newName);
-								if (server != null && server.getServerInfo().getBot().isConnected()) {
+								moeService.renameServer(originalServerName,
+										newName);
+								if (server != null
+										&& server.getServerInfo().getBot()
+												.isConnected()) {
 									moeService.disconnect(newName);
 								}
 							} else {
@@ -481,7 +540,9 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 		if (actionId == EditorInfo.IME_ACTION_SEND) {
 			this.sendMessage();
 		}
-		if (actionId == EditorInfo.IME_NULL && event.getAction() == KeyEvent.ACTION_DOWN && event.getKeyCode() == KeyEvent.KEYCODE_ENTER) {
+		if (actionId == EditorInfo.IME_NULL
+				&& event.getAction() == KeyEvent.ACTION_DOWN
+				&& event.getKeyCode() == KeyEvent.KEYCODE_ENTER) {
 			this.sendMessage();
 			// Explicitly state event is handled.
 			return true;
@@ -489,7 +550,8 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 		return false;
 	}
 
-	public boolean onGroupClick(ExpandableListView parent, View v, int groupPosition, long id) {
+	public boolean onGroupClick(ExpandableListView parent, View v,
+			int groupPosition, long id) {
 		// Force groups to stay expanded
 		parent.expandGroup(groupPosition);
 		Channel newChannel = moeService.getServers().get(groupPosition);
@@ -498,40 +560,53 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 		return true;
 	}
 
-	public boolean onChildClick(ExpandableListView parent, View v, int groupPosition, int childPosition, long id) {
-		Channel newChannel = moeService.getServers().get(groupPosition).getChannels().get(childPosition);
+	public boolean onChildClick(ExpandableListView parent, View v,
+			int groupPosition, int childPosition, long id) {
+		Channel newChannel = moeService.getServers().get(groupPosition)
+				.getChannels().get(childPosition);
 		setCurrentChannelView(newChannel);
 		hideChannelList();
 		return false;
 	}
 
 	@Override
-	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenuInfo menuInfo) {
+	public void onCreateContextMenu(ContextMenu menu, View v,
+			ContextMenuInfo menuInfo) {
 		if (v == this.expandableChannelList) {
 			ExpandableListContextMenuInfo info = (ExpandableListContextMenuInfo) menuInfo;
-			int groupPosition = ExpandableListView.getPackedPositionGroup(info.packedPosition);
+			int groupPosition = ExpandableListView
+					.getPackedPositionGroup(info.packedPosition);
 			Server server = moeService.getServers().get(groupPosition);
 			if (v.getId() == expandableChannelList.getId()) {
-				int selectionType = ExpandableListView.getPackedPositionType(info.packedPosition);
+				int selectionType = ExpandableListView
+						.getPackedPositionType(info.packedPosition);
 				switch (selectionType) {
 				case ExpandableListView.PACKED_POSITION_TYPE_GROUP:
 					menu.setHeaderTitle("Server Options");
 					if (server.getClient().isConnected())
-						menu.add(CONTEXTMENU_SERVEROPTIONS, SERVEROPTIONS_DISCONNECT, 0, getResources().getString(R.string.disconnect));
+						menu.add(CONTEXTMENU_SERVEROPTIONS,
+								SERVEROPTIONS_DISCONNECT, 0, getResources()
+										.getString(R.string.disconnect));
 					else
-						menu.add(CONTEXTMENU_SERVEROPTIONS, SERVEROPTIONS_CONNECT, 0, getResources().getString(R.string.connect));
-					menu.add(CONTEXTMENU_SERVEROPTIONS, SERVEROPTIONS_EDIT, 1, getResources().getString(R.string.edit));
-					menu.add(CONTEXTMENU_SERVEROPTIONS, SERVEROPTIONS_DELETE, 2, getResources().getString(R.string.delete));
+						menu.add(CONTEXTMENU_SERVEROPTIONS,
+								SERVEROPTIONS_CONNECT, 0, getResources()
+										.getString(R.string.connect));
+					menu.add(CONTEXTMENU_SERVEROPTIONS, SERVEROPTIONS_EDIT, 1,
+							getResources().getString(R.string.edit));
+					menu.add(CONTEXTMENU_SERVEROPTIONS, SERVEROPTIONS_DELETE,
+							2, getResources().getString(R.string.delete));
 					break;
 				case ExpandableListView.PACKED_POSITION_TYPE_CHILD:
 					menu.setHeaderTitle("Channel Options");
-					menu.add(CONTEXTMENU_CHANNELOPTIONS, CHANNELOPTIONS_PART, 0, getResources().getString(R.string.part));
+					menu.add(CONTEXTMENU_CHANNELOPTIONS, CHANNELOPTIONS_PART,
+							0, getResources().getString(R.string.part));
 				}
 			}
 		} else if (v == this.getListView()) {
 			AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) menuInfo;
 			this.vibrator.vibrate(150);
-			this.startActionMode(new ActionModeCallback(currentChannel.getMessages().get(info.position)));
+			this.startActionMode(new ActionModeCallback(currentChannel
+					.getMessages().get(info.position)));
 		} else if (v == this.fakeUserListView) {
 			if (currentChannel != null) {
 				menu.setHeaderTitle(getResources().getString(R.string.users));
@@ -543,23 +618,34 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 						User u = i.next();
 						contextUserList.add(u);
 					}
-					Collections.sort(contextUserList, new UserComparator(currentChannel));
+					Collections.sort(contextUserList, new UserComparator(
+							currentChannel));
 					for (int j = 0; j < contextUserList.size(); j++) {
 						User user = contextUserList.get(j);
-						menu.add(CONTEXTMENU_USERLIST, j, j, UserComparator.getPrefix(user, currentChannel) + user.getNick());
+						menu.add(CONTEXTMENU_USERLIST, j, j,
+								UserComparator.getPrefix(user, currentChannel)
+										+ user.getNick());
 					}
 				}
 			}
 		} else if (v == this.fakeUserOptionsView) {
 			menu.setHeaderTitle(this.userOptionsSelectedFor.getNick());
-			menu.add(CONTEXTMENU_USEROPTIONS, USEROPTIONS_QUERY, 0, getResources().getString(R.string.query));
-			menu.add(CONTEXTMENU_USEROPTIONS, USEROPTIONS_MENTION, 1, getResources().getString(R.string.mention));
-			menu.add(CONTEXTMENU_USEROPTIONS, USEROPTIONS_WHOIS, 2, getResources().getString(R.string.whois));
-			User self = this.currentChannel.getClient().getUser(this.currentChannel.getClient().getNick());
-			if (this.currentChannel.getChannelInfo().isOp(self) || this.currentChannel.getChannelInfo().isSuperOp(self)
-					|| this.currentChannel.getChannelInfo().isHalfOp(self) || this.currentChannel.getChannelInfo().isOwner(self)) {
-				menu.add(CONTEXTMENU_USEROPTIONS, USEROPTIONS_KICK, 3, getResources().getString(R.string.kick));
-				menu.add(CONTEXTMENU_USEROPTIONS, USEROPTIONS_KICKBAN, 4, getResources().getString(R.string.kickban));
+			menu.add(CONTEXTMENU_USEROPTIONS, USEROPTIONS_QUERY, 0,
+					getResources().getString(R.string.query));
+			menu.add(CONTEXTMENU_USEROPTIONS, USEROPTIONS_MENTION, 1,
+					getResources().getString(R.string.mention));
+			menu.add(CONTEXTMENU_USEROPTIONS, USEROPTIONS_WHOIS, 2,
+					getResources().getString(R.string.whois));
+			User self = this.currentChannel.getClient().getUser(
+					this.currentChannel.getClient().getNick());
+			if (this.currentChannel.getChannelInfo().isOp(self)
+					|| this.currentChannel.getChannelInfo().isSuperOp(self)
+					|| this.currentChannel.getChannelInfo().isHalfOp(self)
+					|| this.currentChannel.getChannelInfo().isOwner(self)) {
+				menu.add(CONTEXTMENU_USEROPTIONS, USEROPTIONS_KICK, 3,
+						getResources().getString(R.string.kick));
+				menu.add(CONTEXTMENU_USEROPTIONS, USEROPTIONS_KICKBAN, 4,
+						getResources().getString(R.string.kickban));
 			}
 		}
 	}
@@ -582,8 +668,10 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 			return false;
 		}
 
-		public boolean onActionItemClicked(ActionMode actionMode, MenuItem menuItem) {
-			if (menuItem.getTitle().equals(getResources().getString(R.string.copy))) {
+		public boolean onActionItemClicked(ActionMode actionMode,
+				MenuItem menuItem) {
+			if (menuItem.getTitle().equals(
+					getResources().getString(R.string.copy))) {
 				ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
 				String s = message.getContent().toString();
 				if (message.getNickname().length() > 0)
@@ -602,13 +690,16 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 
 	@Override
 	public boolean onContextItemSelected(MenuItem item) {
-		ExpandableListContextMenuInfo info = (ExpandableListContextMenuInfo) item.getMenuInfo();
+		ExpandableListContextMenuInfo info = (ExpandableListContextMenuInfo) item
+				.getMenuInfo();
 		int groupPosition;
 		int childPosition;
 		switch (item.getGroupId()) {
 		case CONTEXTMENU_SERVEROPTIONS:
-			groupPosition = ExpandableListView.getPackedPositionGroup(info.packedPosition);
-			childPosition = ExpandableListView.getPackedPositionChild(info.packedPosition);
+			groupPosition = ExpandableListView
+					.getPackedPositionGroup(info.packedPosition);
+			childPosition = ExpandableListView
+					.getPackedPositionChild(info.packedPosition);
 			Server server = moeService.getServers().get(groupPosition);
 			switch (item.getItemId()) {
 			case SERVEROPTIONS_DISCONNECT:
@@ -621,29 +712,44 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 				this.showServerEditDialog(server);
 				break;
 			case SERVEROPTIONS_DELETE:
-				if (this.currentChannel != null && this.currentChannel.getServer().getName().equals(server.getName())) {
-					this.activity.adapter.setMessages(new ArrayList<GenericMessage>());
+				if (this.currentChannel != null
+						&& this.currentChannel.getServer().getName()
+								.equals(server.getName())) {
+					this.activity.adapter
+							.setMessages(new ArrayList<GenericMessage>());
 					this.activity.setTitle("");
 				}
-				server.getClient().getServerPreferences()
-						.deleteFromSharedPreferences(this.activity.getSharedPreferences("servers", Context.MODE_PRIVATE));
+				server.getClient()
+						.getServerPreferences()
+						.deleteFromSharedPreferences(
+								this.activity.getSharedPreferences("servers",
+										Context.MODE_PRIVATE));
 				this.moeService.deleteServer(server.getName());
 				this.activity.channelAdapter.notifyDataSetChanged();
 				break;
 			}
 			break;
 		case CONTEXTMENU_CHANNELOPTIONS:
-			groupPosition = ExpandableListView.getPackedPositionGroup(info.packedPosition);
-			childPosition = ExpandableListView.getPackedPositionChild(info.packedPosition);
+			groupPosition = ExpandableListView
+					.getPackedPositionGroup(info.packedPosition);
+			childPosition = ExpandableListView
+					.getPackedPositionChild(info.packedPosition);
 			switch (item.getItemId()) {
 			case CHANNELOPTIONS_PART:
-				moeService.partChannel(moeService.getServers().get(groupPosition).getChannels().get(childPosition));
+				moeService.partChannel(moeService.getServers()
+						.get(groupPosition).getChannels().get(childPosition));
 				break;
 			}
 			break;
 		case CONTEXTMENU_USERLIST:
 			userOptionsSelectedFor = contextUserList.get(item.getItemId());
-			fakeUserOptionsView.showContextMenu();
+			// Query user
+			if (this.commandInterpreter == null) {
+				this.commandInterpreter = new CommandInterpreter(
+						this.moeService, this);
+			}
+			commandInterpreter.interpret("/query "
+					+ userOptionsSelectedFor.getNick());
 			break;
 		case CONTEXTMENU_USEROPTIONS:
 			switch (item.getItemId()) {
@@ -673,7 +779,8 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 
 		private ArrayList<GenericMessage> items;
 
-		public MessageAdapter(Context context, int textViewResourceId, ArrayList<GenericMessage> items) {
+		public MessageAdapter(Context context, int textViewResourceId,
+				ArrayList<GenericMessage> items) {
 			super(context, textViewResourceId, items);
 			this.items = items;
 		}
@@ -692,16 +799,21 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 		@Override
 		public View getView(int position, View convertView, ViewGroup parent) {
 			if (convertView == null) {
-				convertView = inflater.inflate(R.layout.channel_message_row, null);
+				convertView = inflater.inflate(R.layout.channel_message_row,
+						null);
 			}
 
 			GenericMessage message = this.items.get(position);
-			TextView name = (TextView) convertView.findViewById(R.id.channelMessageName);
-			TextView content = (TextView) convertView.findViewById(R.id.channelMessageContent);
+			TextView name = (TextView) convertView
+					.findViewById(R.id.channelMessageName);
+			TextView content = (TextView) convertView
+					.findViewById(R.id.channelMessageContent);
 			if (message.isChannelNotificationType())
-				content.setTextColor(activity.getResources().getColor(R.color.channelNotification));
+				content.setTextColor(activity.getResources().getColor(
+						R.color.channelNotification));
 			else
-				content.setTextColor(activity.getResources().getColor(R.color.channelNormal));
+				content.setTextColor(activity.getResources().getColor(
+						R.color.channelNormal));
 			content.setText(message.getContent());
 			/*
 			 * if (message.getEmbeddedYoutube() != null) { if (false) {
@@ -740,19 +852,23 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 			return childPosition;
 		}
 
-		public View getChildView(int groupPosition, int childPosition, boolean isLastChild, View convertView, ViewGroup parent) {
+		public View getChildView(int groupPosition, int childPosition,
+				boolean isLastChild, View convertView, ViewGroup parent) {
 			if (convertView == null) {
-				convertView = inflater.inflate(R.layout.channellist_channel, null);
+				convertView = inflater.inflate(R.layout.channellist_channel,
+						null);
 			}
 			Server s = servers.get(groupPosition);
 			if (s.getChannels().size() > 0) {
 				Channel c = s.getChannels().get(childPosition);
 				TextView name = (TextView) convertView.findViewById(R.id.name);
-				TextView messages = (TextView) convertView.findViewById(R.id.unreadCount);
+				TextView messages = (TextView) convertView
+						.findViewById(R.id.unreadCount);
 				name.setText(c.getChannelInfo().getName());
 
 				if (c.getUnreadMessageCount() > 0) {
-					messages.setText("(" + String.valueOf(c.getUnreadMessageCount()) + ")");
+					messages.setText("("
+							+ String.valueOf(c.getUnreadMessageCount()) + ")");
 				} else {
 					messages.setText("");
 				}
@@ -776,10 +892,12 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 			return groupPosition;
 		}
 
-		public View getGroupView(int groupPosition, boolean isExpanded, View convertView, ViewGroup parent) {
+		public View getGroupView(int groupPosition, boolean isExpanded,
+				View convertView, ViewGroup parent) {
 			Server s = servers.get(groupPosition);
 			if (convertView == null) {
-				convertView = inflater.inflate(R.layout.channellist_server, null);
+				convertView = inflater.inflate(R.layout.channellist_server,
+						null);
 			}
 			TextView name = (TextView) convertView.findViewById(R.id.name);
 			name.setText(s.getName());
@@ -805,29 +923,38 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 			if (moeService != null)
 				moeService.isAppActive(true);
 
-			activity.channelAdapter = new ChannelListAdapter(moeService.getServers());
+			activity.channelAdapter = new ChannelListAdapter(
+					moeService.getServers());
 
 			// Set adapter of newly inflated container
-			LinearLayout channelListPanel = (LinearLayout) activity.findViewById(R.id.channelListPanel);
-			expandableChannelList = (ExpandableListView) channelListPanel.findViewById(android.R.id.list);
+			LinearLayout channelListPanel = (LinearLayout) activity
+					.findViewById(R.id.channelListPanel);
+			expandableChannelList = (ExpandableListView) channelListPanel
+					.findViewById(android.R.id.list);
 			expandableChannelList.setAdapter(activity.channelAdapter);
 			expandableChannelList.setOnChildClickListener(activity);
 			expandableChannelList.setOnGroupClickListener(activity);
 			activity.registerForContextMenu(expandableChannelList);
 			activity.registerForContextMenu(activity.getListView());
-			channelList = (LinearLayout) activity.findViewById(R.id.channelList);
+			channelList = (LinearLayout) activity
+					.findViewById(R.id.channelList);
 			// And hide it by default.
 			hideChannelList();
 
-			settingsButton = (Button) activity.findViewById(R.id.settingsButton);
+			settingsButton = (Button) activity
+					.findViewById(R.id.settingsButton);
 			settingsButton.setOnClickListener(activity);
 
 			// Goto certain channel
 			if (gotoChannelOnServiceConnect) {
 				gotoChannelOnServiceConnect = false;
-				activity.setCurrentChannelView(moeService.getServer(onServiceConnectServer).getChannel(onServiceConnectChannel));
-				onServiceConnectChannel = null;
-				onServiceConnectServer = null;
+				Channel chan = moeService.getServer(onServiceConnectServer)
+						.getChannel(onServiceConnectChannel);
+				if (chan != null) {
+					activity.setCurrentChannelView(chan);
+					onServiceConnectChannel = null;
+					onServiceConnectServer = null;
+				}
 			}
 
 			if (!isStarted) {
@@ -841,7 +968,9 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 				// Works reliably from what I see, and shouldn't cause any
 				// issues if binding out-races the connection task.
 				if (moeService.getServers().size() > 0)
-					activity.channelJoined(moeService.getServers().get(moeService.getServers().size() - 1), null);
+					activity.channelJoined(
+							moeService.getServers().get(
+									moeService.getServers().size() - 1), null);
 				channelAdapter.notifyDataSetChanged();
 			}
 		}
@@ -862,7 +991,8 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 	 * IRC service callbacks.
 	 */
 
-	public void channelMessageReceived(Channel channel, GenericMessage message, boolean active) {
+	public void channelMessageReceived(Channel channel, GenericMessage message,
+			boolean active) {
 		final Channel chan = channel;
 		final GenericMessage mess = message;
 		final boolean act = active;
@@ -894,7 +1024,8 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 		});
 	}
 
-	public void queryMessageReceived(Query query, GenericMessage message, boolean active) {
+	public void queryMessageReceived(Query query, GenericMessage message,
+			boolean active) {
 		final Query q = query;
 		final GenericMessage m = message;
 		final boolean a = active;
@@ -928,7 +1059,8 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 		// Switch to the new channel when it is joined
 		// Accept 0-length nick for time when server is connecting and has no
 		// nick
-		if (nickname == null || nickname.equals(channel.getServer().getClient().getNick())) {
+		if (nickname == null
+				|| nickname.equals(channel.getServer().getClient().getNick())) {
 			this.runOnUiThread(new Runnable() {
 				public void run() {
 					setCurrentChannelView(chan);
@@ -958,7 +1090,8 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 						channelAdapter.notifyDataSetChanged();
 					}
 					if (nextPos > -1)
-						activity.setCurrentChannelView(chan.getServer().getChannels().get(nextPos));
+						activity.setCurrentChannelView(chan.getServer()
+								.getChannels().get(nextPos));
 					else
 						activity.setCurrentChannelView(chan.getServer());
 				}
@@ -977,7 +1110,8 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 		}
 	}
 
-	public void nickChanged(Collection<Channel> commonChannels, String from, String to) {
+	public void nickChanged(Collection<Channel> commonChannels, String from,
+			String to) {
 		if (commonChannels.contains(this.currentChannel)) {
 			this.runOnUiThread(new Runnable() {
 				public void run() {
@@ -1007,7 +1141,8 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 
 			this.runOnUiThread(new Runnable() {
 				public void run() {
-					GenericMessage e = Server.createError(SpannableString.valueOf(err));
+					GenericMessage e = Server.createError(SpannableString
+							.valueOf(err));
 					serv.addMessage(e);
 					for (Channel channel : serv.getChannels()) {
 						channel.addMessage(e);
@@ -1048,7 +1183,8 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 		// Set list adapter to be the messages of the connected channel,
 		// TODO: Re-creating the adapter every time may be inefficient
 		if (this.activity.adapter == null) {
-			this.activity.adapter = new MessageAdapter(getApplicationContext(), R.layout.channel_message_row, channel.getMessages());
+			this.activity.adapter = new MessageAdapter(getApplicationContext(),
+					R.layout.channel_message_row, channel.getMessages());
 			this.activity.setListAdapter(this.activity.adapter);
 		} else
 			this.activity.adapter.setMessages(channel.getMessages());
@@ -1067,7 +1203,8 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 
 	private void sendMessage() {
 		if (this.commandInterpreter == null) {
-			this.commandInterpreter = new CommandInterpreter(this.moeService, this);
+			this.commandInterpreter = new CommandInterpreter(this.moeService,
+					this);
 		}
 
 		String message = this.sendText.getText().toString();
@@ -1110,7 +1247,10 @@ public class ChannelActivity extends ListActivity implements ServiceEventListene
 			hash += b;
 		}
 
-		return this.activity.getResources().getColor(this.possibleNickColours[hash % this.possibleNickColours.length]);
+		return this.activity.getResources()
+				.getColor(
+						this.possibleNickColours[hash
+								% this.possibleNickColours.length]);
 	}
 
 }
