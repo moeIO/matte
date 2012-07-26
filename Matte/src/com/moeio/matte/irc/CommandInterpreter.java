@@ -6,14 +6,15 @@ import android.text.Html;
 import android.text.SpannedString;
 
 import com.moeio.matte.ChannelActivity;
+import com.moeio.matte.IRCActivity;
 import com.moeio.matte.R;
 import com.moeio.matte.backend.IRCService;
 
 public class CommandInterpreter {
 	private IRCService service;
-	private ChannelActivity activity;
+	private IRCActivity activity;
 
-	public CommandInterpreter(IRCService service, ChannelActivity activity) {
+	public CommandInterpreter(IRCService service, IRCActivity activity) {
 		this.service = service;
 		this.activity = activity;
 	}

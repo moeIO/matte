@@ -6,12 +6,16 @@ import java.util.Date;
 import android.text.Spanned;
 import android.text.SpannedString;
 
+import com.moeio.matte.FragmentPage;
+
 public class Channel {
 	private org.pircbotx.Channel channelInfo;
 	private Server server;
 	protected ArrayList<GenericMessage> messages;
 	protected int unreadMessages;
 	protected boolean active;
+
+	private FragmentPage fragment;
 
 	private static final int MAX_BUFFER_MESSAGES = 50;
 
@@ -101,5 +105,13 @@ public class Channel {
 
 	public Client getClient() {
 		return this.getServer().getClient();
+	}
+
+	public void setFragment(FragmentPage fragment) {
+		this.fragment = fragment;
+	}
+
+	public FragmentPage getFragment() {
+		return this.fragment;
 	}
 }

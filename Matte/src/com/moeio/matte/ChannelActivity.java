@@ -71,7 +71,7 @@ import com.moeio.matte.irc.UserComparator;
 
 public class ChannelActivity extends ListActivity implements
 		ServiceEventListener, OnClickListener, OnEditorActionListener,
-		OnChildClickListener, OnGroupClickListener {
+		OnChildClickListener, OnGroupClickListener, IRCActivity {
 	// Layout stuff.
 	private ChannelActivity activity;
 	private LayoutInflater inflater;
